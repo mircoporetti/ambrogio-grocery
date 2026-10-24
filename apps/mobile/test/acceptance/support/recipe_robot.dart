@@ -1,31 +1,38 @@
 import 'package:ambrogio_grocery/app.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_picker_port.dart';
+import 'package:ambrogio_grocery/recipes/domain/photo_storage_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/recipe_storage_port.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fake_photo_picker_adapter.dart';
+import 'fake_photo_storage_adapter.dart';
 
-/// Drives the app the way a user would, so acceptance tests read as
-/// requirements instead of widget plumbing.
 class RecipeRobot {
   RecipeRobot(this.tester);
 
   final WidgetTester tester;
 
-  /// Tests never open the real device gallery.
   Future<void> launchApp(
     RecipeStoragePort storage, {
     PhotoPickerPort? photoPicker,
+    PhotoStoragePort? photoStorage,
   }) async {
     await tester.pumpWidget(
       AmbrogioApp(
         recipeStorage: storage,
         photoPicker: photoPicker ?? FakePhotoPickerAdapter(),
+        photoStorage: photoStorage ?? FakePhotoStorageAdapter(),
       ),
     );
     await tester.pumpAndSettle();
   }
+
+  Future<void> deleteOpenRecipe() => _tap(find.byTooltip('Delete recipe'));
+
+  Future<void> confirmDelete() => _tap(find.text('Delete'));
+
+  Future<void> cancelDelete() => _tap(find.text('Cancel'));
 
   Future<void> addPhoto() => _tap(find.text('Add photo (optional)'));
 

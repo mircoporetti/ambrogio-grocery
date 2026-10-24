@@ -46,6 +46,11 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
     });
   });
 
+  // Ingredients and categories go with it through ON DELETE CASCADE.
+  @override
+  Future<void> delete(RecipeId id) =>
+      (_db.delete(_db.recipes)..where((r) => r.uuid.equals(id.value))).go();
+
   Stream<void> _changes() => _db
       .customSelect(
         'SELECT 1',

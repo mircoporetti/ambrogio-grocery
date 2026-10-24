@@ -9,4 +9,6 @@ abstract interface class RecipeStoragePort {
   Stream<Recipe?> watchById(RecipeId id);
 
   Future<void> save(Recipe recipe);
+
+  Future<void> delete(RecipeId id);
 }

@@ -8,11 +8,18 @@ class FailingRecipeStorageAdapter implements RecipeStoragePort {
   final RecipeStoragePort _real;
 
   bool failSaves = false;
+  bool failDeletes = false;
 
   @override
   Future<void> save(Recipe recipe) async {
     if (failSaves) throw Exception('Simulated storage failure');
     await _real.save(recipe);
+  }
+
+  @override
+  Future<void> delete(RecipeId id) async {
+    if (failDeletes) throw Exception('Simulated storage failure');
+    await _real.delete(id);
   }
 
   @override
