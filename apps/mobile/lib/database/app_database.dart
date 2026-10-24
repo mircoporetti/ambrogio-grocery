@@ -6,6 +6,7 @@ part 'app_database.g.dart';
 @DataClassName('RecipeRow')
 class Recipes extends Table {
   IntColumn get id => integer().autoIncrement()();
+  TextColumn get uuid => text().unique()();
   TextColumn get title => text()();
   IntColumn get portions => integer()();
   TextColumn get procedure => text().nullable()();
@@ -39,10 +40,30 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.onDevice() : super(driftDatabase(name: 'ambrogio_grocery'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        // Gives every existing recipe its own random UUID v4, generated in SQL.
+        await m.alterTable(
+          TableMigration(
+            recipes,
+            newColumns: [recipes.uuid],
+            columnTransformer: {
+              recipes.uuid: const CustomExpression<String>(
+                "lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2)))"
+                " || '-4' || substr(lower(hex(randomblob(2))), 2) || '-'"
+                " || substr('89ab', 1 + (abs(random()) % 4), 1)"
+                " || substr(lower(hex(randomblob(2))), 2) || '-'"
+                ' || lower(hex(randomblob(6)))',
+              ),
+            },
+          ),
+        );
+      }
+    },
     beforeOpen: (_) => customStatement('PRAGMA foreign_keys = ON'),
   );
 }

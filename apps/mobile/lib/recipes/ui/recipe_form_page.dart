@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 
 import '../domain/ingredient.dart';
 import '../domain/recipe.dart';
+import 'formatting.dart';
 import 'recipe_form_view_model.dart';
 
 class RecipeFormPage extends StatefulWidget {
   const RecipeFormPage({super.key, required this.viewModel});
 
-  /// Owned by this page and disposed with it.
   final RecipeFormViewModel viewModel;
 
   @override
@@ -112,11 +112,6 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
   static double? _parseQuantity(String text) =>
       double.tryParse(text.trim().replaceAll(',', '.'));
 
-  static String _formatQuantity(double quantity) =>
-      quantity == quantity.roundToDouble()
-      ? quantity.toInt().toString()
-      : quantity.toString();
-
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -195,10 +190,7 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(ingredient.name),
-                  subtitle: Text(
-                    '${_formatQuantity(ingredient.quantity)} '
-                    '${ingredient.unit.symbol}',
-                  ),
+                  subtitle: Text(formatQuantity(ingredient)),
                   trailing: IconButton(
                     tooltip: 'Remove ${ingredient.name}',
                     icon: const Icon(Icons.delete_outline),

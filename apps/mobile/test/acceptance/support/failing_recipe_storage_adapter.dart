@@ -1,4 +1,5 @@
 import 'package:ambrogio_grocery/recipes/domain/recipe.dart';
+import 'package:ambrogio_grocery/recipes/domain/recipe_id.dart';
 import 'package:ambrogio_grocery/recipes/domain/recipe_storage_port.dart';
 
 class FailingRecipeStorageAdapter implements RecipeStoragePort {
@@ -19,4 +20,7 @@ class FailingRecipeStorageAdapter implements RecipeStoragePort {
 
   @override
   Stream<List<Recipe>> watchAll() => _real.watchAll();
+
+  @override
+  Stream<Recipe?> watchById(RecipeId id) => _real.watchById(id);
 }

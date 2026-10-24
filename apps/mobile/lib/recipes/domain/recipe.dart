@@ -1,14 +1,17 @@
 import 'ingredient.dart';
+import 'recipe_id.dart';
 
 class Recipe {
   Recipe({
+    RecipeId? id,
     required this.title,
     required this.portions,
     required List<Ingredient> ingredients,
     this.procedure,
     this.photoPath,
     List<String> categories = const [],
-  }) : ingredients = List.unmodifiable(ingredients),
+  }) : id = id ?? RecipeId.generate(),
+       ingredients = List.unmodifiable(ingredients),
        categories = List.unmodifiable(categories) {
     if (title.trim().isEmpty) {
       throw ArgumentError.value(title, 'title', 'must not be blank');
@@ -25,6 +28,7 @@ class Recipe {
     }
   }
 
+  final RecipeId id;
   final String title;
   final int portions;
   final List<Ingredient> ingredients;

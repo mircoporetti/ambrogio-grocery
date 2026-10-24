@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'recipes/application/create_recipe.dart';
 import 'recipes/application/pick_recipe_photo.dart';
+import 'recipes/application/watch_recipe.dart';
 import 'recipes/application/watch_recipes.dart';
 import 'recipes/data/image_picker_photo_picker_adapter.dart';
 import 'recipes/domain/photo_picker_port.dart';
@@ -24,6 +25,7 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
   late final _pickRecipePhoto = PickRecipePhoto(
     widget.photoPicker ?? ImagePickerPhotoPickerAdapter(),
   );
+  late final _watchRecipe = WatchRecipe(widget.recipeStorage);
   late final _recipeList = RecipeListViewModel(
     WatchRecipes(widget.recipeStorage),
   );
@@ -43,6 +45,7 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
         viewModel: _recipeList,
         createRecipe: _createRecipe,
         pickRecipePhoto: _pickRecipePhoto,
+        watchRecipe: _watchRecipe,
       ),
     );
   }

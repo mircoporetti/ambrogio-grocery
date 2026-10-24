@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import '../../database/app_database.dart';
 import '../domain/ingredient.dart';
 import '../domain/recipe.dart';
+import '../domain/recipe_id.dart';
 import '../domain/recipe_storage_port.dart';
 
 class DriftRecipeStorageAdapter implements RecipeStoragePort {
@@ -16,6 +17,7 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
         .into(_db.recipes)
         .insert(
           RecipesCompanion.insert(
+            uuid: recipe.id.value,
             title: recipe.title,
             portions: recipe.portions,
             procedure: Value(recipe.procedure),
@@ -44,29 +46,41 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
     });
   });
 
-  /// Re-reads every recipe whenever any of the three tables changes. drift
-  /// only notifies after a transaction commits, so a recipe is never seen
-  /// without its ingredients.
-  @override
-  Stream<List<Recipe>> watchAll() => _db
+  Stream<void> _changes() => _db
       .customSelect(
         'SELECT 1',
         readsFrom: {_db.recipes, _db.recipeIngredients, _db.recipeCategories},
       )
-      .watch()
-      .asyncMap((_) => findAll());
+      .watch();
 
   @override
-  Future<List<Recipe>> findAll() => _db.transaction(() async {
-    final recipes = await (_db.select(
-      _db.recipes,
-    )..orderBy([(r) => OrderingTerm.asc(r.id)])).get();
-    final ingredients = await (_db.select(
-      _db.recipeIngredients,
-    )..orderBy([(i) => OrderingTerm.asc(i.position)])).get();
-    final categories = await (_db.select(
-      _db.recipeCategories,
-    )..orderBy([(c) => OrderingTerm.asc(c.position)])).get();
+  Stream<List<Recipe>> watchAll() => _changes().asyncMap((_) => findAll());
+
+  @override
+  Stream<Recipe?> watchById(RecipeId id) =>
+      _changes().asyncMap((_) async => (await _load(id: id)).firstOrNull);
+
+  @override
+  Future<List<Recipe>> findAll() => _load();
+
+  Future<List<Recipe>> _load({RecipeId? id}) => _db.transaction(() async {
+    final recipeQuery = _db.select(_db.recipes)
+      ..orderBy([(r) => OrderingTerm.asc(r.id)]);
+    if (id != null) recipeQuery.where((r) => r.uuid.equals(id.value));
+    final recipes = await recipeQuery.get();
+    if (recipes.isEmpty) return const <Recipe>[];
+
+    final rowIds = recipes.map((r) => r.id).toList();
+    final ingredients =
+        await (_db.select(_db.recipeIngredients)
+              ..where((i) => i.recipeId.isIn(rowIds))
+              ..orderBy([(i) => OrderingTerm.asc(i.position)]))
+            .get();
+    final categories =
+        await (_db.select(_db.recipeCategories)
+              ..where((c) => c.recipeId.isIn(rowIds))
+              ..orderBy([(c) => OrderingTerm.asc(c.position)]))
+            .get();
 
     final ingredientsByRecipe = <int, List<Ingredient>>{};
     for (final row in ingredients) {
@@ -88,6 +102,7 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
     return [
       for (final row in recipes)
         Recipe(
+          id: RecipeId(row.uuid),
           title: row.title,
           portions: row.portions,
           ingredients: ingredientsByRecipe[row.id] ?? const [],

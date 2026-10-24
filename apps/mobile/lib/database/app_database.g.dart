@@ -21,6 +21,16 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, RecipeRow> {
       'PRIMARY KEY AUTOINCREMENT',
     ),
   );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
   static const VerificationMeta _titleMeta = const VerificationMeta('title');
   @override
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
@@ -66,6 +76,7 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, RecipeRow> {
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    uuid,
     title,
     portions,
     procedure,
@@ -85,6 +96,14 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, RecipeRow> {
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
     }
     if (data.containsKey('title')) {
       context.handle(
@@ -127,6 +146,10 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, RecipeRow> {
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
       title: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}title'],
@@ -154,12 +177,14 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, RecipeRow> {
 
 class RecipeRow extends DataClass implements Insertable<RecipeRow> {
   final int id;
+  final String uuid;
   final String title;
   final int portions;
   final String? procedure;
   final String? photoPath;
   const RecipeRow({
     required this.id,
+    required this.uuid,
     required this.title,
     required this.portions,
     this.procedure,
@@ -169,6 +194,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
     map['title'] = Variable<String>(title);
     map['portions'] = Variable<int>(portions);
     if (!nullToAbsent || procedure != null) {
@@ -183,6 +209,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
   RecipesCompanion toCompanion(bool nullToAbsent) {
     return RecipesCompanion(
       id: Value(id),
+      uuid: Value(uuid),
       title: Value(title),
       portions: Value(portions),
       procedure: procedure == null && nullToAbsent
@@ -201,6 +228,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RecipeRow(
       id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
       title: serializer.fromJson<String>(json['title']),
       portions: serializer.fromJson<int>(json['portions']),
       procedure: serializer.fromJson<String?>(json['procedure']),
@@ -212,6 +240,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
       'title': serializer.toJson<String>(title),
       'portions': serializer.toJson<int>(portions),
       'procedure': serializer.toJson<String?>(procedure),
@@ -221,12 +250,14 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
 
   RecipeRow copyWith({
     int? id,
+    String? uuid,
     String? title,
     int? portions,
     Value<String?> procedure = const Value.absent(),
     Value<String?> photoPath = const Value.absent(),
   }) => RecipeRow(
     id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
     title: title ?? this.title,
     portions: portions ?? this.portions,
     procedure: procedure.present ? procedure.value : this.procedure,
@@ -235,6 +266,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
   RecipeRow copyWithCompanion(RecipesCompanion data) {
     return RecipeRow(
       id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
       title: data.title.present ? data.title.value : this.title,
       portions: data.portions.present ? data.portions.value : this.portions,
       procedure: data.procedure.present ? data.procedure.value : this.procedure,
@@ -246,6 +278,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
   String toString() {
     return (StringBuffer('RecipeRow(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('title: $title, ')
           ..write('portions: $portions, ')
           ..write('procedure: $procedure, ')
@@ -255,12 +288,14 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
   }
 
   @override
-  int get hashCode => Object.hash(id, title, portions, procedure, photoPath);
+  int get hashCode =>
+      Object.hash(id, uuid, title, portions, procedure, photoPath);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is RecipeRow &&
           other.id == this.id &&
+          other.uuid == this.uuid &&
           other.title == this.title &&
           other.portions == this.portions &&
           other.procedure == this.procedure &&
@@ -269,12 +304,14 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
 
 class RecipesCompanion extends UpdateCompanion<RecipeRow> {
   final Value<int> id;
+  final Value<String> uuid;
   final Value<String> title;
   final Value<int> portions;
   final Value<String?> procedure;
   final Value<String?> photoPath;
   const RecipesCompanion({
     this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
     this.title = const Value.absent(),
     this.portions = const Value.absent(),
     this.procedure = const Value.absent(),
@@ -282,14 +319,17 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
   });
   RecipesCompanion.insert({
     this.id = const Value.absent(),
+    required String uuid,
     required String title,
     required int portions,
     this.procedure = const Value.absent(),
     this.photoPath = const Value.absent(),
-  }) : title = Value(title),
+  }) : uuid = Value(uuid),
+       title = Value(title),
        portions = Value(portions);
   static Insertable<RecipeRow> custom({
     Expression<int>? id,
+    Expression<String>? uuid,
     Expression<String>? title,
     Expression<int>? portions,
     Expression<String>? procedure,
@@ -297,6 +337,7 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
       if (title != null) 'title': title,
       if (portions != null) 'portions': portions,
       if (procedure != null) 'procedure': procedure,
@@ -306,6 +347,7 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
 
   RecipesCompanion copyWith({
     Value<int>? id,
+    Value<String>? uuid,
     Value<String>? title,
     Value<int>? portions,
     Value<String?>? procedure,
@@ -313,6 +355,7 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
   }) {
     return RecipesCompanion(
       id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
       title: title ?? this.title,
       portions: portions ?? this.portions,
       procedure: procedure ?? this.procedure,
@@ -325,6 +368,9 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
@@ -345,6 +391,7 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
   String toString() {
     return (StringBuffer('RecipesCompanion(')
           ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
           ..write('title: $title, ')
           ..write('portions: $portions, ')
           ..write('procedure: $procedure, ')
@@ -1089,6 +1136,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
 typedef $$RecipesTableCreateCompanionBuilder =
     RecipesCompanion Function({
       Value<int> id,
+      required String uuid,
       required String title,
       required int portions,
       Value<String?> procedure,
@@ -1097,6 +1145,7 @@ typedef $$RecipesTableCreateCompanionBuilder =
 typedef $$RecipesTableUpdateCompanionBuilder =
     RecipesCompanion Function({
       Value<int> id,
+      Value<String> uuid,
       Value<String> title,
       Value<int> portions,
       Value<String?> procedure,
@@ -1160,6 +1209,11 @@ class $$RecipesTableFilterComposer
   });
   ColumnFilters<int> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1248,6 +1302,11 @@ class $$RecipesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get title => $composableBuilder(
     column: $table.title,
     builder: (column) => ColumnOrderings(column),
@@ -1280,6 +1339,9 @@ class $$RecipesTableAnnotationComposer
   });
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
@@ -1377,12 +1439,14 @@ class $$RecipesTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<int> portions = const Value.absent(),
                 Value<String?> procedure = const Value.absent(),
                 Value<String?> photoPath = const Value.absent(),
               }) => RecipesCompanion(
                 id: id,
+                uuid: uuid,
                 title: title,
                 portions: portions,
                 procedure: procedure,
@@ -1391,12 +1455,14 @@ class $$RecipesTableTableManager
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
+                required String uuid,
                 required String title,
                 required int portions,
                 Value<String?> procedure = const Value.absent(),
                 Value<String?> photoPath = const Value.absent(),
               }) => RecipesCompanion.insert(
                 id: id,
+                uuid: uuid,
                 title: title,
                 portions: portions,
                 procedure: procedure,

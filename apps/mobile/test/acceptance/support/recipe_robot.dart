@@ -34,6 +34,10 @@ class RecipeRobot {
     await tester.pumpAndSettle();
   }
 
+  Future<void> openRecipe(String title) => _tap(find.text(title));
+
+  Future<void> goBack() => _tap(find.byTooltip('Back'));
+
   Future<void> startNewRecipe() async {
     await tester.tap(find.byTooltip('New recipe'));
     await tester.pumpAndSettle();
