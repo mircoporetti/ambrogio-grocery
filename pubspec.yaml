@@ -1,0 +1,10 @@
+name: ambrogio_grocery_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.11.1
+
+# Dart pub workspace: one shared lockfile / dependency resolution for every
+# package in the monorepo. Add the backend and shared packages here later.
+workspace:
+  - apps/mobile
