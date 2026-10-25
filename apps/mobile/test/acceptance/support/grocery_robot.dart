@@ -50,6 +50,22 @@ class GroceryRobot {
           .value ==
       true;
 
+  Future<void> deleteOpenGroceryList() =>
+      _tap(find.byTooltip('Delete grocery list'));
+
+  Future<void> swipeToDelete(String week) async {
+    await tester.fling(
+      find.ancestor(of: find.text(week), matching: find.byType(Dismissible)),
+      const Offset(-500, 0),
+      1000,
+    );
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> confirmDelete() => _tap(find.text('Delete'));
+
+  Future<void> cancelDelete() => _tap(find.text('Cancel'));
+
   Future<void> confirmReplace() => _tap(find.text('Replace'));
 
   Future<void> cancelReplace() => _tap(find.text('Cancel'));

@@ -54,6 +54,11 @@ class DriftGroceryListStorageAdapter implements GroceryListStoragePort {
   });
 
   @override
+  Future<void> delete(GroceryListId id) => (_db.delete(
+    _db.groceryLists,
+  )..where((l) => l.uuid.equals(id.value))).go();
+
+  @override
   Future<void> tickItem(GroceryListId id, int index, {required bool ticked}) =>
       _db.transaction(() async {
         final list = await (_db.select(

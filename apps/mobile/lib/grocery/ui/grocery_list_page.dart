@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../recipes/ui/formatting.dart';
 import '../domain/grocery_item.dart';
 import '../domain/grocery_list.dart';
+import 'confirm_delete_grocery_list.dart';
 import 'grocery_list_view_model.dart';
 import 'week_format.dart';
 
@@ -22,6 +23,12 @@ class _GroceryListPageState extends State<GroceryListPage> {
     super.dispose();
   }
 
+  Future<void> _confirmAndDelete(GroceryList list) async {
+    if (!await confirmDeleteGroceryList(context, list)) return;
+    final deleted = await widget.viewModel.delete();
+    if (deleted && mounted) Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
@@ -29,6 +36,16 @@ class _GroceryListPageState extends State<GroceryListPage> {
       builder: (context, _) => Scaffold(
         appBar: AppBar(
           title: const Text('Grocery list'),
+          actions: [
+            if (widget.viewModel.list case final GroceryList list)
+              IconButton(
+                tooltip: 'Delete grocery list',
+                icon: const Icon(Icons.delete_outline),
+                onPressed: widget.viewModel.deleting
+                    ? null
+                    : () => _confirmAndDelete(list),
+              ),
+          ],
           bottom: _errorBanner(context),
         ),
         body: switch ((widget.viewModel.loading, widget.viewModel.list)) {

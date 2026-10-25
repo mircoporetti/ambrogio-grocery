@@ -9,6 +9,13 @@ class FailingGroceryListStorageAdapter implements GroceryListStoragePort {
   final GroceryListStoragePort _real;
 
   bool failSaves = false;
+  bool failDeletes = false;
+
+  @override
+  Future<void> delete(GroceryListId id) async {
+    if (failDeletes) throw Exception('Simulated storage failure');
+    await _real.delete(id);
+  }
 
   @override
   Future<void> save(GroceryList list) async {

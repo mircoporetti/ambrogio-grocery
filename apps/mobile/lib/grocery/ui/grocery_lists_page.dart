@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../domain/grocery_list.dart';
 import '../domain/week.dart';
+import 'confirm_delete_grocery_list.dart';
 import 'grocery_list_page.dart';
 import 'grocery_list_view_model.dart';
 import 'grocery_lists_view_model.dart';
@@ -52,6 +53,29 @@ class _GroceryListsPageState extends State<GroceryListsPage> {
     );
   }
 
+  Future<bool> _confirmAndDelete(GroceryList list) async {
+    if (!await confirmDeleteGroceryList(context, list)) return false;
+    return widget.viewModel.delete(list);
+  }
+
+  PreferredSizeWidget? _errorBanner(BuildContext context) {
+    final error = widget.viewModel.error;
+    if (error == null) return null;
+    final colors = Theme.of(context).colorScheme;
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(44),
+      child: Container(
+        width: double.infinity,
+        color: colors.errorContainer,
+        padding: const EdgeInsets.all(12),
+        child: Semantics(
+          liveRegion: true,
+          child: Text(error, style: TextStyle(color: colors.onErrorContainer)),
+        ),
+      ),
+    );
+  }
+
   String _subtitle(GroceryList list) {
     final recipes = formatRecipeCount(list.recipes.length);
     return list.week == widget.viewModel.currentWeek
@@ -62,36 +86,58 @@ class _GroceryListsPageState extends State<GroceryListsPage> {
   @override
   Widget build(BuildContext context) {
     final viewModel = widget.viewModel;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Grocery lists')),
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Plan a week',
-        onPressed: _planWeek,
-        child: const Icon(Icons.add),
+    return ListenableBuilder(
+      listenable: viewModel,
+      builder: (context, _) => Scaffold(
+        appBar: AppBar(
+          title: const Text('Grocery lists'),
+          bottom: _errorBanner(context),
+        ),
+        floatingActionButton: FloatingActionButton(
+          tooltip: 'Plan a week',
+          onPressed: _planWeek,
+          child: const Icon(Icons.add),
+        ),
+        body: _body(viewModel),
       ),
-      body: ListenableBuilder(
-        listenable: viewModel,
-        builder: (context, _) {
-          if (viewModel.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (viewModel.lists.isEmpty) {
-            return const Center(child: Text('No grocery lists yet'));
-          }
-          return ListView(
-            children: [
-              for (final list in viewModel.lists)
-                ListTile(
-                  leading: const Icon(Icons.shopping_cart_outlined),
-                  title: Text(formatWeek(list.week)),
-                  subtitle: Text(_subtitle(list)),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _openList(list),
+    );
+  }
+
+  Widget _body(GroceryListsViewModel viewModel) {
+    if (viewModel.loading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (viewModel.lists.isEmpty) {
+      return const Center(child: Text('No grocery lists yet'));
+    }
+    final colors = Theme.of(context).colorScheme;
+    return ListView(
+      children: [
+        for (final list in viewModel.lists)
+          Dismissible(
+            key: ValueKey(list.id),
+            direction: DismissDirection.endToStart,
+            confirmDismiss: (_) => _confirmAndDelete(list),
+            background: Container(
+              color: colors.errorContainer,
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              alignment: Alignment.centerRight,
+              child: ExcludeSemantics(
+                child: Icon(
+                  Icons.delete_outline,
+                  color: colors.onErrorContainer,
                 ),
-            ],
-          );
-        },
-      ),
+              ),
+            ),
+            child: ListTile(
+              leading: const Icon(Icons.shopping_cart_outlined),
+              title: Text(formatWeek(list.week)),
+              subtitle: Text(_subtitle(list)),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => _openList(list),
+            ),
+          ),
+      ],
     );
   }
 }

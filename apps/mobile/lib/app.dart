@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'grocery/application/create_grocery_list.dart';
+import 'grocery/application/delete_grocery_list.dart';
 import 'grocery/application/find_grocery_list.dart';
 import 'grocery/application/get_current_week.dart';
 import 'grocery/application/tick_grocery_item.dart';
@@ -67,6 +68,7 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
   late final _findGroceryList = FindGroceryList(widget.groceryListStorage);
   late final _watchGroceryList = WatchGroceryList(widget.groceryListStorage);
   late final _tickGroceryItem = TickGroceryItem(widget.groceryListStorage);
+  late final _deleteGroceryList = DeleteGroceryList(widget.groceryListStorage);
   late final _watchUpcomingGroceryLists = WatchUpcomingGroceryLists(
     widget.groceryListStorage,
     _clock,
@@ -97,6 +99,7 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
           viewModel: GroceryListsViewModel(
             _watchUpcomingGroceryLists,
             _getCurrentWeek,
+            _deleteGroceryList,
           ),
           planWeekViewModel: () => PlanWeekViewModel(
             _listRecipes,
@@ -104,8 +107,12 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
             _findGroceryList,
             _getCurrentWeek,
           ),
-          groceryListViewModel: (week) =>
-              GroceryListViewModel(_watchGroceryList, _tickGroceryItem, week),
+          groceryListViewModel: (week) => GroceryListViewModel(
+            _watchGroceryList,
+            _tickGroceryItem,
+            _deleteGroceryList,
+            week,
+          ),
         ),
       ),
     );
