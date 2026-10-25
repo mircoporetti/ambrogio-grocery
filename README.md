@@ -5,13 +5,15 @@ An app to plan your weekly grocery shopping starting from your recipes.
 You keep your recipes in the app, choose what you want to cook during the
 week, and get a single grocery list for the whole week.
 
-Today the app runs on Android and stores everything on the device. iOS, user
-accounts and a backend to share data across devices are planned for later.
+Today the app runs on Android and iOS and stores everything on the device.
+User accounts and a backend to share data across devices are planned for
+later.
 
 ## Setup
 
-Requires Flutter (stable) and the SDK of the target platform (Android SDK
-for now). Check with `flutter doctor`.
+Requires Flutter (stable) and the SDK of the target platform: the Android
+SDK for Android, Xcode and CocoaPods for iOS (see [iOS](#ios)). Check with
+`flutter doctor`.
 
 ```sh
 flutter pub get        # from the repo root, resolves all packages
@@ -22,13 +24,36 @@ All the commands below run from `apps/mobile`.
 ## Run
 
 ```sh
-flutter emulators --launch Pixel_8   # or connect a phone with USB debugging
-flutter run
+flutter emulators --launch Pixel_8   # Android, or connect a phone with USB debugging
+open -a Simulator                    # iOS
+flutter devices                      # lists the device ids
+flutter run -d <device id>
 ```
 
 From IntelliJ, use the `mobile` run configuration and pick the device in the
-toolbar. Use a full restart, not hot reload, after changing `main.dart`, the
-database or the dependencies.
+toolbar (View → Appearance → Toolbar if it's hidden). If a device is missing
+from the list but `flutter devices` shows it, restart IntelliJ. Use a full
+restart, not hot reload, after changing `main.dart`, the database or the
+dependencies.
+
+These are debug builds: on an iPhone the app only opens while IntelliJ or
+`flutter run` is connected. To install a build you can open on its own, see
+[Android](#android) and [iOS](#ios).
+
+## Version
+
+The `version` in `pubspec.yaml` is used by both platforms: `1.0.1` is the
+version shown to the user, the number after `+` is the build number. Bump the
+build number on every release, Android refuses an update without it:
+
+```yaml
+version: 1.0.1+2
+```
+
+Recipes survive an update as long as the app id stays the same
+(`me.mircoporetti.ambrogio_grocery` on Android,
+`me.mircoporetti.ambrogioGrocery` on iOS) and, on Android, the APK is signed
+with the same key.
 
 ## Test
 
@@ -77,12 +102,7 @@ a warning. That APK can't update one signed with the real key.
 
 #### Build and install
 
-1. Bump the version in `pubspec.yaml`. The number after `+` must increase on
-   every release, or Android refuses the update:
-
-   ```yaml
-   version: 1.0.1+2
-   ```
+1. Bump the version in `pubspec.yaml` (see [Version](#version)).
 
 2. Build:
 
@@ -149,11 +169,32 @@ configuration, or run `flutter run` from `apps/mobile`.
 4. If the build asks for a development team, set your Team ID (shown in
    Xcode → Settings → Accounts) as `DEVELOPMENT_TEAM = <Team ID>;` in the
    Runner build settings in `ios/Runner.xcodeproj/project.pbxproj`.
-5. Pick the phone in IntelliJ and run.
-6. First launch only: on the iPhone, Settings → General → VPN & Device
-   Management → your Apple ID → Trust.
+5. Pick the phone in IntelliJ and run. Wireless works but is slow; if the
+   phone stays on a white screen, use the cable.
+6. First launch only: if the phone shows "Untrusted Developer", go to
+   Settings → General → VPN & Device Management → your Apple ID → Trust,
+   then run again.
 
-With a free Apple ID the app stops opening after 7 days: run it again from
-IntelliJ to reinstall it. The recipes stay on the phone. A paid Apple
-Developer account ($99/year) removes the limit and is required for
-TestFlight and the App Store.
+### Install a build you can use without IntelliJ
+
+A debug build only opens while connected to IntelliJ. Install a release
+build instead, with the phone connected:
+
+1. Bump the version in `pubspec.yaml` (see [Version](#version)).
+2. Install:
+
+   ```sh
+   flutter devices                       # find the iPhone's id
+   flutter run --release -d <iPhone id>
+   ```
+
+   Pass `-d`: if the simulator is open, Flutter picks it and fails with
+   "Release mode is not supported", since the simulator only runs debug
+   builds.
+3. Stop `flutter run` and unplug the phone: the app opens from the home
+   screen.
+
+With a free Apple ID the app stops opening after 7 days, and the phone must
+stay in Developer Mode: install it again the same way. The recipes stay on
+the phone. A paid Apple Developer account ($99/year) removes the limit and
+is required for TestFlight and the App Store.
