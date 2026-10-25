@@ -113,3 +113,47 @@ SHA-256:
 ```sh
 keytool -list -v -keystore ~/ambrogio-upload.jks -alias upload
 ```
+
+## iOS
+
+Builds need Xcode installed, but you only open it once to sign in with
+your Apple ID. Everything else runs from IntelliJ or the terminal.
+
+### One-time setup on the Mac
+
+```sh
+sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -runFirstLaunch
+xcodebuild -downloadPlatform iOS     # simulator runtime, a few GB
+brew install cocoapods               # needed by the plugins
+flutter doctor                       # Xcode should be green
+```
+
+### Run on the simulator
+
+```sh
+open -a Simulator
+```
+
+Then pick the iPhone in the IntelliJ device dropdown and run the `mobile`
+configuration, or run `flutter run` from `apps/mobile`.
+
+### Run on an iPhone
+
+1. On the iPhone: Settings → Privacy & Security → Developer Mode → on
+   (the phone restarts).
+2. Connect it with a cable and tap "Trust this computer".
+3. Signing, once: open Xcode → Settings → Accounts, add your Apple ID (a
+   free account works), then Manage Certificates → + → Apple Development.
+   Close Xcode.
+4. If the build asks for a development team, set your Team ID (shown in
+   Xcode → Settings → Accounts) as `DEVELOPMENT_TEAM = <Team ID>;` in the
+   Runner build settings in `ios/Runner.xcodeproj/project.pbxproj`.
+5. Pick the phone in IntelliJ and run.
+6. First launch only: on the iPhone, Settings → General → VPN & Device
+   Management → your Apple ID → Trust.
+
+With a free Apple ID the app stops opening after 7 days: run it again from
+IntelliJ to reinstall it. The recipes stay on the phone. A paid Apple
+Developer account ($99/year) removes the limit and is required for
+TestFlight and the App Store.

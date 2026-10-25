@@ -49,3 +49,5 @@ app.*.map.json
 .env
 .env.*
 !.env.example
+/apps/mobile/.idea/
+/.idea/
