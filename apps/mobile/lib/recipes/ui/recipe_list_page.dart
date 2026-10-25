@@ -8,6 +8,7 @@ import '../application/pick_recipe_photo.dart';
 import '../application/update_recipe.dart';
 import '../application/watch_recipe.dart';
 import '../domain/recipe.dart';
+import 'confirm_delete_recipe.dart';
 import 'formatting.dart';
 import 'recipe_detail_page.dart';
 import 'recipe_detail_view_model.dart';
@@ -68,10 +69,42 @@ class RecipeListPage extends StatelessWidget {
     );
   }
 
+  Future<bool> _confirmAndDelete(BuildContext context, Recipe recipe) async {
+    if (!await confirmDeleteRecipe(context, recipe)) return false;
+    return viewModel.delete(recipe);
+  }
+
+  PreferredSizeWidget? _errorBanner(BuildContext context) {
+    final error = viewModel.error;
+    if (error == null) return null;
+    final colors = Theme.of(context).colorScheme;
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(44),
+      child: Container(
+        width: double.infinity,
+        color: colors.errorContainer,
+        padding: const EdgeInsets.all(12),
+        child: Semantics(
+          liveRegion: true,
+          child: Text(error, style: TextStyle(color: colors.onErrorContainer)),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: viewModel,
+      builder: (context, _) => _scaffold(context),
+    );
+  }
+
+  Widget _scaffold(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
+        bottom: _errorBanner(context),
         title: const Text('Recipes'),
         actions: [
           IconButton(
@@ -86,27 +119,36 @@ class RecipeListPage extends StatelessWidget {
         onPressed: () => _openNewRecipeForm(context),
         child: const Icon(Icons.add),
       ),
-      body: ListenableBuilder(
-        listenable: viewModel,
-        builder: (context, _) {
-          if (viewModel.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (viewModel.recipes.isEmpty) {
-            return const Center(child: Text('No recipes yet'));
-          }
-          return ListView.builder(
-            itemCount: viewModel.recipes.length,
-            itemBuilder: (context, i) {
-              final recipe = viewModel.recipes[i];
-              return _RecipeTile(
+      body: switch ((viewModel.loading, viewModel.recipes.isEmpty)) {
+        (true, _) => const Center(child: CircularProgressIndicator()),
+        (false, true) => const Center(child: Text('No recipes yet')),
+        (false, false) => ListView.builder(
+          itemCount: viewModel.recipes.length,
+          itemBuilder: (context, i) {
+            final recipe = viewModel.recipes[i];
+            return Dismissible(
+              key: ValueKey(recipe.id),
+              direction: DismissDirection.endToStart,
+              confirmDismiss: (_) => _confirmAndDelete(context, recipe),
+              background: Container(
+                color: colors.errorContainer,
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                alignment: Alignment.centerRight,
+                child: ExcludeSemantics(
+                  child: Icon(
+                    Icons.delete_outline,
+                    color: colors.onErrorContainer,
+                  ),
+                ),
+              ),
+              child: _RecipeTile(
                 recipe: recipe,
                 onTap: () => _openRecipe(context, recipe),
-              );
-            },
-          );
-        },
-      ),
+              ),
+            );
+          },
+        ),
+      },
     );
   }
 }

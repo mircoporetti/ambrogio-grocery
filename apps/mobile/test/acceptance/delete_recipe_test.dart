@@ -105,4 +105,90 @@ void main() {
     expect(await storage.findAll(), hasLength(1));
     expect(photoStorage.deleted, isEmpty);
   });
+
+  testWidgets('swiping a recipe left in the list deletes it', (tester) async {
+    robot = RecipeRobot(tester);
+    await robot.launchApp(storage);
+    await createRecipe('Carbonara');
+    await createRecipe('Pancakes');
+
+    await robot.swipeToDelete('Carbonara');
+    expect(find.text('Delete Carbonara?'), findsOneWidget);
+    await robot.confirmDelete();
+
+    expect(find.text('Carbonara'), findsNothing);
+    expect(find.text('Pancakes'), findsOneWidget);
+    final titles = (await storage.findAll()).map((r) => r.title);
+    expect(titles, ['Pancakes']);
+  });
+
+  testWidgets('cancelling a swipe keeps the recipe in the list', (
+    tester,
+  ) async {
+    robot = RecipeRobot(tester);
+    await robot.launchApp(storage);
+    await createRecipe('Carbonara');
+
+    await robot.swipeToDelete('Carbonara');
+    await robot.cancelDelete();
+
+    expect(find.text('Carbonara'), findsOneWidget);
+    expect(await storage.findAll(), hasLength(1));
+  });
+
+  testWidgets('deleting a recipe by swipe also deletes its photo', (
+    tester,
+  ) async {
+    final photoPicker = FakePhotoPickerAdapter()
+      ..nextPhoto = '/photos/carbonara.jpg';
+    final photoStorage = FakePhotoStorageAdapter();
+    robot = RecipeRobot(tester);
+    await robot.launchApp(
+      storage,
+      photoPicker: photoPicker,
+      photoStorage: photoStorage,
+    );
+    await robot.startNewRecipe();
+    await robot.addPhoto();
+    await robot.enterTitle('Carbonara');
+    await robot.enterPortions('4');
+    await robot.addIngredient('Spaghetti', '320', 'g');
+    await robot.save();
+
+    await robot.swipeToDelete('Carbonara');
+    await robot.confirmDelete();
+
+    expect(photoStorage.deleted, ['/photos/carbonara.jpg']);
+  });
+
+  testWidgets('if deleting by swipe fails, the recipe stays and can retry', (
+    tester,
+  ) async {
+    final failingStorage = FailingRecipeStorageAdapter(storage);
+    robot = RecipeRobot(tester);
+    await robot.launchApp(failingStorage);
+    await createRecipe('Carbonara');
+    failingStorage.failDeletes = true;
+
+    await robot.swipeToDelete('Carbonara');
+    await robot.confirmDelete();
+
+    expect(
+      find.text('Could not delete the recipe. Please try again.'),
+      findsOneWidget,
+    );
+    expect(find.text('Carbonara'), findsOneWidget);
+    expect(await storage.findAll(), hasLength(1));
+
+    failingStorage.failDeletes = false;
+    await robot.swipeToDelete('Carbonara');
+    await robot.confirmDelete();
+
+    expect(find.text('Carbonara'), findsNothing);
+    expect(find.text('No recipes yet'), findsOneWidget);
+    expect(
+      find.text('Could not delete the recipe. Please try again.'),
+      findsNothing,
+    );
+  });
 }

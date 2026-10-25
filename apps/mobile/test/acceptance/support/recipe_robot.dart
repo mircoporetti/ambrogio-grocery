@@ -56,6 +56,15 @@ class RecipeRobot {
       .controller!
       .text;
 
+  Future<void> swipeToDelete(String title) async {
+    await tester.fling(
+      find.ancestor(of: find.text(title), matching: find.byType(Dismissible)),
+      const Offset(-500, 0),
+      1000,
+    );
+    await tester.pumpAndSettle();
+  }
+
   Future<void> confirmDelete() => _tap(find.text('Delete'));
 
   Future<void> cancelDelete() => _tap(find.text('Cancel'));

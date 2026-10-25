@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../domain/recipe.dart';
+import 'confirm_delete_recipe.dart';
 import 'formatting.dart';
 import 'recipe_detail_view_model.dart';
 import 'recipe_form_page.dart';
@@ -38,24 +39,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   }
 
   Future<void> _confirmAndDelete(Recipe recipe) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Delete ${recipe.title}?'),
-        content: const Text('This cannot be undone.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
+    if (!await confirmDeleteRecipe(context, recipe)) return;
     final deleted = await widget.viewModel.delete();
     if (deleted && mounted) Navigator.of(context).pop();
   }

@@ -75,6 +75,7 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
   );
   late final _recipeList = RecipeListViewModel(
     WatchRecipes(widget.recipeStorage),
+    _deleteRecipe,
   );
 
   @override
