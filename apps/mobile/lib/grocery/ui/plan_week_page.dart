@@ -146,6 +146,7 @@ class _PlanWeekPageState extends State<PlanWeekPage> {
       return const Center(child: Text("You've seen all your recipes"));
     }
     return _RecipeDeck(
+      key: ValueKey(recipe.id),
       recipe: recipe,
       position: '${viewModel.position} of ${viewModel.recipes.length}',
       onCook: viewModel.cook,
@@ -190,8 +191,9 @@ class _WeekPicker extends StatelessWidget {
   }
 }
 
-class _RecipeDeck extends StatelessWidget {
+class _RecipeDeck extends StatefulWidget {
   const _RecipeDeck({
+    super.key,
     required this.recipe,
     required this.position,
     required this.onCook,
@@ -204,34 +206,120 @@ class _RecipeDeck extends StatelessWidget {
   final VoidCallback onSkip;
 
   @override
+  State<_RecipeDeck> createState() => _RecipeDeckState();
+}
+
+class _RecipeDeckState extends State<_RecipeDeck>
+    with SingleTickerProviderStateMixin {
+  static const _throwDistance = 0.35;
+  static const _throwSpeed = 800.0;
+  static const _maxTilt = 0.35;
+
+  late final AnimationController _controller;
+  late Animation<Offset> _animation;
+  Offset _offset = Offset.zero;
+  double _width = 1;
+  bool _thrown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this)
+      ..addListener(() => setState(() => _offset = _animation.value));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  double get _tilt =>
+      (_offset.dx / _width * 0.5).clamp(-_maxTilt, _maxTilt).toDouble();
+
+  void _animateTo(Offset target, {VoidCallback? onDone}) {
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    _controller.duration = reduceMotion
+        ? Duration.zero
+        : const Duration(milliseconds: 250);
+    _animation = Tween(
+      begin: _offset,
+      end: target,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _controller.forward(from: 0).then((_) => onDone?.call());
+  }
+
+  void _throw(int direction) {
+    if (_thrown) return;
+    setState(() => _thrown = true);
+    _animateTo(
+      Offset(direction * _width * 1.5, _offset.dy + 80),
+      onDone: direction > 0 ? widget.onCook : widget.onSkip,
+    );
+  }
+
+  void _onDragUpdate(DragUpdateDetails details) {
+    if (_thrown) return;
+    _controller.stop();
+    setState(() => _offset += details.delta);
+  }
+
+  void _onDragEnd(DragEndDetails details) {
+    if (_thrown) return;
+    final speed = details.velocity.pixelsPerSecond.dx;
+    final far = _offset.dx.abs() > _width * _throwDistance;
+    final fast = speed.abs() > _throwSpeed && speed.sign == _offset.dx.sign;
+    if (far || fast) {
+      _throw(_offset.dx > 0 ? 1 : -1);
+    } else {
+      _animateTo(Offset.zero);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final pull = (_offset.dx / (_width * _throwDistance)).clamp(-1.0, 1.0);
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          Text(position),
+          Text(widget.position),
           const SizedBox(height: 8),
           Expanded(
-            child: Dismissible(
-              key: ValueKey(recipe.id),
-              onDismissed: (direction) =>
-                  direction == DismissDirection.startToEnd
-                  ? onCook()
-                  : onSkip(),
-              background: _SwipeHint(
-                label: 'Cook',
-                icon: Icons.check,
-                color: colors.primaryContainer,
-                alignment: Alignment.centerLeft,
-              ),
-              secondaryBackground: _SwipeHint(
-                label: 'Skip',
-                icon: Icons.close,
-                color: colors.surfaceContainerHighest,
-                alignment: Alignment.centerRight,
-              ),
-              child: _RecipeCard(recipe: recipe),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                _width = constraints.maxWidth;
+                return GestureDetector(
+                  onPanUpdate: _onDragUpdate,
+                  onPanEnd: _onDragEnd,
+                  child: Transform.translate(
+                    offset: _offset,
+                    child: Transform.rotate(
+                      angle: _tilt,
+                      alignment: Alignment.bottomCenter,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          _RecipeCard(recipe: widget.recipe),
+                          _SwipeStamp(
+                            icon: Icons.check,
+                            color: colors.primary,
+                            alignment: Alignment.topLeft,
+                            opacity: pull > 0 ? pull : 0,
+                          ),
+                          _SwipeStamp(
+                            icon: Icons.close,
+                            color: colors.error,
+                            alignment: Alignment.topRight,
+                            opacity: pull < 0 ? -pull : 0,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           const SizedBox(height: 16),
@@ -239,7 +327,7 @@ class _RecipeDeck extends StatelessWidget {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: onSkip,
+                  onPressed: _thrown ? null : () => _throw(-1),
                   icon: const Icon(Icons.close),
                   label: const Text('Skip'),
                 ),
@@ -247,7 +335,7 @@ class _RecipeDeck extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: FilledButton.tonalIcon(
-                  onPressed: onCook,
+                  onPressed: _thrown ? null : () => _throw(1),
                   icon: const Icon(Icons.check),
                   label: const Text('Cook'),
                 ),
@@ -301,29 +389,39 @@ class _RecipeCard extends StatelessWidget {
   }
 }
 
-class _SwipeHint extends StatelessWidget {
-  const _SwipeHint({
-    required this.label,
+class _SwipeStamp extends StatelessWidget {
+  const _SwipeStamp({
     required this.icon,
     required this.color,
     required this.alignment,
+    required this.opacity,
   });
 
-  final String label;
   final IconData icon;
   final Color color;
   final Alignment alignment;
+  final double opacity;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
+    return IgnorePointer(
+      child: ExcludeSemantics(
+        child: Align(
+          alignment: alignment,
+          child: Opacity(
+            opacity: opacity,
+            child: Container(
+              margin: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                border: Border.all(color: color, width: 4),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 48),
+            ),
+          ),
+        ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      alignment: alignment,
-      child: ExcludeSemantics(child: Icon(icon, size: 48)),
     );
   }
 }

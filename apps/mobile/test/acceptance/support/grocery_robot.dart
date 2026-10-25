@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -100,8 +102,44 @@ class GroceryRobot {
     matching: find.byWidgetPredicate((w) => w is ButtonStyleButton),
   );
 
+  TestGesture? _cardDrag;
+  var _dragTime = Duration.zero;
+
+  Future<void> holdCardDragged(double dx) async {
+    final gesture = await tester.createGesture();
+    _dragTime = Duration.zero;
+    await gesture.down(tester.getCenter(_card), timeStamp: _dragTime);
+    _cardDrag = gesture;
+    await dragCardFurther(dx);
+  }
+
+  Future<void> dragCardFurther(double dx) async {
+    for (final step in [dx / 2, dx / 2]) {
+      _dragTime += const Duration(milliseconds: 100);
+      await _cardDrag!.moveBy(Offset(step, 0), timeStamp: _dragTime);
+      await tester.pump();
+    }
+  }
+
+  /// Released after a pause, so the card is let go without any speed.
+  Future<void> releaseCard() async {
+    _dragTime += const Duration(seconds: 1);
+    await _cardDrag!.up(timeStamp: _dragTime);
+    _cardDrag = null;
+    await tester.pumpAndSettle();
+  }
+
+  /// The card's angle on screen in radians, positive when tilted clockwise.
+  double get cardTilt {
+    final left = tester.getTopLeft(_card);
+    final right = tester.getTopRight(_card);
+    return atan2(right.dy - left.dy, right.dx - left.dx);
+  }
+
+  Finder get _card => find.byType(Card);
+
   Future<void> _swipe(double dx) async {
-    await tester.fling(find.byType(Dismissible), Offset(dx, 0), 1000);
+    await tester.fling(_card, Offset(dx, 0), 1000);
     await tester.pumpAndSettle();
   }
 

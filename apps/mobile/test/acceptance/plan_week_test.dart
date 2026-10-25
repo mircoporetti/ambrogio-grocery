@@ -114,6 +114,27 @@ void main() {
     expect(robot.groceryList, ['Flour 100 g']);
   });
 
+  testWidgets('a dragged card tilts toward its side and comes back if let go', (
+    tester,
+  ) async {
+    await givenRecipe('Carbonara', [grams('Spaghetti', 320)]);
+    await givenRecipe('Pancakes', [grams('Flour', 100)]);
+    await launchApp(tester);
+    await robot.startPlanningWeek();
+
+    await robot.holdCardDragged(120);
+    expect(robot.cardTilt, greaterThan(0.05));
+
+    await robot.dragCardFurther(-240);
+    expect(robot.cardTilt, lessThan(-0.05));
+
+    await robot.releaseCard();
+    expect(robot.cardTilt, closeTo(0, 0.001));
+    expect(find.text('Carbonara'), findsOneWidget);
+    expect(find.text('1 of 2'), findsOneWidget);
+    expect(find.text('No recipes chosen yet'), findsOneWidget);
+  });
+
   testWidgets('a grocery list needs at least one chosen recipe', (
     tester,
   ) async {
