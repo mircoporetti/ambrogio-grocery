@@ -1,5 +1,6 @@
 import '../../recipes/domain/ingredient.dart';
 import '../../recipes/domain/recipe.dart';
+import 'grocery_item.dart';
 import 'grocery_list_id.dart';
 import 'week.dart';
 
@@ -8,7 +9,7 @@ class GroceryList {
     GroceryListId? id,
     required this.week,
     required List<String> recipes,
-    required List<Ingredient> items,
+    required List<GroceryItem> items,
   }) : id = id ?? GroceryListId.generate(),
        recipes = List.unmodifiable(recipes),
        items = List.unmodifiable(items) {
@@ -40,12 +41,12 @@ class GroceryList {
     return GroceryList(
       week: week,
       recipes: [for (final recipe in recipes) recipe.title],
-      items: [for (final key in keys) merged[key]!],
+      items: [for (final key in keys) GroceryItem(merged[key]!)],
     );
   }
 
   final GroceryListId id;
   final Week week;
   final List<String> recipes;
-  final List<Ingredient> items;
+  final List<GroceryItem> items;
 }

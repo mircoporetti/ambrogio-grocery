@@ -59,6 +59,7 @@ class GroceryListItems extends Table {
   TextColumn get name => text()();
   RealColumn get quantity => real()();
   TextColumn get unit => text()();
+  BoolColumn get ticked => boolean().withDefault(const Constant(false))();
 }
 
 @DriftDatabase(
@@ -77,7 +78,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.onDevice() : super(driftDatabase(name: 'ambrogio_grocery'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -110,6 +111,9 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(groceryLists);
         await m.createTable(groceryListRecipes);
         await m.createTable(groceryListItems);
+      }
+      if (from == 4) {
+        await m.addColumn(groceryListItems, groceryListItems.ticked);
       }
     },
     beforeOpen: (_) => customStatement('PRAGMA foreign_keys = ON'),

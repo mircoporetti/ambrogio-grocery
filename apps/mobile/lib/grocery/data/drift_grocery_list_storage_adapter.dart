@@ -2,6 +2,7 @@ import 'package:drift/drift.dart';
 
 import '../../database/app_database.dart';
 import '../../recipes/domain/ingredient.dart';
+import '../domain/grocery_item.dart';
 import '../domain/grocery_list.dart';
 import '../domain/grocery_list_id.dart';
 import '../domain/grocery_list_storage_port.dart';
@@ -43,13 +44,31 @@ class DriftGroceryListStorageAdapter implements GroceryListStoragePort {
           GroceryListItemsCompanion.insert(
             listId: listId,
             position: position,
-            name: item.name,
-            quantity: item.quantity,
-            unit: item.unit.name,
+            name: item.ingredient.name,
+            quantity: item.ingredient.quantity,
+            unit: item.ingredient.unit.name,
+            ticked: Value(item.ticked),
           ),
       ]);
     });
   });
+
+  @override
+  Future<void> tickItem(GroceryListId id, int index, {required bool ticked}) =>
+      _db.transaction(() async {
+        final list = await (_db.select(
+          _db.groceryLists,
+        )..where((l) => l.uuid.equals(id.value))).getSingleOrNull();
+        if (list == null) throw StateError('No grocery list $id');
+        final updated =
+            await (_db.update(_db.groceryListItems)..where(
+                  (i) => i.listId.equals(list.id) & i.position.equals(index),
+                ))
+                .write(GroceryListItemsCompanion(ticked: Value(ticked)));
+        if (updated == 0) {
+          throw StateError('No item $index in grocery list $id');
+        }
+      });
 
   Stream<void> _changes() => _db
       .customSelect(
@@ -108,15 +127,18 @@ class DriftGroceryListStorageAdapter implements GroceryListStoragePort {
         for (final row in recipes) {
           recipesByList.putIfAbsent(row.listId, () => []).add(row.title);
         }
-        final itemsByList = <int, List<Ingredient>>{};
+        final itemsByList = <int, List<GroceryItem>>{};
         for (final row in items) {
           itemsByList
               .putIfAbsent(row.listId, () => [])
               .add(
-                Ingredient(
-                  name: row.name,
-                  quantity: row.quantity,
-                  unit: MeasureUnit.values.byName(row.unit),
+                GroceryItem(
+                  Ingredient(
+                    name: row.name,
+                    quantity: row.quantity,
+                    unit: MeasureUnit.values.byName(row.unit),
+                  ),
+                  ticked: row.ticked,
                 ),
               );
         }

@@ -32,6 +32,24 @@ class GroceryRobot {
           .onPressed !=
       null;
 
+  Future<void> tick(String item) => _tap(find.text(item));
+
+  Future<void> untick(String item) => _tap(find.text(item));
+
+  bool isTicked(String item) =>
+      tester
+          .widget<Checkbox>(
+            find.descendant(
+              of: find.ancestor(
+                of: find.text(item),
+                matching: find.byType(ListTile),
+              ),
+              matching: find.byType(Checkbox),
+            ),
+          )
+          .value ==
+      true;
+
   Future<void> confirmReplace() => _tap(find.text('Replace'));
 
   Future<void> cancelReplace() => _tap(find.text('Cancel'));

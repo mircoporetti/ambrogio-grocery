@@ -12,7 +12,7 @@ class Recipe {
     List<String> categories = const [],
   }) : id = id ?? RecipeId.generate(),
        ingredients = List.unmodifiable(ingredients),
-       categories = List.unmodifiable(categories) {
+       categories = List.unmodifiable(distinctCategories(categories)) {
     if (title.trim().isEmpty) {
       throw ArgumentError.value(title, 'title', 'must not be blank');
     }
@@ -35,4 +35,12 @@ class Recipe {
   final String? procedure;
   final String? photoPath;
   final List<String> categories;
+}
+
+List<String> distinctCategories(Iterable<String> categories) {
+  final seen = <String>{};
+  return [
+    for (final category in categories.map((c) => c.trim()))
+      if (category.isNotEmpty && seen.add(category.toLowerCase())) category,
+  ];
 }

@@ -1719,6 +1719,19 @@ class $GroceryListItemsTable extends GroceryListItems
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _tickedMeta = const VerificationMeta('ticked');
+  @override
+  late final GeneratedColumn<bool> ticked = GeneratedColumn<bool>(
+    'ticked',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("ticked" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1727,6 +1740,7 @@ class $GroceryListItemsTable extends GroceryListItems
     name,
     quantity,
     unit,
+    ticked,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1783,6 +1797,12 @@ class $GroceryListItemsTable extends GroceryListItems
     } else if (isInserting) {
       context.missing(_unitMeta);
     }
+    if (data.containsKey('ticked')) {
+      context.handle(
+        _tickedMeta,
+        ticked.isAcceptableOrUnknown(data['ticked']!, _tickedMeta),
+      );
+    }
     return context;
   }
 
@@ -1816,6 +1836,10 @@ class $GroceryListItemsTable extends GroceryListItems
         DriftSqlType.string,
         data['${effectivePrefix}unit'],
       )!,
+      ticked: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}ticked'],
+      )!,
     );
   }
 
@@ -1833,6 +1857,7 @@ class GroceryListItemRow extends DataClass
   final String name;
   final double quantity;
   final String unit;
+  final bool ticked;
   const GroceryListItemRow({
     required this.id,
     required this.listId,
@@ -1840,6 +1865,7 @@ class GroceryListItemRow extends DataClass
     required this.name,
     required this.quantity,
     required this.unit,
+    required this.ticked,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1850,6 +1876,7 @@ class GroceryListItemRow extends DataClass
     map['name'] = Variable<String>(name);
     map['quantity'] = Variable<double>(quantity);
     map['unit'] = Variable<String>(unit);
+    map['ticked'] = Variable<bool>(ticked);
     return map;
   }
 
@@ -1861,6 +1888,7 @@ class GroceryListItemRow extends DataClass
       name: Value(name),
       quantity: Value(quantity),
       unit: Value(unit),
+      ticked: Value(ticked),
     );
   }
 
@@ -1876,6 +1904,7 @@ class GroceryListItemRow extends DataClass
       name: serializer.fromJson<String>(json['name']),
       quantity: serializer.fromJson<double>(json['quantity']),
       unit: serializer.fromJson<String>(json['unit']),
+      ticked: serializer.fromJson<bool>(json['ticked']),
     );
   }
   @override
@@ -1888,6 +1917,7 @@ class GroceryListItemRow extends DataClass
       'name': serializer.toJson<String>(name),
       'quantity': serializer.toJson<double>(quantity),
       'unit': serializer.toJson<String>(unit),
+      'ticked': serializer.toJson<bool>(ticked),
     };
   }
 
@@ -1898,6 +1928,7 @@ class GroceryListItemRow extends DataClass
     String? name,
     double? quantity,
     String? unit,
+    bool? ticked,
   }) => GroceryListItemRow(
     id: id ?? this.id,
     listId: listId ?? this.listId,
@@ -1905,6 +1936,7 @@ class GroceryListItemRow extends DataClass
     name: name ?? this.name,
     quantity: quantity ?? this.quantity,
     unit: unit ?? this.unit,
+    ticked: ticked ?? this.ticked,
   );
   GroceryListItemRow copyWithCompanion(GroceryListItemsCompanion data) {
     return GroceryListItemRow(
@@ -1914,6 +1946,7 @@ class GroceryListItemRow extends DataClass
       name: data.name.present ? data.name.value : this.name,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
       unit: data.unit.present ? data.unit.value : this.unit,
+      ticked: data.ticked.present ? data.ticked.value : this.ticked,
     );
   }
 
@@ -1925,13 +1958,15 @@ class GroceryListItemRow extends DataClass
           ..write('position: $position, ')
           ..write('name: $name, ')
           ..write('quantity: $quantity, ')
-          ..write('unit: $unit')
+          ..write('unit: $unit, ')
+          ..write('ticked: $ticked')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, listId, position, name, quantity, unit);
+  int get hashCode =>
+      Object.hash(id, listId, position, name, quantity, unit, ticked);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1941,7 +1976,8 @@ class GroceryListItemRow extends DataClass
           other.position == this.position &&
           other.name == this.name &&
           other.quantity == this.quantity &&
-          other.unit == this.unit);
+          other.unit == this.unit &&
+          other.ticked == this.ticked);
 }
 
 class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
@@ -1951,6 +1987,7 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
   final Value<String> name;
   final Value<double> quantity;
   final Value<String> unit;
+  final Value<bool> ticked;
   const GroceryListItemsCompanion({
     this.id = const Value.absent(),
     this.listId = const Value.absent(),
@@ -1958,6 +1995,7 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
     this.name = const Value.absent(),
     this.quantity = const Value.absent(),
     this.unit = const Value.absent(),
+    this.ticked = const Value.absent(),
   });
   GroceryListItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -1966,6 +2004,7 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
     required String name,
     required double quantity,
     required String unit,
+    this.ticked = const Value.absent(),
   }) : listId = Value(listId),
        position = Value(position),
        name = Value(name),
@@ -1978,6 +2017,7 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
     Expression<String>? name,
     Expression<double>? quantity,
     Expression<String>? unit,
+    Expression<bool>? ticked,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1986,6 +2026,7 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
       if (name != null) 'name': name,
       if (quantity != null) 'quantity': quantity,
       if (unit != null) 'unit': unit,
+      if (ticked != null) 'ticked': ticked,
     });
   }
 
@@ -1996,6 +2037,7 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
     Value<String>? name,
     Value<double>? quantity,
     Value<String>? unit,
+    Value<bool>? ticked,
   }) {
     return GroceryListItemsCompanion(
       id: id ?? this.id,
@@ -2004,6 +2046,7 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
       name: name ?? this.name,
       quantity: quantity ?? this.quantity,
       unit: unit ?? this.unit,
+      ticked: ticked ?? this.ticked,
     );
   }
 
@@ -2028,6 +2071,9 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
     if (unit.present) {
       map['unit'] = Variable<String>(unit.value);
     }
+    if (ticked.present) {
+      map['ticked'] = Variable<bool>(ticked.value);
+    }
     return map;
   }
 
@@ -2039,7 +2085,8 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
           ..write('position: $position, ')
           ..write('name: $name, ')
           ..write('quantity: $quantity, ')
-          ..write('unit: $unit')
+          ..write('unit: $unit, ')
+          ..write('ticked: $ticked')
           ..write(')'))
         .toString();
   }
@@ -3851,6 +3898,7 @@ typedef $$GroceryListItemsTableCreateCompanionBuilder =
       required String name,
       required double quantity,
       required String unit,
+      Value<bool> ticked,
     });
 typedef $$GroceryListItemsTableUpdateCompanionBuilder =
     GroceryListItemsCompanion Function({
@@ -3860,6 +3908,7 @@ typedef $$GroceryListItemsTableUpdateCompanionBuilder =
       Value<String> name,
       Value<double> quantity,
       Value<String> unit,
+      Value<bool> ticked,
     });
 
 final class $$GroceryListItemsTableReferences
@@ -3927,6 +3976,11 @@ class $$GroceryListItemsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<bool> get ticked => $composableBuilder(
+    column: $table.ticked,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$GroceryListsTableFilterComposer get listId {
     final $$GroceryListsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -3985,6 +4039,11 @@ class $$GroceryListItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get ticked => $composableBuilder(
+    column: $table.ticked,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$GroceryListsTableOrderingComposer get listId {
     final $$GroceryListsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4032,6 +4091,9 @@ class $$GroceryListItemsTableAnnotationComposer
 
   GeneratedColumn<String> get unit =>
       $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<bool> get ticked =>
+      $composableBuilder(column: $table.ticked, builder: (column) => column);
 
   $$GroceryListsTableAnnotationComposer get listId {
     final $$GroceryListsTableAnnotationComposer composer = $composerBuilder(
@@ -4093,6 +4155,7 @@ class $$GroceryListItemsTableTableManager
                 Value<String> name = const Value.absent(),
                 Value<double> quantity = const Value.absent(),
                 Value<String> unit = const Value.absent(),
+                Value<bool> ticked = const Value.absent(),
               }) => GroceryListItemsCompanion(
                 id: id,
                 listId: listId,
@@ -4100,6 +4163,7 @@ class $$GroceryListItemsTableTableManager
                 name: name,
                 quantity: quantity,
                 unit: unit,
+                ticked: ticked,
               ),
           createCompanionCallback:
               ({
@@ -4109,6 +4173,7 @@ class $$GroceryListItemsTableTableManager
                 required String name,
                 required double quantity,
                 required String unit,
+                Value<bool> ticked = const Value.absent(),
               }) => GroceryListItemsCompanion.insert(
                 id: id,
                 listId: listId,
@@ -4116,6 +4181,7 @@ class $$GroceryListItemsTableTableManager
                 name: name,
                 quantity: quantity,
                 unit: unit,
+                ticked: ticked,
               ),
           withReferenceMapper: (p0) => p0
               .map(

@@ -1,5 +1,6 @@
 import 'package:ambrogio_grocery/recipes/data/drift_recipe_storage_adapter.dart';
 import 'package:ambrogio_grocery/recipes/domain/ingredient.dart';
+import 'package:ambrogio_grocery/recipes/domain/recipe.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/failing_recipe_storage_adapter.dart';
@@ -67,6 +68,42 @@ void main() {
     final saved = (await storage.findAll()).single;
     expect(saved.procedure, isNull);
     expect(saved.categories, isEmpty);
+  });
+
+  testWidgets('a category is added only once, whatever its case', (
+    tester,
+  ) async {
+    robot = RecipeRobot(tester);
+    await robot.launchApp(storage);
+
+    await robot.startNewRecipe();
+    await robot.enterTitle('Carbonara');
+    await robot.enterPortions('4');
+    await robot.addIngredient('Spaghetti', '320', 'g');
+    await robot.addCategory('Pasta');
+    await robot.addCategory('pasta ');
+    await robot.save();
+
+    expect(find.text('4 portions · Pasta'), findsOneWidget);
+    expect((await storage.findAll()).single.categories, ['Pasta']);
+  });
+
+  testWidgets('a recipe never keeps the same category twice', (tester) async {
+    await storage.save(
+      Recipe(
+        title: 'Carbonara',
+        portions: 4,
+        ingredients: [
+          Ingredient(name: 'Spaghetti', quantity: 320, unit: MeasureUnit.grams),
+        ],
+        categories: ['Pasta', 'Dinner', ' PASTA'],
+      ),
+    );
+    robot = RecipeRobot(tester);
+    await robot.launchApp(storage);
+
+    expect(find.text('4 portions · Pasta, Dinner'), findsOneWidget);
+    expect((await storage.findAll()).single.categories, ['Pasta', 'Dinner']);
   });
 
   testWidgets('a recipe needs a title, valid portions and an ingredient', (

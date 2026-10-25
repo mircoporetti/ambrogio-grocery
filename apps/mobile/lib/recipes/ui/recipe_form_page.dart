@@ -87,10 +87,11 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
       setState(() => _ingredients.remove(ingredient));
 
   void _addCategory() {
-    final category = _category.text.trim();
-    if (category.isEmpty || _categories.contains(category)) return;
+    final categories = distinctCategories([..._categories, _category.text]);
     setState(() {
-      _categories.add(category);
+      _categories
+        ..clear()
+        ..addAll(categories);
       _category.clear();
     });
   }

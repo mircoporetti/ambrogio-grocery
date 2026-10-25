@@ -7,16 +7,18 @@ import '../../recipes/domain/recipe.dart';
 import '../application/create_grocery_list.dart';
 import '../application/find_grocery_list.dart';
 import '../application/get_current_week.dart';
+import '../domain/past_week_exception.dart';
 import '../domain/week.dart';
+import 'week_format.dart';
 
 class PlanWeekViewModel extends ChangeNotifier {
   PlanWeekViewModel(
     ListRecipes listRecipes,
     this._createGroceryList,
     this._findGroceryList,
-    GetCurrentWeek getCurrentWeek,
-  ) : _currentWeek = getCurrentWeek() {
-    _week = _currentWeek;
+    this._getCurrentWeek,
+  ) {
+    _week = _getCurrentWeek();
     listRecipes().then((recipes) {
       if (_disposed) return;
       _recipes = recipes;
@@ -27,13 +29,13 @@ class PlanWeekViewModel extends ChangeNotifier {
 
   final CreateGroceryList _createGroceryList;
   final FindGroceryList _findGroceryList;
-  final Week _currentWeek;
+  final GetCurrentWeek _getCurrentWeek;
   bool _disposed = false;
 
   late Week _week;
   Week get week => _week;
 
-  bool get canChooseEarlierWeek => !_week.previous.isBefore(_currentWeek);
+  bool get canChooseEarlierWeek => !_week.previous.isBefore(_getCurrentWeek());
 
   List<Recipe> _recipes = const [];
   List<Recipe> get recipes => _recipes;
@@ -102,6 +104,9 @@ class PlanWeekViewModel extends ChangeNotifier {
     try {
       await _createGroceryList(_week, _chosen);
       return true;
+    } on PastWeekException catch (e) {
+      _error = '${formatWeek(e.week)} is over. Choose a later week.';
+      return false;
     } on Exception catch (e, stackTrace) {
       log('Saving grocery list failed', error: e, stackTrace: stackTrace);
       _error = 'Could not save the grocery list. Please try again.';

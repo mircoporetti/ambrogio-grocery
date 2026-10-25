@@ -35,12 +35,13 @@ void main() {
   Future<void> launchApp(
     WidgetTester tester, {
     DateTime? now,
+    FixedClockAdapter? clock,
     FailingGroceryListStorageAdapter? failingLists,
   }) async {
     await RecipeRobot(tester).launchApp(
       recipes,
       groceryListStorage: failingLists ?? lists,
-      clock: FixedClockAdapter(now ?? today),
+      clock: clock ?? FixedClockAdapter(now ?? today),
     );
     robot = GroceryRobot(tester);
   }
@@ -176,6 +177,33 @@ void main() {
 
     expect(robot.groceryListWeeks, ['26 Oct – 1 Nov']);
     expect(find.text('This week · 1 recipe'), findsOneWidget);
+  });
+
+  testWidgets('a list cannot be saved for a week that ended while planning', (
+    tester,
+  ) async {
+    await givenRecipe('Carbonara', [grams('Spaghetti', 320)]);
+    final clock = FixedClockAdapter(DateTime(2026, 10, 25, 23, 59));
+    await launchApp(tester, clock: clock);
+    await robot.openGroceryLists();
+    await robot.planWeek();
+    await robot.cook();
+
+    clock.today = DateTime(2026, 10, 26, 0, 1);
+    await robot.createGroceryList();
+
+    expect(
+      find.text('19 – 25 Oct is over. Choose a later week.'),
+      findsOneWidget,
+    );
+    expect(find.text('1 recipe chosen'), findsOneWidget);
+    expect(await lists.findAll(), isEmpty);
+
+    await robot.laterWeek();
+    await robot.createGroceryList();
+
+    expect(robot.groceryList, ['Spaghetti 320 g']);
+    expect((await lists.findAll()).single.week.start, DateTime(2026, 10, 26));
   });
 
   testWidgets('a list keeps its ingredients when a recipe changes later', (
