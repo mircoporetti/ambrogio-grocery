@@ -1,4 +1,5 @@
 import 'package:drift/drift.dart';
+import 'package:path/path.dart' as p;
 
 import '../../database/app_database.dart';
 import '../domain/ingredient.dart';
@@ -7,9 +8,22 @@ import '../domain/recipe_id.dart';
 import '../domain/recipe_storage_port.dart';
 
 class DriftRecipeStorageAdapter implements RecipeStoragePort {
-  DriftRecipeStorageAdapter(this._db);
+  DriftRecipeStorageAdapter(this._db, {required String documentsDir})
+    : _documentsDir = documentsDir;
 
   final AppDatabase _db;
+
+  final String _documentsDir;
+
+  String? _toStored(String? path) {
+    if (path == null || !p.isWithin(_documentsDir, path)) return path;
+    return p.relative(path, from: _documentsDir);
+  }
+
+  String? _fromStored(String? path) {
+    if (path == null || p.isAbsolute(path)) return path;
+    return p.join(_documentsDir, path);
+  }
 
   @override
   Future<void> save(Recipe recipe) => _db.transaction(() async {
@@ -21,7 +35,7 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
             title: recipe.title,
             portions: recipe.portions,
             procedure: Value(recipe.procedure),
-            photoPath: Value(recipe.photoPath),
+            photoPath: Value(_toStored(recipe.photoPath)),
           ),
         );
     await _db.batch((batch) {
@@ -46,7 +60,6 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
     });
   });
 
-  // Ingredients and categories go with it through ON DELETE CASCADE.
   @override
   Future<void> delete(RecipeId id) =>
       (_db.delete(_db.recipes)..where((r) => r.uuid.equals(id.value))).go();
@@ -112,7 +125,7 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
           portions: row.portions,
           ingredients: ingredientsByRecipe[row.id] ?? const [],
           procedure: row.procedure,
-          photoPath: row.photoPath,
+          photoPath: _fromStored(row.photoPath),
           categories: categoriesByRecipe[row.id] ?? const [],
         ),
     ];

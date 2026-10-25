@@ -40,13 +40,12 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.onDevice() : super(driftDatabase(name: 'ambrogio_grocery'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onUpgrade: (m, from, to) async {
       if (from < 2) {
-        // Gives every existing recipe its own random UUID v4, generated in SQL.
         await m.alterTable(
           TableMigration(
             recipes,
@@ -61,6 +60,13 @@ class AppDatabase extends _$AppDatabase {
               ),
             },
           ),
+        );
+      }
+      if (from < 3) {
+        await customStatement(
+          "UPDATE recipes SET photo_path = substr(photo_path, "
+          "instr(photo_path, '/photos/') + 1) "
+          "WHERE instr(photo_path, '/photos/') > 0",
         );
       }
     },

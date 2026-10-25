@@ -8,7 +8,12 @@ void main() {
   late DriftRecipeStorageAdapter storage;
   late RecipeRobot robot;
 
-  setUp(() => storage = DriftRecipeStorageAdapter(openInMemoryDatabase()));
+  setUp(
+    () => storage = DriftRecipeStorageAdapter(
+      openInMemoryDatabase(),
+      documentsDir: testDocumentsDir,
+    ),
+  );
 
   testWidgets('tapping a recipe shows all its details', (tester) async {
     robot = RecipeRobot(tester);

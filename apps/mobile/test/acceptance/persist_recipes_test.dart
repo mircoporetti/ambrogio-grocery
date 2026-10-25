@@ -11,7 +11,9 @@ void main() {
     final file = newDatabaseFile();
 
     final firstLaunch = openFileDatabase(file);
-    await robot.launchApp(DriftRecipeStorageAdapter(firstLaunch));
+    await robot.launchApp(
+      DriftRecipeStorageAdapter(firstLaunch, documentsDir: testDocumentsDir),
+    );
     await robot.startNewRecipe();
     await robot.enterTitle('Carbonara');
     await robot.enterPortions('4');
@@ -26,7 +28,10 @@ void main() {
 
     final secondLaunch = openFileDatabase(file);
     addTearDown(secondLaunch.close);
-    final storage = DriftRecipeStorageAdapter(secondLaunch);
+    final storage = DriftRecipeStorageAdapter(
+      secondLaunch,
+      documentsDir: testDocumentsDir,
+    );
     await robot.launchApp(storage);
 
     expect(find.text('Carbonara'), findsOneWidget);
@@ -44,7 +49,9 @@ void main() {
     final file = newDatabaseFile();
 
     final firstLaunch = openFileDatabase(file);
-    await robot.launchApp(DriftRecipeStorageAdapter(firstLaunch));
+    await robot.launchApp(
+      DriftRecipeStorageAdapter(firstLaunch, documentsDir: testDocumentsDir),
+    );
     for (final title in ['Carbonara', 'Pancakes', 'Risotto']) {
       await robot.startNewRecipe();
       await robot.enterTitle(title);
@@ -57,7 +64,10 @@ void main() {
 
     final secondLaunch = openFileDatabase(file);
     addTearDown(secondLaunch.close);
-    final storage = DriftRecipeStorageAdapter(secondLaunch);
+    final storage = DriftRecipeStorageAdapter(
+      secondLaunch,
+      documentsDir: testDocumentsDir,
+    );
     await robot.launchApp(storage);
 
     final titles = (await storage.findAll()).map((r) => r.title);

@@ -5,14 +5,14 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+const testDocumentsDir = '/app-documents';
+
 AppDatabase openInMemoryDatabase() {
   final db = AppDatabase(_forTests(NativeDatabase.memory()));
   addTearDown(db.close);
   return db;
 }
 
-/// A fresh database file, so a test can close the app and reopen it on the
-/// same storage, like a device does between launches.
 File newDatabaseFile() {
   final dir = Directory.systemTemp.createTempSync('ambrogio_test_');
   addTearDown(() => dir.deleteSync(recursive: true));

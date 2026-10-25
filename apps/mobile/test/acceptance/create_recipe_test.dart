@@ -11,7 +11,12 @@ void main() {
   late DriftRecipeStorageAdapter storage;
   late RecipeRobot robot;
 
-  setUp(() => storage = DriftRecipeStorageAdapter(openInMemoryDatabase()));
+  setUp(
+    () => storage = DriftRecipeStorageAdapter(
+      openInMemoryDatabase(),
+      documentsDir: testDocumentsDir,
+    ),
+  );
 
   testWidgets('shows an empty state when there are no recipes', (tester) async {
     robot = RecipeRobot(tester);

@@ -11,7 +11,12 @@ void main() {
   late DriftRecipeStorageAdapter storage;
   late RecipeRobot robot;
 
-  setUp(() => storage = DriftRecipeStorageAdapter(openInMemoryDatabase()));
+  setUp(
+    () => storage = DriftRecipeStorageAdapter(
+      openInMemoryDatabase(),
+      documentsDir: testDocumentsDir,
+    ),
+  );
 
   Future<void> createRecipe(String title) async {
     await robot.startNewRecipe();
