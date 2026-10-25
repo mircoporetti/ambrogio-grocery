@@ -30,6 +30,21 @@ class RecipeRobot {
 
   Future<void> deleteOpenRecipe() => _tap(find.byTooltip('Delete recipe'));
 
+  Future<void> editOpenRecipe() => _tap(find.byTooltip('Edit recipe'));
+
+  Future<void> removeIngredient(String name) =>
+      _tap(find.byTooltip('Remove $name'));
+
+  Future<void> removeCategory(String name) =>
+      _tap(find.byTooltip('Remove $name'));
+
+  Future<void> changePhoto() => _tap(find.bySemanticsLabel('Change photo'));
+
+  String fieldText(String label) => tester
+      .widget<TextField>(find.widgetWithText(TextField, label))
+      .controller!
+      .text;
+
   Future<void> confirmDelete() => _tap(find.text('Delete'));
 
   Future<void> cancelDelete() => _tap(find.text('Cancel'));

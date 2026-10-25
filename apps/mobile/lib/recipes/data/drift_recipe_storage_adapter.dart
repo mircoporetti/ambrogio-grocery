@@ -27,17 +27,32 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
 
   @override
   Future<void> save(Recipe recipe) => _db.transaction(() async {
-    final recipeId = await _db
-        .into(_db.recipes)
-        .insert(
-          RecipesCompanion.insert(
-            uuid: recipe.id.value,
-            title: recipe.title,
-            portions: recipe.portions,
-            procedure: Value(recipe.procedure),
-            photoPath: Value(_toStored(recipe.photoPath)),
-          ),
-        );
+    final row = RecipesCompanion.insert(
+      uuid: recipe.id.value,
+      title: recipe.title,
+      portions: recipe.portions,
+      procedure: Value(recipe.procedure),
+      photoPath: Value(_toStored(recipe.photoPath)),
+    );
+    final existing = await (_db.select(
+      _db.recipes,
+    )..where((r) => r.uuid.equals(recipe.id.value))).getSingleOrNull();
+
+    final int recipeId;
+    if (existing == null) {
+      recipeId = await _db.into(_db.recipes).insert(row);
+    } else {
+      recipeId = existing.id;
+      await (_db.update(
+        _db.recipes,
+      )..where((r) => r.id.equals(recipeId))).write(row);
+      await (_db.delete(
+        _db.recipeIngredients,
+      )..where((i) => i.recipeId.equals(recipeId))).go();
+      await (_db.delete(
+        _db.recipeCategories,
+      )..where((c) => c.recipeId.equals(recipeId))).go();
+    }
     await _db.batch((batch) {
       batch.insertAll(_db.recipeIngredients, [
         for (final (position, ingredient) in recipe.ingredients.indexed)
@@ -80,6 +95,10 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
 
   @override
   Future<List<Recipe>> findAll() => _load();
+
+  @override
+  Future<Recipe?> findById(RecipeId id) async =>
+      (await _load(id: id)).firstOrNull;
 
   Future<List<Recipe>> _load({RecipeId? id}) => _db.transaction(() async {
     final recipeQuery = _db.select(_db.recipes)

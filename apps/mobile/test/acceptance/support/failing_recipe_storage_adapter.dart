@@ -26,6 +26,9 @@ class FailingRecipeStorageAdapter implements RecipeStoragePort {
   Future<List<Recipe>> findAll() => _real.findAll();
 
   @override
+  Future<Recipe?> findById(RecipeId id) => _real.findById(id);
+
+  @override
   Stream<List<Recipe>> watchAll() => _real.watchAll();
 
   @override

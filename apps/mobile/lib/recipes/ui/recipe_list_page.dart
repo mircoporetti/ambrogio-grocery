@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../application/create_recipe.dart';
 import '../application/delete_recipe.dart';
 import '../application/pick_recipe_photo.dart';
+import '../application/update_recipe.dart';
 import '../application/watch_recipe.dart';
 import '../domain/recipe.dart';
 import 'formatting.dart';
@@ -22,6 +23,7 @@ class RecipeListPage extends StatelessWidget {
     required this.pickRecipePhoto,
     required this.watchRecipe,
     required this.deleteRecipe,
+    required this.updateRecipe,
   });
 
   final RecipeListViewModel viewModel;
@@ -29,13 +31,14 @@ class RecipeListPage extends StatelessWidget {
   final PickRecipePhoto pickRecipePhoto;
   final WatchRecipe watchRecipe;
   final DeleteRecipe deleteRecipe;
+  final UpdateRecipe updateRecipe;
 
   // The form saves the recipe itself; the list updates by watching storage.
   void _openNewRecipeForm(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => RecipeFormPage(
-          viewModel: RecipeFormViewModel(createRecipe, pickRecipePhoto),
+          viewModel: RecipeFormViewModel.create(createRecipe, pickRecipePhoto),
         ),
       ),
     );
@@ -50,6 +53,8 @@ class RecipeListPage extends StatelessWidget {
             deleteRecipe,
             recipe.id,
           ),
+          editFormFor: (recipe) =>
+              RecipeFormViewModel.edit(updateRecipe, pickRecipePhoto, recipe),
         ),
       ),
     );

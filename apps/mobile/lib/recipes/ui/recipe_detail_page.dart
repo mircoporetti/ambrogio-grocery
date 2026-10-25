@@ -5,11 +5,18 @@ import 'package:flutter/material.dart';
 import '../domain/recipe.dart';
 import 'formatting.dart';
 import 'recipe_detail_view_model.dart';
+import 'recipe_form_page.dart';
+import 'recipe_form_view_model.dart';
 
 class RecipeDetailPage extends StatefulWidget {
-  const RecipeDetailPage({super.key, required this.viewModel});
+  const RecipeDetailPage({
+    super.key,
+    required this.viewModel,
+    required this.editFormFor,
+  });
 
   final RecipeDetailViewModel viewModel;
+  final RecipeFormViewModel Function(Recipe recipe) editFormFor;
 
   @override
   State<RecipeDetailPage> createState() => _RecipeDetailPageState();
@@ -20,6 +27,14 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
   void dispose() {
     widget.viewModel.dispose();
     super.dispose();
+  }
+
+  void _openEditForm(Recipe recipe) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => RecipeFormPage(viewModel: widget.editFormFor(recipe)),
+      ),
+    );
   }
 
   Future<void> _confirmAndDelete(Recipe recipe) async {
@@ -57,6 +72,14 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
           appBar: AppBar(
             title: Text(recipe?.title ?? ''),
             actions: [
+              if (recipe != null)
+                IconButton(
+                  tooltip: 'Edit recipe',
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: widget.viewModel.deleting
+                      ? null
+                      : () => _openEditForm(recipe),
+                ),
               if (recipe != null)
                 IconButton(
                   tooltip: 'Delete recipe',

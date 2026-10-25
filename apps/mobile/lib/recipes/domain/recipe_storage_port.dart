@@ -4,6 +4,8 @@ import 'recipe_id.dart';
 abstract interface class RecipeStoragePort {
   Future<List<Recipe>> findAll();
 
+  Future<Recipe?> findById(RecipeId id);
+
   Stream<List<Recipe>> watchAll();
 
   Stream<Recipe?> watchById(RecipeId id);

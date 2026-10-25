@@ -4,13 +4,27 @@ import 'package:flutter/foundation.dart';
 
 import '../application/create_recipe.dart';
 import '../application/pick_recipe_photo.dart';
+import '../application/update_recipe.dart';
 import '../domain/recipe.dart';
 
 class RecipeFormViewModel extends ChangeNotifier {
-  RecipeFormViewModel(this._createRecipe, this._pickRecipePhoto);
+  RecipeFormViewModel.create(CreateRecipe createRecipe, this._pickRecipePhoto)
+    : _submit = createRecipe.call,
+      initial = null;
 
-  final CreateRecipe _createRecipe;
+  RecipeFormViewModel.edit(
+    UpdateRecipe updateRecipe,
+    this._pickRecipePhoto,
+    Recipe this.initial,
+  ) : _submit = updateRecipe.call,
+      _photoPath = initial.photoPath;
+
+  final Future<void> Function(Recipe) _submit;
   final PickRecipePhoto _pickRecipePhoto;
+
+  final Recipe? initial;
+
+  bool get isEditing => initial != null;
 
   String? _photoPath;
   String? get photoPath => _photoPath;
@@ -28,13 +42,12 @@ class RecipeFormViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Returns true when the recipe was saved and the form can close.
   Future<bool> save(Recipe recipe) async {
     _saving = true;
     _error = null;
     notifyListeners();
     try {
-      await _createRecipe(recipe);
+      await _submit(recipe);
       return true;
     } on Exception catch (e, stackTrace) {
       log('Saving recipe failed', error: e, stackTrace: stackTrace);

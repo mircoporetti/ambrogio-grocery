@@ -34,6 +34,18 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
   String? _ingredientsError;
 
   @override
+  void initState() {
+    super.initState();
+    final initial = widget.viewModel.initial;
+    if (initial == null) return;
+    _title.text = initial.title;
+    _portions.text = '${initial.portions}';
+    _procedure.text = initial.procedure ?? '';
+    _ingredients.addAll(initial.ingredients);
+    _categories.addAll(initial.categories);
+  }
+
+  @override
   void dispose() {
     for (final c in [
       _title,
@@ -98,6 +110,7 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
     final procedure = _procedure.text.trim();
     final saved = await widget.viewModel.save(
       Recipe(
+        id: widget.viewModel.initial?.id,
         title: _title.text.trim(),
         portions: int.parse(_portions.text.trim()),
         ingredients: _ingredients,
@@ -117,7 +130,7 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
     final textTheme = Theme.of(context).textTheme;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('New recipe'),
+        title: Text(widget.viewModel.isEditing ? 'Edit recipe' : 'New recipe'),
         actions: [
           ListenableBuilder(
             listenable: widget.viewModel,
@@ -260,6 +273,7 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
                       InputChip(
                         label: Text(category),
                         onDeleted: () => _removeCategory(category),
+                        deleteButtonTooltipMessage: 'Remove $category',
                       ),
                   ],
                 ),
@@ -305,7 +319,15 @@ class _PhotoField extends StatelessWidget {
         onTap: onPick,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: Image.file(File(path), height: 180, fit: BoxFit.cover),
+          child: Image.file(
+            File(path),
+            height: 180,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => const SizedBox(
+              height: 180,
+              child: Center(child: Icon(Icons.broken_image_outlined)),
+            ),
+          ),
         ),
       ),
     );
