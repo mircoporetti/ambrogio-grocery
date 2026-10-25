@@ -198,3 +198,15 @@ With a free Apple ID the app stops opening after 7 days, and the phone must
 stay in Developer Mode: install it again the same way. The recipes stay on
 the phone. A paid Apple Developer account ($99/year) removes the limit and
 is required for TestFlight and the App Store.
+
+### Troubleshooting
+
+If the app crashes on the simulator at launch with `Couldn't resolve native
+function ... Failed to load dynamic library 'objective_c.framework/...'`,
+the build reused native libraries compiled for the iPhone. It happens after
+building for the phone and then running on the simulator. Clean and run
+again:
+
+```sh
+flutter clean && flutter pub get
+```

@@ -1,10 +1,12 @@
 import 'dart:io';
 
+import 'package:ambrogio_grocery/grocery/data/drift_grocery_list_storage_adapter.dart';
 import 'package:ambrogio_grocery/recipes/data/drift_recipe_storage_adapter.dart';
 import 'package:ambrogio_grocery/recipes/domain/ingredient.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 
+import 'support/grocery_robot.dart';
 import 'support/recipe_robot.dart';
 import 'support/test_database.dart';
 
@@ -58,6 +60,42 @@ void main() {
     final recipe = (await storage.findAll()).single;
     expect(recipe.photoPath, '$testDocumentsDir/photos/carbonara.jpg');
   });
+
+  testWidgets('after the update, grocery lists can be saved', (tester) async {
+    final file = newDatabaseFile();
+    _writeVersion3Database(file);
+
+    final db = openFileDatabase(file);
+    addTearDown(db.close);
+    final lists = DriftGroceryListStorageAdapter(db);
+    await RecipeRobot(tester).launchApp(
+      DriftRecipeStorageAdapter(db, documentsDir: testDocumentsDir),
+      groceryListStorage: lists,
+    );
+    expect(find.text('Carbonara'), findsOneWidget);
+
+    final robot = GroceryRobot(tester);
+    await robot.startPlanningWeek();
+    await robot.cook();
+    await robot.createGroceryList();
+
+    expect(robot.groceryList, ['Spaghetti 320 g']);
+    expect((await lists.findAll()).single.recipes, ['Carbonara']);
+  });
+}
+
+// Schema version 3 had no grocery lists.
+void _writeVersion3Database(File file) {
+  final raw = sqlite3.open(file.path);
+  raw.execute('''
+    CREATE TABLE "recipes" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "uuid" TEXT NOT NULL UNIQUE, "title" TEXT NOT NULL, "portions" INTEGER NOT NULL, "procedure" TEXT NULL, "photo_path" TEXT NULL);
+    CREATE TABLE "recipe_ingredients" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "recipe_id" INTEGER NOT NULL REFERENCES recipes (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "name" TEXT NOT NULL, "quantity" REAL NOT NULL, "unit" TEXT NOT NULL);
+    CREATE TABLE "recipe_categories" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "recipe_id" INTEGER NOT NULL REFERENCES recipes (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "name" TEXT NOT NULL);
+    INSERT INTO recipes (uuid, title, portions) VALUES ('4b6f1c2e-8a3d-4f5b-9c7e-1d2a3b4c5d6e', 'Carbonara', 4);
+    INSERT INTO recipe_ingredients (recipe_id, position, name, quantity, unit) VALUES (1, 0, 'Spaghetti', 320, 'grams');
+    PRAGMA user_version = 3;
+  ''');
+  raw.close();
 }
 
 // Schema version 2 stored the photo's absolute path.

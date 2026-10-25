@@ -24,6 +24,7 @@ class RecipeListPage extends StatelessWidget {
     required this.watchRecipe,
     required this.deleteRecipe,
     required this.updateRecipe,
+    required this.groceryListsPage,
   });
 
   final RecipeListViewModel viewModel;
@@ -32,6 +33,7 @@ class RecipeListPage extends StatelessWidget {
   final WatchRecipe watchRecipe;
   final DeleteRecipe deleteRecipe;
   final UpdateRecipe updateRecipe;
+  final Widget Function() groceryListsPage;
 
   // The form saves the recipe itself; the list updates by watching storage.
   void _openNewRecipeForm(BuildContext context) {
@@ -42,6 +44,12 @@ class RecipeListPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void _openGroceryLists(BuildContext context) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => groceryListsPage()));
   }
 
   void _openRecipe(BuildContext context, Recipe recipe) {
@@ -63,7 +71,16 @@ class RecipeListPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Recipes')),
+      appBar: AppBar(
+        title: const Text('Recipes'),
+        actions: [
+          IconButton(
+            tooltip: 'Grocery lists',
+            icon: const Icon(Icons.shopping_cart_outlined),
+            onPressed: () => _openGroceryLists(context),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton(
         tooltip: 'New recipe',
         onPressed: () => _openNewRecipeForm(context),

@@ -1096,6 +1096,955 @@ class RecipeCategoriesCompanion extends UpdateCompanion<CategoryRow> {
   }
 }
 
+class $GroceryListsTable extends GroceryLists
+    with TableInfo<$GroceryListsTable, GroceryListRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GroceryListsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _weekStartMeta = const VerificationMeta(
+    'weekStart',
+  );
+  @override
+  late final GeneratedColumn<String> weekStart = GeneratedColumn<String>(
+    'week_start',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, uuid, weekStart];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'grocery_lists';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GroceryListRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('week_start')) {
+      context.handle(
+        _weekStartMeta,
+        weekStart.isAcceptableOrUnknown(data['week_start']!, _weekStartMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_weekStartMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GroceryListRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GroceryListRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      weekStart: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}week_start'],
+      )!,
+    );
+  }
+
+  @override
+  $GroceryListsTable createAlias(String alias) {
+    return $GroceryListsTable(attachedDatabase, alias);
+  }
+}
+
+class GroceryListRow extends DataClass implements Insertable<GroceryListRow> {
+  final int id;
+  final String uuid;
+  final String weekStart;
+  const GroceryListRow({
+    required this.id,
+    required this.uuid,
+    required this.weekStart,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['uuid'] = Variable<String>(uuid);
+    map['week_start'] = Variable<String>(weekStart);
+    return map;
+  }
+
+  GroceryListsCompanion toCompanion(bool nullToAbsent) {
+    return GroceryListsCompanion(
+      id: Value(id),
+      uuid: Value(uuid),
+      weekStart: Value(weekStart),
+    );
+  }
+
+  factory GroceryListRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GroceryListRow(
+      id: serializer.fromJson<int>(json['id']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      weekStart: serializer.fromJson<String>(json['weekStart']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'uuid': serializer.toJson<String>(uuid),
+      'weekStart': serializer.toJson<String>(weekStart),
+    };
+  }
+
+  GroceryListRow copyWith({int? id, String? uuid, String? weekStart}) =>
+      GroceryListRow(
+        id: id ?? this.id,
+        uuid: uuid ?? this.uuid,
+        weekStart: weekStart ?? this.weekStart,
+      );
+  GroceryListRow copyWithCompanion(GroceryListsCompanion data) {
+    return GroceryListRow(
+      id: data.id.present ? data.id.value : this.id,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      weekStart: data.weekStart.present ? data.weekStart.value : this.weekStart,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroceryListRow(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('weekStart: $weekStart')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, uuid, weekStart);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GroceryListRow &&
+          other.id == this.id &&
+          other.uuid == this.uuid &&
+          other.weekStart == this.weekStart);
+}
+
+class GroceryListsCompanion extends UpdateCompanion<GroceryListRow> {
+  final Value<int> id;
+  final Value<String> uuid;
+  final Value<String> weekStart;
+  const GroceryListsCompanion({
+    this.id = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.weekStart = const Value.absent(),
+  });
+  GroceryListsCompanion.insert({
+    this.id = const Value.absent(),
+    required String uuid,
+    required String weekStart,
+  }) : uuid = Value(uuid),
+       weekStart = Value(weekStart);
+  static Insertable<GroceryListRow> custom({
+    Expression<int>? id,
+    Expression<String>? uuid,
+    Expression<String>? weekStart,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (uuid != null) 'uuid': uuid,
+      if (weekStart != null) 'week_start': weekStart,
+    });
+  }
+
+  GroceryListsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? uuid,
+    Value<String>? weekStart,
+  }) {
+    return GroceryListsCompanion(
+      id: id ?? this.id,
+      uuid: uuid ?? this.uuid,
+      weekStart: weekStart ?? this.weekStart,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (weekStart.present) {
+      map['week_start'] = Variable<String>(weekStart.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroceryListsCompanion(')
+          ..write('id: $id, ')
+          ..write('uuid: $uuid, ')
+          ..write('weekStart: $weekStart')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $GroceryListRecipesTable extends GroceryListRecipes
+    with TableInfo<$GroceryListRecipesTable, GroceryListRecipeRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GroceryListRecipesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _listIdMeta = const VerificationMeta('listId');
+  @override
+  late final GeneratedColumn<int> listId = GeneratedColumn<int>(
+    'list_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES grocery_lists (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, listId, position, title];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'grocery_list_recipes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GroceryListRecipeRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('list_id')) {
+      context.handle(
+        _listIdMeta,
+        listId.isAcceptableOrUnknown(data['list_id']!, _listIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_listIdMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GroceryListRecipeRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GroceryListRecipeRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      listId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}list_id'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+    );
+  }
+
+  @override
+  $GroceryListRecipesTable createAlias(String alias) {
+    return $GroceryListRecipesTable(attachedDatabase, alias);
+  }
+}
+
+class GroceryListRecipeRow extends DataClass
+    implements Insertable<GroceryListRecipeRow> {
+  final int id;
+  final int listId;
+  final int position;
+  final String title;
+  const GroceryListRecipeRow({
+    required this.id,
+    required this.listId,
+    required this.position,
+    required this.title,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['list_id'] = Variable<int>(listId);
+    map['position'] = Variable<int>(position);
+    map['title'] = Variable<String>(title);
+    return map;
+  }
+
+  GroceryListRecipesCompanion toCompanion(bool nullToAbsent) {
+    return GroceryListRecipesCompanion(
+      id: Value(id),
+      listId: Value(listId),
+      position: Value(position),
+      title: Value(title),
+    );
+  }
+
+  factory GroceryListRecipeRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GroceryListRecipeRow(
+      id: serializer.fromJson<int>(json['id']),
+      listId: serializer.fromJson<int>(json['listId']),
+      position: serializer.fromJson<int>(json['position']),
+      title: serializer.fromJson<String>(json['title']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'listId': serializer.toJson<int>(listId),
+      'position': serializer.toJson<int>(position),
+      'title': serializer.toJson<String>(title),
+    };
+  }
+
+  GroceryListRecipeRow copyWith({
+    int? id,
+    int? listId,
+    int? position,
+    String? title,
+  }) => GroceryListRecipeRow(
+    id: id ?? this.id,
+    listId: listId ?? this.listId,
+    position: position ?? this.position,
+    title: title ?? this.title,
+  );
+  GroceryListRecipeRow copyWithCompanion(GroceryListRecipesCompanion data) {
+    return GroceryListRecipeRow(
+      id: data.id.present ? data.id.value : this.id,
+      listId: data.listId.present ? data.listId.value : this.listId,
+      position: data.position.present ? data.position.value : this.position,
+      title: data.title.present ? data.title.value : this.title,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroceryListRecipeRow(')
+          ..write('id: $id, ')
+          ..write('listId: $listId, ')
+          ..write('position: $position, ')
+          ..write('title: $title')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, listId, position, title);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GroceryListRecipeRow &&
+          other.id == this.id &&
+          other.listId == this.listId &&
+          other.position == this.position &&
+          other.title == this.title);
+}
+
+class GroceryListRecipesCompanion
+    extends UpdateCompanion<GroceryListRecipeRow> {
+  final Value<int> id;
+  final Value<int> listId;
+  final Value<int> position;
+  final Value<String> title;
+  const GroceryListRecipesCompanion({
+    this.id = const Value.absent(),
+    this.listId = const Value.absent(),
+    this.position = const Value.absent(),
+    this.title = const Value.absent(),
+  });
+  GroceryListRecipesCompanion.insert({
+    this.id = const Value.absent(),
+    required int listId,
+    required int position,
+    required String title,
+  }) : listId = Value(listId),
+       position = Value(position),
+       title = Value(title);
+  static Insertable<GroceryListRecipeRow> custom({
+    Expression<int>? id,
+    Expression<int>? listId,
+    Expression<int>? position,
+    Expression<String>? title,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (listId != null) 'list_id': listId,
+      if (position != null) 'position': position,
+      if (title != null) 'title': title,
+    });
+  }
+
+  GroceryListRecipesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? listId,
+    Value<int>? position,
+    Value<String>? title,
+  }) {
+    return GroceryListRecipesCompanion(
+      id: id ?? this.id,
+      listId: listId ?? this.listId,
+      position: position ?? this.position,
+      title: title ?? this.title,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (listId.present) {
+      map['list_id'] = Variable<int>(listId.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroceryListRecipesCompanion(')
+          ..write('id: $id, ')
+          ..write('listId: $listId, ')
+          ..write('position: $position, ')
+          ..write('title: $title')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $GroceryListItemsTable extends GroceryListItems
+    with TableInfo<$GroceryListItemsTable, GroceryListItemRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GroceryListItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _listIdMeta = const VerificationMeta('listId');
+  @override
+  late final GeneratedColumn<int> listId = GeneratedColumn<int>(
+    'list_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES grocery_lists (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _positionMeta = const VerificationMeta(
+    'position',
+  );
+  @override
+  late final GeneratedColumn<int> position = GeneratedColumn<int>(
+    'position',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quantityMeta = const VerificationMeta(
+    'quantity',
+  );
+  @override
+  late final GeneratedColumn<double> quantity = GeneratedColumn<double>(
+    'quantity',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unitMeta = const VerificationMeta('unit');
+  @override
+  late final GeneratedColumn<String> unit = GeneratedColumn<String>(
+    'unit',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    listId,
+    position,
+    name,
+    quantity,
+    unit,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'grocery_list_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GroceryListItemRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('list_id')) {
+      context.handle(
+        _listIdMeta,
+        listId.isAcceptableOrUnknown(data['list_id']!, _listIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_listIdMeta);
+    }
+    if (data.containsKey('position')) {
+      context.handle(
+        _positionMeta,
+        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_positionMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('quantity')) {
+      context.handle(
+        _quantityMeta,
+        quantity.isAcceptableOrUnknown(data['quantity']!, _quantityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_quantityMeta);
+    }
+    if (data.containsKey('unit')) {
+      context.handle(
+        _unitMeta,
+        unit.isAcceptableOrUnknown(data['unit']!, _unitMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unitMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GroceryListItemRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GroceryListItemRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      listId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}list_id'],
+      )!,
+      position: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}position'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      quantity: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}quantity'],
+      )!,
+      unit: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}unit'],
+      )!,
+    );
+  }
+
+  @override
+  $GroceryListItemsTable createAlias(String alias) {
+    return $GroceryListItemsTable(attachedDatabase, alias);
+  }
+}
+
+class GroceryListItemRow extends DataClass
+    implements Insertable<GroceryListItemRow> {
+  final int id;
+  final int listId;
+  final int position;
+  final String name;
+  final double quantity;
+  final String unit;
+  const GroceryListItemRow({
+    required this.id,
+    required this.listId,
+    required this.position,
+    required this.name,
+    required this.quantity,
+    required this.unit,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['list_id'] = Variable<int>(listId);
+    map['position'] = Variable<int>(position);
+    map['name'] = Variable<String>(name);
+    map['quantity'] = Variable<double>(quantity);
+    map['unit'] = Variable<String>(unit);
+    return map;
+  }
+
+  GroceryListItemsCompanion toCompanion(bool nullToAbsent) {
+    return GroceryListItemsCompanion(
+      id: Value(id),
+      listId: Value(listId),
+      position: Value(position),
+      name: Value(name),
+      quantity: Value(quantity),
+      unit: Value(unit),
+    );
+  }
+
+  factory GroceryListItemRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GroceryListItemRow(
+      id: serializer.fromJson<int>(json['id']),
+      listId: serializer.fromJson<int>(json['listId']),
+      position: serializer.fromJson<int>(json['position']),
+      name: serializer.fromJson<String>(json['name']),
+      quantity: serializer.fromJson<double>(json['quantity']),
+      unit: serializer.fromJson<String>(json['unit']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'listId': serializer.toJson<int>(listId),
+      'position': serializer.toJson<int>(position),
+      'name': serializer.toJson<String>(name),
+      'quantity': serializer.toJson<double>(quantity),
+      'unit': serializer.toJson<String>(unit),
+    };
+  }
+
+  GroceryListItemRow copyWith({
+    int? id,
+    int? listId,
+    int? position,
+    String? name,
+    double? quantity,
+    String? unit,
+  }) => GroceryListItemRow(
+    id: id ?? this.id,
+    listId: listId ?? this.listId,
+    position: position ?? this.position,
+    name: name ?? this.name,
+    quantity: quantity ?? this.quantity,
+    unit: unit ?? this.unit,
+  );
+  GroceryListItemRow copyWithCompanion(GroceryListItemsCompanion data) {
+    return GroceryListItemRow(
+      id: data.id.present ? data.id.value : this.id,
+      listId: data.listId.present ? data.listId.value : this.listId,
+      position: data.position.present ? data.position.value : this.position,
+      name: data.name.present ? data.name.value : this.name,
+      quantity: data.quantity.present ? data.quantity.value : this.quantity,
+      unit: data.unit.present ? data.unit.value : this.unit,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroceryListItemRow(')
+          ..write('id: $id, ')
+          ..write('listId: $listId, ')
+          ..write('position: $position, ')
+          ..write('name: $name, ')
+          ..write('quantity: $quantity, ')
+          ..write('unit: $unit')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, listId, position, name, quantity, unit);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GroceryListItemRow &&
+          other.id == this.id &&
+          other.listId == this.listId &&
+          other.position == this.position &&
+          other.name == this.name &&
+          other.quantity == this.quantity &&
+          other.unit == this.unit);
+}
+
+class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
+  final Value<int> id;
+  final Value<int> listId;
+  final Value<int> position;
+  final Value<String> name;
+  final Value<double> quantity;
+  final Value<String> unit;
+  const GroceryListItemsCompanion({
+    this.id = const Value.absent(),
+    this.listId = const Value.absent(),
+    this.position = const Value.absent(),
+    this.name = const Value.absent(),
+    this.quantity = const Value.absent(),
+    this.unit = const Value.absent(),
+  });
+  GroceryListItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required int listId,
+    required int position,
+    required String name,
+    required double quantity,
+    required String unit,
+  }) : listId = Value(listId),
+       position = Value(position),
+       name = Value(name),
+       quantity = Value(quantity),
+       unit = Value(unit);
+  static Insertable<GroceryListItemRow> custom({
+    Expression<int>? id,
+    Expression<int>? listId,
+    Expression<int>? position,
+    Expression<String>? name,
+    Expression<double>? quantity,
+    Expression<String>? unit,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (listId != null) 'list_id': listId,
+      if (position != null) 'position': position,
+      if (name != null) 'name': name,
+      if (quantity != null) 'quantity': quantity,
+      if (unit != null) 'unit': unit,
+    });
+  }
+
+  GroceryListItemsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? listId,
+    Value<int>? position,
+    Value<String>? name,
+    Value<double>? quantity,
+    Value<String>? unit,
+  }) {
+    return GroceryListItemsCompanion(
+      id: id ?? this.id,
+      listId: listId ?? this.listId,
+      position: position ?? this.position,
+      name: name ?? this.name,
+      quantity: quantity ?? this.quantity,
+      unit: unit ?? this.unit,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (listId.present) {
+      map['list_id'] = Variable<int>(listId.value);
+    }
+    if (position.present) {
+      map['position'] = Variable<int>(position.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (quantity.present) {
+      map['quantity'] = Variable<double>(quantity.value);
+    }
+    if (unit.present) {
+      map['unit'] = Variable<String>(unit.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroceryListItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('listId: $listId, ')
+          ..write('position: $position, ')
+          ..write('name: $name, ')
+          ..write('quantity: $quantity, ')
+          ..write('unit: $unit')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -1103,6 +2052,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $RecipeIngredientsTable recipeIngredients =
       $RecipeIngredientsTable(this);
   late final $RecipeCategoriesTable recipeCategories = $RecipeCategoriesTable(
+    this,
+  );
+  late final $GroceryListsTable groceryLists = $GroceryListsTable(this);
+  late final $GroceryListRecipesTable groceryListRecipes =
+      $GroceryListRecipesTable(this);
+  late final $GroceryListItemsTable groceryListItems = $GroceryListItemsTable(
     this,
   );
   @override
@@ -1113,6 +2068,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     recipes,
     recipeIngredients,
     recipeCategories,
+    groceryLists,
+    groceryListRecipes,
+    groceryListItems,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -1129,6 +2087,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('recipe_categories', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'grocery_lists',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('grocery_list_recipes', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'grocery_lists',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('grocery_list_items', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -2196,6 +3168,1024 @@ typedef $$RecipeCategoriesTableProcessedTableManager =
       CategoryRow,
       PrefetchHooks Function({bool recipeId})
     >;
+typedef $$GroceryListsTableCreateCompanionBuilder =
+    GroceryListsCompanion Function({
+      Value<int> id,
+      required String uuid,
+      required String weekStart,
+    });
+typedef $$GroceryListsTableUpdateCompanionBuilder =
+    GroceryListsCompanion Function({
+      Value<int> id,
+      Value<String> uuid,
+      Value<String> weekStart,
+    });
+
+final class $$GroceryListsTableReferences
+    extends BaseReferences<_$AppDatabase, $GroceryListsTable, GroceryListRow> {
+  $$GroceryListsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<
+    $GroceryListRecipesTable,
+    List<GroceryListRecipeRow>
+  >
+  _groceryListRecipesRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.groceryListRecipes,
+        aliasName: 'grocery_lists__id__grocery_list_recipes__list_id',
+      );
+
+  $$GroceryListRecipesTableProcessedTableManager get groceryListRecipesRefs {
+    final manager = $$GroceryListRecipesTableTableManager(
+      $_db,
+      $_db.groceryListRecipes,
+    ).filter((f) => f.listId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _groceryListRecipesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$GroceryListItemsTable, List<GroceryListItemRow>>
+  _groceryListItemsRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.groceryListItems,
+    aliasName: 'grocery_lists__id__grocery_list_items__list_id',
+  );
+
+  $$GroceryListItemsTableProcessedTableManager get groceryListItemsRefs {
+    final manager = $$GroceryListItemsTableTableManager(
+      $_db,
+      $_db.groceryListItems,
+    ).filter((f) => f.listId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _groceryListItemsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$GroceryListsTableFilterComposer
+    extends Composer<_$AppDatabase, $GroceryListsTable> {
+  $$GroceryListsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get weekStart => $composableBuilder(
+    column: $table.weekStart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  Expression<bool> groceryListRecipesRefs(
+    Expression<bool> Function($$GroceryListRecipesTableFilterComposer f) f,
+  ) {
+    final $$GroceryListRecipesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.groceryListRecipes,
+      getReferencedColumn: (t) => t.listId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroceryListRecipesTableFilterComposer(
+            $db: $db,
+            $table: $db.groceryListRecipes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> groceryListItemsRefs(
+    Expression<bool> Function($$GroceryListItemsTableFilterComposer f) f,
+  ) {
+    final $$GroceryListItemsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.groceryListItems,
+      getReferencedColumn: (t) => t.listId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroceryListItemsTableFilterComposer(
+            $db: $db,
+            $table: $db.groceryListItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$GroceryListsTableOrderingComposer
+    extends Composer<_$AppDatabase, $GroceryListsTable> {
+  $$GroceryListsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get weekStart => $composableBuilder(
+    column: $table.weekStart,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GroceryListsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GroceryListsTable> {
+  $$GroceryListsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<String> get weekStart =>
+      $composableBuilder(column: $table.weekStart, builder: (column) => column);
+
+  Expression<T> groceryListRecipesRefs<T extends Object>(
+    Expression<T> Function($$GroceryListRecipesTableAnnotationComposer a) f,
+  ) {
+    final $$GroceryListRecipesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.groceryListRecipes,
+          getReferencedColumn: (t) => t.listId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$GroceryListRecipesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.groceryListRecipes,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> groceryListItemsRefs<T extends Object>(
+    Expression<T> Function($$GroceryListItemsTableAnnotationComposer a) f,
+  ) {
+    final $$GroceryListItemsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.groceryListItems,
+      getReferencedColumn: (t) => t.listId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroceryListItemsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groceryListItems,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$GroceryListsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GroceryListsTable,
+          GroceryListRow,
+          $$GroceryListsTableFilterComposer,
+          $$GroceryListsTableOrderingComposer,
+          $$GroceryListsTableAnnotationComposer,
+          $$GroceryListsTableCreateCompanionBuilder,
+          $$GroceryListsTableUpdateCompanionBuilder,
+          (GroceryListRow, $$GroceryListsTableReferences),
+          GroceryListRow,
+          PrefetchHooks Function({
+            bool groceryListRecipesRefs,
+            bool groceryListItemsRefs,
+          })
+        > {
+  $$GroceryListsTableTableManager(_$AppDatabase db, $GroceryListsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GroceryListsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GroceryListsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GroceryListsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
+                Value<String> weekStart = const Value.absent(),
+              }) => GroceryListsCompanion(
+                id: id,
+                uuid: uuid,
+                weekStart: weekStart,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String uuid,
+                required String weekStart,
+              }) => GroceryListsCompanion.insert(
+                id: id,
+                uuid: uuid,
+                weekStart: weekStart,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$GroceryListsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({groceryListRecipesRefs = false, groceryListItemsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (groceryListRecipesRefs) db.groceryListRecipes,
+                    if (groceryListItemsRefs) db.groceryListItems,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (groceryListRecipesRefs)
+                        await $_getPrefetchedData<
+                          GroceryListRow,
+                          $GroceryListsTable,
+                          GroceryListRecipeRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GroceryListsTableReferences
+                              ._groceryListRecipesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GroceryListsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).groceryListRecipesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.listId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (groceryListItemsRefs)
+                        await $_getPrefetchedData<
+                          GroceryListRow,
+                          $GroceryListsTable,
+                          GroceryListItemRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$GroceryListsTableReferences
+                              ._groceryListItemsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$GroceryListsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).groceryListItemsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.listId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$GroceryListsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GroceryListsTable,
+      GroceryListRow,
+      $$GroceryListsTableFilterComposer,
+      $$GroceryListsTableOrderingComposer,
+      $$GroceryListsTableAnnotationComposer,
+      $$GroceryListsTableCreateCompanionBuilder,
+      $$GroceryListsTableUpdateCompanionBuilder,
+      (GroceryListRow, $$GroceryListsTableReferences),
+      GroceryListRow,
+      PrefetchHooks Function({
+        bool groceryListRecipesRefs,
+        bool groceryListItemsRefs,
+      })
+    >;
+typedef $$GroceryListRecipesTableCreateCompanionBuilder =
+    GroceryListRecipesCompanion Function({
+      Value<int> id,
+      required int listId,
+      required int position,
+      required String title,
+    });
+typedef $$GroceryListRecipesTableUpdateCompanionBuilder =
+    GroceryListRecipesCompanion Function({
+      Value<int> id,
+      Value<int> listId,
+      Value<int> position,
+      Value<String> title,
+    });
+
+final class $$GroceryListRecipesTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $GroceryListRecipesTable,
+          GroceryListRecipeRow
+        > {
+  $$GroceryListRecipesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $GroceryListsTable _listIdTable(_$AppDatabase db) => db.groceryLists
+      .createAlias('grocery_list_recipes__list_id__grocery_lists__id');
+
+  $$GroceryListsTableProcessedTableManager get listId {
+    final $_column = $_itemColumn<int>('list_id')!;
+
+    final manager = $$GroceryListsTableTableManager(
+      $_db,
+      $_db.groceryLists,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_listIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$GroceryListRecipesTableFilterComposer
+    extends Composer<_$AppDatabase, $GroceryListRecipesTable> {
+  $$GroceryListRecipesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$GroceryListsTableFilterComposer get listId {
+    final $$GroceryListsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.listId,
+      referencedTable: $db.groceryLists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroceryListsTableFilterComposer(
+            $db: $db,
+            $table: $db.groceryLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$GroceryListRecipesTableOrderingComposer
+    extends Composer<_$AppDatabase, $GroceryListRecipesTable> {
+  $$GroceryListRecipesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$GroceryListsTableOrderingComposer get listId {
+    final $$GroceryListsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.listId,
+      referencedTable: $db.groceryLists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroceryListsTableOrderingComposer(
+            $db: $db,
+            $table: $db.groceryLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$GroceryListRecipesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GroceryListRecipesTable> {
+  $$GroceryListRecipesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  $$GroceryListsTableAnnotationComposer get listId {
+    final $$GroceryListsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.listId,
+      referencedTable: $db.groceryLists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroceryListsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groceryLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$GroceryListRecipesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GroceryListRecipesTable,
+          GroceryListRecipeRow,
+          $$GroceryListRecipesTableFilterComposer,
+          $$GroceryListRecipesTableOrderingComposer,
+          $$GroceryListRecipesTableAnnotationComposer,
+          $$GroceryListRecipesTableCreateCompanionBuilder,
+          $$GroceryListRecipesTableUpdateCompanionBuilder,
+          (GroceryListRecipeRow, $$GroceryListRecipesTableReferences),
+          GroceryListRecipeRow,
+          PrefetchHooks Function({bool listId})
+        > {
+  $$GroceryListRecipesTableTableManager(
+    _$AppDatabase db,
+    $GroceryListRecipesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GroceryListRecipesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GroceryListRecipesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GroceryListRecipesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> listId = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<String> title = const Value.absent(),
+              }) => GroceryListRecipesCompanion(
+                id: id,
+                listId: listId,
+                position: position,
+                title: title,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int listId,
+                required int position,
+                required String title,
+              }) => GroceryListRecipesCompanion.insert(
+                id: id,
+                listId: listId,
+                position: position,
+                title: title,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$GroceryListRecipesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({listId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (listId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.listId,
+                                referencedTable:
+                                    $$GroceryListRecipesTableReferences
+                                        ._listIdTable(db),
+                                referencedColumn:
+                                    $$GroceryListRecipesTableReferences
+                                        ._listIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$GroceryListRecipesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GroceryListRecipesTable,
+      GroceryListRecipeRow,
+      $$GroceryListRecipesTableFilterComposer,
+      $$GroceryListRecipesTableOrderingComposer,
+      $$GroceryListRecipesTableAnnotationComposer,
+      $$GroceryListRecipesTableCreateCompanionBuilder,
+      $$GroceryListRecipesTableUpdateCompanionBuilder,
+      (GroceryListRecipeRow, $$GroceryListRecipesTableReferences),
+      GroceryListRecipeRow,
+      PrefetchHooks Function({bool listId})
+    >;
+typedef $$GroceryListItemsTableCreateCompanionBuilder =
+    GroceryListItemsCompanion Function({
+      Value<int> id,
+      required int listId,
+      required int position,
+      required String name,
+      required double quantity,
+      required String unit,
+    });
+typedef $$GroceryListItemsTableUpdateCompanionBuilder =
+    GroceryListItemsCompanion Function({
+      Value<int> id,
+      Value<int> listId,
+      Value<int> position,
+      Value<String> name,
+      Value<double> quantity,
+      Value<String> unit,
+    });
+
+final class $$GroceryListItemsTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $GroceryListItemsTable,
+          GroceryListItemRow
+        > {
+  $$GroceryListItemsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $GroceryListsTable _listIdTable(_$AppDatabase db) => db.groceryLists
+      .createAlias('grocery_list_items__list_id__grocery_lists__id');
+
+  $$GroceryListsTableProcessedTableManager get listId {
+    final $_column = $_itemColumn<int>('list_id')!;
+
+    final manager = $$GroceryListsTableTableManager(
+      $_db,
+      $_db.groceryLists,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_listIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$GroceryListItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $GroceryListItemsTable> {
+  $$GroceryListItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$GroceryListsTableFilterComposer get listId {
+    final $$GroceryListsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.listId,
+      referencedTable: $db.groceryLists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroceryListsTableFilterComposer(
+            $db: $db,
+            $table: $db.groceryLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$GroceryListItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $GroceryListItemsTable> {
+  $$GroceryListItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get position => $composableBuilder(
+    column: $table.position,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get quantity => $composableBuilder(
+    column: $table.quantity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get unit => $composableBuilder(
+    column: $table.unit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$GroceryListsTableOrderingComposer get listId {
+    final $$GroceryListsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.listId,
+      referencedTable: $db.groceryLists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroceryListsTableOrderingComposer(
+            $db: $db,
+            $table: $db.groceryLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$GroceryListItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $GroceryListItemsTable> {
+  $$GroceryListItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<double> get quantity =>
+      $composableBuilder(column: $table.quantity, builder: (column) => column);
+
+  GeneratedColumn<String> get unit =>
+      $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  $$GroceryListsTableAnnotationComposer get listId {
+    final $$GroceryListsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.listId,
+      referencedTable: $db.groceryLists,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroceryListsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groceryLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$GroceryListItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $GroceryListItemsTable,
+          GroceryListItemRow,
+          $$GroceryListItemsTableFilterComposer,
+          $$GroceryListItemsTableOrderingComposer,
+          $$GroceryListItemsTableAnnotationComposer,
+          $$GroceryListItemsTableCreateCompanionBuilder,
+          $$GroceryListItemsTableUpdateCompanionBuilder,
+          (GroceryListItemRow, $$GroceryListItemsTableReferences),
+          GroceryListItemRow,
+          PrefetchHooks Function({bool listId})
+        > {
+  $$GroceryListItemsTableTableManager(
+    _$AppDatabase db,
+    $GroceryListItemsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GroceryListItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GroceryListItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GroceryListItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> listId = const Value.absent(),
+                Value<int> position = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<double> quantity = const Value.absent(),
+                Value<String> unit = const Value.absent(),
+              }) => GroceryListItemsCompanion(
+                id: id,
+                listId: listId,
+                position: position,
+                name: name,
+                quantity: quantity,
+                unit: unit,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int listId,
+                required int position,
+                required String name,
+                required double quantity,
+                required String unit,
+              }) => GroceryListItemsCompanion.insert(
+                id: id,
+                listId: listId,
+                position: position,
+                name: name,
+                quantity: quantity,
+                unit: unit,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$GroceryListItemsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({listId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (listId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.listId,
+                                referencedTable:
+                                    $$GroceryListItemsTableReferences
+                                        ._listIdTable(db),
+                                referencedColumn:
+                                    $$GroceryListItemsTableReferences
+                                        ._listIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$GroceryListItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $GroceryListItemsTable,
+      GroceryListItemRow,
+      $$GroceryListItemsTableFilterComposer,
+      $$GroceryListItemsTableOrderingComposer,
+      $$GroceryListItemsTableAnnotationComposer,
+      $$GroceryListItemsTableCreateCompanionBuilder,
+      $$GroceryListItemsTableUpdateCompanionBuilder,
+      (GroceryListItemRow, $$GroceryListItemsTableReferences),
+      GroceryListItemRow,
+      PrefetchHooks Function({bool listId})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -2206,4 +4196,10 @@ class $AppDatabaseManager {
       $$RecipeIngredientsTableTableManager(_db, _db.recipeIngredients);
   $$RecipeCategoriesTableTableManager get recipeCategories =>
       $$RecipeCategoriesTableTableManager(_db, _db.recipeCategories);
+  $$GroceryListsTableTableManager get groceryLists =>
+      $$GroceryListsTableTableManager(_db, _db.groceryLists);
+  $$GroceryListRecipesTableTableManager get groceryListRecipes =>
+      $$GroceryListRecipesTableTableManager(_db, _db.groceryListRecipes);
+  $$GroceryListItemsTableTableManager get groceryListItems =>
+      $$GroceryListItemsTableTableManager(_db, _db.groceryListItems);
 }

@@ -7,6 +7,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 const testDocumentsDir = '/app-documents';
 
+/// A Wednesday: its week runs from Monday 19 to Sunday 25 October.
+final today = DateTime(2026, 10, 21, 10);
+
 AppDatabase openInMemoryDatabase() {
   final db = AppDatabase(_forTests(NativeDatabase.memory()));
   addTearDown(db.close);

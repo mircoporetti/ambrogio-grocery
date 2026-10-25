@@ -33,14 +33,51 @@ class RecipeCategories extends Table {
   TextColumn get name => text()();
 }
 
-@DriftDatabase(tables: [Recipes, RecipeIngredients, RecipeCategories])
+@DataClassName('GroceryListRow')
+class GroceryLists extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get uuid => text().unique()();
+  // The Monday as yyyy-MM-dd, so the week doesn't depend on the time zone.
+  TextColumn get weekStart => text().unique()();
+}
+
+@DataClassName('GroceryListRecipeRow')
+class GroceryListRecipes extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get listId =>
+      integer().references(GroceryLists, #id, onDelete: KeyAction.cascade)();
+  IntColumn get position => integer()();
+  TextColumn get title => text()();
+}
+
+@DataClassName('GroceryListItemRow')
+class GroceryListItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get listId =>
+      integer().references(GroceryLists, #id, onDelete: KeyAction.cascade)();
+  IntColumn get position => integer()();
+  TextColumn get name => text()();
+  RealColumn get quantity => real()();
+  TextColumn get unit => text()();
+}
+
+@DriftDatabase(
+  tables: [
+    Recipes,
+    RecipeIngredients,
+    RecipeCategories,
+    GroceryLists,
+    GroceryListRecipes,
+    GroceryListItems,
+  ],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   AppDatabase.onDevice() : super(driftDatabase(name: 'ambrogio_grocery'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -68,6 +105,11 @@ class AppDatabase extends _$AppDatabase {
           "instr(photo_path, '/photos/') + 1) "
           "WHERE instr(photo_path, '/photos/') > 0",
         );
+      }
+      if (from < 4) {
+        await m.createTable(groceryLists);
+        await m.createTable(groceryListRecipes);
+        await m.createTable(groceryListItems);
       }
     },
     beforeOpen: (_) => customStatement('PRAGMA foreign_keys = ON'),

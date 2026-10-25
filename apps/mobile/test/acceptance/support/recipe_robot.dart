@@ -1,4 +1,7 @@
 import 'package:ambrogio_grocery/app.dart';
+import 'package:ambrogio_grocery/grocery/data/drift_grocery_list_storage_adapter.dart';
+import 'package:ambrogio_grocery/grocery/domain/clock_port.dart';
+import 'package:ambrogio_grocery/grocery/domain/grocery_list_storage_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_picker_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_storage_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/recipe_storage_port.dart';
@@ -7,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'fake_photo_picker_adapter.dart';
 import 'fake_photo_storage_adapter.dart';
+import 'fixed_clock_adapter.dart';
+import 'test_database.dart';
 
 class RecipeRobot {
   RecipeRobot(this.tester);
@@ -17,10 +22,16 @@ class RecipeRobot {
     RecipeStoragePort storage, {
     PhotoPickerPort? photoPicker,
     PhotoStoragePort? photoStorage,
+    GroceryListStoragePort? groceryListStorage,
+    ClockPort? clock,
   }) async {
     await tester.pumpWidget(
       AmbrogioApp(
         recipeStorage: storage,
+        groceryListStorage:
+            groceryListStorage ??
+            DriftGroceryListStorageAdapter(openInMemoryDatabase()),
+        clock: clock ?? FixedClockAdapter(today),
         photoPicker: photoPicker ?? FakePhotoPickerAdapter(),
         photoStorage: photoStorage ?? FakePhotoStorageAdapter(),
       ),

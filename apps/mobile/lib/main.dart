@@ -3,6 +3,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'app.dart';
 import 'database/app_database.dart';
+import 'grocery/data/drift_grocery_list_storage_adapter.dart';
 import 'recipes/data/drift_recipe_storage_adapter.dart';
 
 Future<void> main() async {
@@ -15,6 +16,7 @@ Future<void> main() async {
         database,
         documentsDir: documents.path,
       ),
+      groceryListStorage: DriftGroceryListStorageAdapter(database),
     ),
   );
 }
