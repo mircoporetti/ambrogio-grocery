@@ -9,6 +9,7 @@ import '../application/watch_grocery_list.dart';
 import '../domain/grocery_item.dart';
 import '../domain/grocery_list.dart';
 import '../domain/week.dart';
+import 'grocery_error.dart';
 
 class GroceryListViewModel extends ChangeNotifier {
   GroceryListViewModel(
@@ -35,8 +36,8 @@ class GroceryListViewModel extends ChangeNotifier {
   bool _loading = true;
   bool get loading => _loading;
 
-  String? _error;
-  String? get error => _error;
+  GroceryError? _error;
+  GroceryError? get error => _error;
 
   bool _deleting = false;
   bool get deleting => _deleting;
@@ -53,7 +54,7 @@ class GroceryListViewModel extends ChangeNotifier {
       await _tickGroceryItem(list.id, index, ticked: ticked);
     } on Exception catch (e, stackTrace) {
       log('Ticking grocery item failed', error: e, stackTrace: stackTrace);
-      _error = 'Could not update the grocery list. Please try again.';
+      _error = const UpdateFailed();
       notifyListeners();
     }
   }
@@ -69,7 +70,7 @@ class GroceryListViewModel extends ChangeNotifier {
       return true;
     } on Exception catch (e, stackTrace) {
       log('Deleting grocery list failed', error: e, stackTrace: stackTrace);
-      _error = 'Could not delete the grocery list. Please try again.';
+      _error = const DeleteFailed();
       return false;
     } finally {
       _deleting = false;

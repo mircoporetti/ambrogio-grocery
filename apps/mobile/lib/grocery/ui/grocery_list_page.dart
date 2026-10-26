@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../recipes/ui/formatting.dart';
 import '../domain/grocery_item.dart';
 import '../domain/grocery_list.dart';
@@ -35,11 +36,11 @@ class _GroceryListPageState extends State<GroceryListPage> {
       listenable: widget.viewModel,
       builder: (context, _) => Scaffold(
         appBar: AppBar(
-          title: const Text('Grocery list'),
+          title: Text(AppLocalizations.of(context).groceryList),
           actions: [
             if (widget.viewModel.list case final GroceryList list)
               IconButton(
-                tooltip: 'Delete grocery list',
+                tooltip: AppLocalizations.of(context).deleteGroceryList,
                 icon: const Icon(Icons.delete_outline),
                 onPressed: widget.viewModel.deleting
                     ? null
@@ -50,8 +51,8 @@ class _GroceryListPageState extends State<GroceryListPage> {
         ),
         body: switch ((widget.viewModel.loading, widget.viewModel.list)) {
           (true, _) => const Center(child: CircularProgressIndicator()),
-          (false, null) => const Center(
-            child: Text('This grocery list no longer exists'),
+          (false, null) => Center(
+            child: Text(AppLocalizations.of(context).groceryListNoLongerExists),
           ),
           (false, final GroceryList list) => _GroceryListItems(
             list: list,
@@ -75,7 +76,10 @@ class _GroceryListPageState extends State<GroceryListPage> {
         padding: const EdgeInsets.all(12),
         child: Semantics(
           liveRegion: true,
-          child: Text(error, style: TextStyle(color: colors.onErrorContainer)),
+          child: Text(
+            error.message(AppLocalizations.of(context)),
+            style: TextStyle(color: colors.onErrorContainer),
+          ),
         ),
       ),
     );
@@ -103,7 +107,10 @@ class _GroceryListItems extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(formatWeek(list.week), style: textTheme.titleLarge),
+              Text(
+                formatWeek(AppLocalizations.of(context), list.week),
+                style: textTheme.titleLarge,
+              ),
               const SizedBox(height: 4),
               Text(list.recipes.join(', '), style: textTheme.bodyMedium),
             ],
@@ -135,7 +142,10 @@ class _GroceryItemTile extends StatelessWidget {
       child: ListTile(
         leading: Checkbox(value: item.ticked, onChanged: (_) => onToggle()),
         title: Text(ingredient.name, style: style),
-        trailing: Text(formatQuantity(ingredient), style: style),
+        trailing: Text(
+          formatQuantity(AppLocalizations.of(context), ingredient),
+          style: style,
+        ),
         onTap: onToggle,
       ),
     );

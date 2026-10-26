@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../domain/ingredient.dart';
 import '../domain/recipe.dart';
 import 'formatting.dart';
@@ -62,14 +63,13 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
   }
 
   void _addIngredient() {
+    final l10n = AppLocalizations.of(context);
     final name = _ingredientName.text.trim();
     final quantity = _parseQuantity(_ingredientQuantity.text);
     setState(() {
-      _ingredientNameError = name.isEmpty
-          ? 'Ingredient name is required'
-          : null;
+      _ingredientNameError = name.isEmpty ? l10n.ingredientNameRequired : null;
       _ingredientQuantityError = quantity == null || quantity <= 0
-          ? 'Quantity must be a number greater than 0'
+          ? l10n.quantityInvalid
           : null;
       if (_ingredientNameError != null || _ingredientQuantityError != null) {
         return;
@@ -103,7 +103,7 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
     final fieldsValid = _formKey.currentState!.validate();
     setState(() {
       _ingredientsError = _ingredients.isEmpty
-          ? 'Add at least one ingredient'
+          ? AppLocalizations.of(context).addAtLeastOneIngredient
           : null;
     });
     if (!fieldsValid || _ingredientsError != null) return;
@@ -129,16 +129,19 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.viewModel.isEditing ? 'Edit recipe' : 'New recipe'),
+        title: Text(
+          widget.viewModel.isEditing ? l10n.editRecipe : l10n.newRecipe,
+        ),
         actions: [
           ListenableBuilder(
             listenable: widget.viewModel,
             builder: (_, _) => TextButton(
               // Disabled while saving so a double tap can't save twice.
               onPressed: widget.viewModel.saving ? null : _save,
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ),
         ],
@@ -157,7 +160,7 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
                 child: Semantics(
                   liveRegion: true,
                   child: Text(
-                    error,
+                    error.message(l10n),
                     style: TextStyle(color: colors.onErrorContainer),
                   ),
                 ),
@@ -183,30 +186,30 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
               ),
               TextFormField(
                 controller: _title,
-                decoration: const InputDecoration(labelText: 'Title'),
+                decoration: InputDecoration(labelText: l10n.titleLabel),
                 textCapitalization: TextCapitalization.sentences,
                 validator: (value) =>
-                    (value ?? '').trim().isEmpty ? 'Title is required' : null,
+                    (value ?? '').trim().isEmpty ? l10n.titleRequired : null,
               ),
               TextFormField(
                 controller: _portions,
-                decoration: const InputDecoration(labelText: 'Portions'),
+                decoration: InputDecoration(labelText: l10n.portionsLabel),
                 keyboardType: TextInputType.number,
                 validator: (value) {
                   final portions = int.tryParse((value ?? '').trim());
                   return portions == null || portions < 1
-                      ? 'Portions must be a whole number of at least 1'
+                      ? l10n.portionsInvalid
                       : null;
                 },
               ),
-              Text('Ingredients', style: textTheme.titleMedium),
+              Text(l10n.ingredients, style: textTheme.titleMedium),
               for (final ingredient in _ingredients)
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: Text(ingredient.name),
-                  subtitle: Text(formatQuantity(ingredient)),
+                  subtitle: Text(formatQuantity(l10n, ingredient)),
                   trailing: IconButton(
-                    tooltip: 'Remove ${ingredient.name}',
+                    tooltip: l10n.remove(ingredient.name),
                     icon: const Icon(Icons.delete_outline),
                     onPressed: () => _removeIngredient(ingredient),
                   ),
@@ -219,7 +222,7 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
               TextFormField(
                 controller: _ingredientName,
                 decoration: InputDecoration(
-                  labelText: 'Ingredient',
+                  labelText: l10n.ingredientLabel,
                   errorText: _ingredientNameError,
                 ),
                 textCapitalization: TextCapitalization.sentences,
@@ -232,7 +235,7 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
                     child: TextFormField(
                       controller: _ingredientQuantity,
                       decoration: InputDecoration(
-                        labelText: 'Quantity',
+                        labelText: l10n.quantityLabel,
                         errorText: _ingredientQuantityError,
                       ),
                       keyboardType: const TextInputType.numberWithOptions(
@@ -253,19 +256,19 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
               OutlinedButton.icon(
                 onPressed: _addIngredient,
                 icon: const Icon(Icons.add),
-                label: const Text('Add ingredient'),
+                label: Text(l10n.addIngredient),
               ),
               TextFormField(
                 controller: _procedure,
-                decoration: const InputDecoration(
-                  labelText: 'Procedure (optional)',
+                decoration: InputDecoration(
+                  labelText: l10n.procedureOptionalLabel,
                   alignLabelWithHint: true,
                 ),
                 minLines: 3,
                 maxLines: null,
                 textCapitalization: TextCapitalization.sentences,
               ),
-              Text('Categories', style: textTheme.titleMedium),
+              Text(l10n.categories, style: textTheme.titleMedium),
               if (_categories.isNotEmpty)
                 Wrap(
                   spacing: 8,
@@ -274,20 +277,20 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
                       InputChip(
                         label: Text(category),
                         onDeleted: () => _removeCategory(category),
-                        deleteButtonTooltipMessage: 'Remove $category',
+                        deleteButtonTooltipMessage: l10n.remove(category),
                       ),
                   ],
                 ),
               TextFormField(
                 controller: _category,
-                decoration: const InputDecoration(labelText: 'Category'),
+                decoration: InputDecoration(labelText: l10n.categoryLabel),
                 textCapitalization: TextCapitalization.sentences,
                 onFieldSubmitted: (_) => _addCategory(),
               ),
               OutlinedButton.icon(
                 onPressed: _addCategory,
                 icon: const Icon(Icons.add),
-                label: const Text('Add category'),
+                label: Text(l10n.addCategory),
               ),
             ],
           ),
@@ -305,17 +308,18 @@ class _PhotoField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final path = photoPath;
     if (path == null) {
       return OutlinedButton.icon(
         onPressed: onPick,
         icon: const Icon(Icons.add_a_photo_outlined),
-        label: const Text('Add photo (optional)'),
+        label: Text(l10n.addPhotoOptional),
       );
     }
     return Semantics(
       button: true,
-      label: 'Change photo',
+      label: l10n.changePhoto,
       child: InkWell(
         onTap: onPick,
         child: ClipRRect(

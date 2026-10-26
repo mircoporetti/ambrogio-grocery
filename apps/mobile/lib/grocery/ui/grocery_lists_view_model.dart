@@ -8,6 +8,7 @@ import '../application/get_current_week.dart';
 import '../application/watch_upcoming_grocery_lists.dart';
 import '../domain/grocery_list.dart';
 import '../domain/week.dart';
+import 'grocery_error.dart';
 
 class GroceryListsViewModel extends ChangeNotifier {
   GroceryListsViewModel(
@@ -32,8 +33,8 @@ class GroceryListsViewModel extends ChangeNotifier {
   bool _loading = true;
   bool get loading => _loading;
 
-  String? _error;
-  String? get error => _error;
+  GroceryError? _error;
+  GroceryError? get error => _error;
 
   Future<bool> delete(GroceryList list) async {
     _error = null;
@@ -44,7 +45,7 @@ class GroceryListsViewModel extends ChangeNotifier {
       return true;
     } on Exception catch (e, stackTrace) {
       log('Deleting grocery list failed', error: e, stackTrace: stackTrace);
-      _error = 'Could not delete the grocery list. Please try again.';
+      _error = const DeleteFailed();
       return false;
     } finally {
       notifyListeners();

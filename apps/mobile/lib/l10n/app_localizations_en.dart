@@ -1,0 +1,249 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+class AppLocalizationsEn extends AppLocalizations {
+  AppLocalizationsEn([String locale = 'en']) : super(locale);
+
+  @override
+  String get appTitle => 'Ambrogio Grocery';
+
+  @override
+  String get recipes => 'Recipes';
+
+  @override
+  String get noRecipesYet => 'No recipes yet';
+
+  @override
+  String get newRecipe => 'New recipe';
+
+  @override
+  String get editRecipe => 'Edit recipe';
+
+  @override
+  String get deleteRecipe => 'Delete recipe';
+
+  @override
+  String get recipeNoLongerExists => 'This recipe no longer exists';
+
+  @override
+  String photoOf(String title) {
+    return 'Photo of $title';
+  }
+
+  @override
+  String portions(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count portions',
+      one: '1 portion',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get ingredients => 'Ingredients';
+
+  @override
+  String get procedure => 'Procedure';
+
+  @override
+  String get categories => 'Categories';
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get titleLabel => 'Title';
+
+  @override
+  String get titleRequired => 'Title is required';
+
+  @override
+  String get portionsLabel => 'Portions';
+
+  @override
+  String get portionsInvalid => 'Portions must be a whole number of at least 1';
+
+  @override
+  String get ingredientLabel => 'Ingredient';
+
+  @override
+  String get ingredientNameRequired => 'Ingredient name is required';
+
+  @override
+  String get quantityLabel => 'Quantity';
+
+  @override
+  String get quantityInvalid => 'Quantity must be a number greater than 0';
+
+  @override
+  String get addIngredient => 'Add ingredient';
+
+  @override
+  String get addAtLeastOneIngredient => 'Add at least one ingredient';
+
+  @override
+  String get procedureOptionalLabel => 'Procedure (optional)';
+
+  @override
+  String get categoryLabel => 'Category';
+
+  @override
+  String get addCategory => 'Add category';
+
+  @override
+  String remove(String name) {
+    return 'Remove $name';
+  }
+
+  @override
+  String get addPhotoOptional => 'Add photo (optional)';
+
+  @override
+  String get changePhoto => 'Change photo';
+
+  @override
+  String get saveRecipeFailed => 'Could not save the recipe. Please try again.';
+
+  @override
+  String get deleteRecipeFailed =>
+      'Could not delete the recipe. Please try again.';
+
+  @override
+  String confirmDeleteRecipe(String title) {
+    return 'Delete $title?';
+  }
+
+  @override
+  String get cannotBeUndone => 'This cannot be undone.';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get delete => 'Delete';
+
+  @override
+  String get groceryLists => 'Grocery lists';
+
+  @override
+  String get groceryList => 'Grocery list';
+
+  @override
+  String get noGroceryListsYet => 'No grocery lists yet';
+
+  @override
+  String get deleteGroceryList => 'Delete grocery list';
+
+  @override
+  String confirmDeleteGroceryList(String week) {
+    return 'Delete the list for $week?';
+  }
+
+  @override
+  String get groceryListNoLongerExists => 'This grocery list no longer exists';
+
+  @override
+  String get updateGroceryListFailed =>
+      'Could not update the grocery list. Please try again.';
+
+  @override
+  String get deleteGroceryListFailed =>
+      'Could not delete the grocery list. Please try again.';
+
+  @override
+  String get thisWeek => 'This week';
+
+  @override
+  String recipeCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recipes',
+      one: '1 recipe',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get planAWeek => 'Plan a week';
+
+  @override
+  String get planTheWeek => 'Plan the week';
+
+  @override
+  String get earlierWeek => 'Earlier week';
+
+  @override
+  String get laterWeek => 'Later week';
+
+  @override
+  String confirmReplaceGroceryList(String week) {
+    return 'Replace the list for $week?';
+  }
+
+  @override
+  String get replaceGroceryListWarning =>
+      'The current list of that week will be lost.';
+
+  @override
+  String get replace => 'Replace';
+
+  @override
+  String recipesChosen(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count recipes chosen',
+      one: '1 recipe chosen',
+      zero: 'No recipes chosen yet',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get createGroceryList => 'Create grocery list';
+
+  @override
+  String get addRecipesToPlan => 'Add some recipes to plan your week';
+
+  @override
+  String get seenAllRecipes => 'You\'ve seen all your recipes';
+
+  @override
+  String deckPosition(int position, int total) {
+    return '$position of $total';
+  }
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get cook => 'Cook';
+
+  @override
+  String weekIsOver(String week) {
+    return '$week is over. Choose a later week.';
+  }
+
+  @override
+  String get saveGroceryListFailed =>
+      'Could not save the grocery list. Please try again.';
+
+  @override
+  String get settings => 'Settings';
+
+  @override
+  String get language => 'Language';
+
+  @override
+  String get systemDefault => 'System default';
+
+  @override
+  String get changeLanguageFailed =>
+      'Could not change the language. Please try again.';
+}

@@ -1,33 +1,20 @@
+import 'package:intl/intl.dart';
+
+import '../../l10n/app_localizations.dart';
 import '../domain/week.dart';
 
-const _months = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'May',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Oct',
-  'Nov',
-  'Dec',
-];
-
-String formatWeek(Week week) {
+String formatWeek(AppLocalizations l10n, Week week) {
+  final locale = l10n.localeName;
   final start = week.start;
   final end = week.end;
-  final endText = '${end.day} ${_months[end.month - 1]}';
+  final day = DateFormat.d(locale);
+  final dayMonth = DateFormat('d MMM', locale);
+  final dayMonthYear = DateFormat('d MMM y', locale);
   if (start.year != end.year) {
-    return '${start.day} ${_months[start.month - 1]} ${start.year}'
-        ' – $endText ${end.year}';
+    return '${dayMonthYear.format(start)} – ${dayMonthYear.format(end)}';
   }
   if (start.month != end.month) {
-    return '${start.day} ${_months[start.month - 1]} – $endText';
+    return '${dayMonth.format(start)} – ${dayMonth.format(end)}';
   }
-  return '${start.day} – $endText';
+  return '${day.format(start)} – ${dayMonth.format(end)}';
 }
-
-String formatRecipeCount(int count) =>
-    count == 1 ? '1 recipe' : '$count recipes';

@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../../recipes/domain/recipe.dart';
-import '../../recipes/ui/formatting.dart';
 import '../domain/week.dart';
 import 'grocery_list_page.dart';
 import 'grocery_list_view_model.dart';
@@ -34,22 +34,27 @@ class _PlanWeekPageState extends State<PlanWeekPage> {
   Future<bool> _confirmReplace() async {
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-          'Replace the list for ${formatWeek(widget.viewModel.week)}?',
-        ),
-        content: const Text('The current list of that week will be lost.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context);
+        return AlertDialog(
+          title: Text(
+            l10n.confirmReplaceGroceryList(
+              formatWeek(l10n, widget.viewModel.week),
+            ),
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Replace'),
-          ),
-        ],
-      ),
+          content: Text(l10n.replaceGroceryListWarning),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(l10n.replace),
+            ),
+          ],
+        );
+      },
     );
     return confirmed == true;
   }
@@ -69,17 +74,12 @@ class _PlanWeekPageState extends State<PlanWeekPage> {
     );
   }
 
-  String _chosenSummary(int count) => switch (count) {
-    0 => 'No recipes chosen yet',
-    1 => '1 recipe chosen',
-    _ => '$count recipes chosen',
-  };
-
   @override
   Widget build(BuildContext context) {
     final viewModel = widget.viewModel;
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Plan the week')),
+      appBar: AppBar(title: Text(l10n.planTheWeek)),
       body: ListenableBuilder(
         listenable: viewModel,
         builder: (context, _) => Column(
@@ -106,14 +106,14 @@ class _PlanWeekPageState extends State<PlanWeekPage> {
                       child: Semantics(
                         liveRegion: true,
                         child: Text(
-                          error,
+                          error.message(l10n),
                           style: TextStyle(color: colors.error),
                         ),
                       ),
                     ),
                   Semantics(
                     liveRegion: true,
-                    child: Text(_chosenSummary(viewModel.chosenCount)),
+                    child: Text(l10n.recipesChosen(viewModel.chosenCount)),
                   ),
                   const SizedBox(height: 8),
                   SizedBox(
@@ -122,7 +122,7 @@ class _PlanWeekPageState extends State<PlanWeekPage> {
                       onPressed: viewModel.canCreateGroceryList
                           ? _createGroceryList
                           : null,
-                      child: const Text('Create grocery list'),
+                      child: Text(l10n.createGroceryList),
                     ),
                   ),
                 ],
@@ -135,20 +135,21 @@ class _PlanWeekPageState extends State<PlanWeekPage> {
   }
 
   Widget _deck(PlanWeekViewModel viewModel) {
+    final l10n = AppLocalizations.of(context);
     if (viewModel.loading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (viewModel.recipes.isEmpty) {
-      return const Center(child: Text('Add some recipes to plan your week'));
+      return Center(child: Text(l10n.addRecipesToPlan));
     }
     final recipe = viewModel.current;
     if (recipe == null) {
-      return const Center(child: Text("You've seen all your recipes"));
+      return Center(child: Text(l10n.seenAllRecipes));
     }
     return _RecipeDeck(
       key: ValueKey(recipe.id),
       recipe: recipe,
-      position: '${viewModel.position} of ${viewModel.recipes.length}',
+      position: l10n.deckPosition(viewModel.position, viewModel.recipes.length),
       onCook: viewModel.cook,
       onSkip: viewModel.skip,
     );
@@ -162,12 +163,13 @@ class _WeekPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
           IconButton(
-            tooltip: 'Earlier week',
+            tooltip: l10n.earlierWeek,
             icon: const Icon(Icons.chevron_left),
             onPressed: viewModel.canChooseEarlierWeek
                 ? viewModel.earlierWeek
@@ -175,13 +177,13 @@ class _WeekPicker extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              formatWeek(viewModel.week),
+              formatWeek(l10n, viewModel.week),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.titleMedium,
             ),
           ),
           IconButton(
-            tooltip: 'Later week',
+            tooltip: l10n.laterWeek,
             icon: const Icon(Icons.chevron_right),
             onPressed: viewModel.laterWeek,
           ),
@@ -279,6 +281,7 @@ class _RecipeDeckState extends State<_RecipeDeck>
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context);
     final pull = (_offset.dx / (_width * _throwDistance)).clamp(-1.0, 1.0);
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -329,7 +332,7 @@ class _RecipeDeckState extends State<_RecipeDeck>
                 child: OutlinedButton.icon(
                   onPressed: _thrown ? null : () => _throw(-1),
                   icon: const Icon(Icons.close),
-                  label: const Text('Skip'),
+                  label: Text(l10n.skip),
                 ),
               ),
               const SizedBox(width: 16),
@@ -337,7 +340,7 @@ class _RecipeDeckState extends State<_RecipeDeck>
                 child: FilledButton.tonalIcon(
                   onPressed: _thrown ? null : () => _throw(1),
                   icon: const Icon(Icons.check),
-                  label: const Text('Cook'),
+                  label: Text(l10n.cook),
                 ),
               ),
             ],
@@ -356,6 +359,7 @@ class _RecipeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     final photo = recipe.photoPath;
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -368,7 +372,7 @@ class _RecipeCard extends StatelessWidget {
                 : Image.file(
                     File(photo),
                     fit: BoxFit.cover,
-                    semanticLabel: 'Photo of ${recipe.title}',
+                    semanticLabel: l10n.photoOf(recipe.title),
                     errorBuilder: (_, _, _) =>
                         const Icon(Icons.restaurant, size: 96),
                   ),
@@ -379,7 +383,7 @@ class _RecipeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(recipe.title, style: textTheme.headlineSmall),
-                Text(formatPortions(recipe.portions)),
+                Text(l10n.portions(recipe.portions)),
               ],
             ),
           ),

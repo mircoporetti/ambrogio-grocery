@@ -7,6 +7,7 @@ import '../application/delete_recipe.dart';
 import '../application/watch_recipe.dart';
 import '../domain/recipe.dart';
 import '../domain/recipe_id.dart';
+import 'recipe_error.dart';
 
 class RecipeDetailViewModel extends ChangeNotifier {
   RecipeDetailViewModel(
@@ -33,8 +34,8 @@ class RecipeDetailViewModel extends ChangeNotifier {
   bool _deleting = false;
   bool get deleting => _deleting;
 
-  String? _error;
-  String? get error => _error;
+  RecipeError? _error;
+  RecipeError? get error => _error;
 
   /// Returns true when the recipe was deleted and the page can close.
   Future<bool> delete() async {
@@ -48,7 +49,7 @@ class RecipeDetailViewModel extends ChangeNotifier {
       return true;
     } on Exception catch (e, stackTrace) {
       log('Deleting recipe failed', error: e, stackTrace: stackTrace);
-      _error = 'Could not delete the recipe. Please try again.';
+      _error = RecipeError.deleteFailed;
       return false;
     } finally {
       _deleting = false;

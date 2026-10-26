@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../domain/recipe.dart';
 import 'confirm_delete_recipe.dart';
 import 'formatting.dart';
@@ -52,13 +53,14 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
         final recipe = widget.viewModel.recipe;
         final error = widget.viewModel.error;
         final colors = Theme.of(context).colorScheme;
+        final l10n = AppLocalizations.of(context);
         return Scaffold(
           appBar: AppBar(
             title: Text(recipe?.title ?? ''),
             actions: [
               if (recipe != null)
                 IconButton(
-                  tooltip: 'Edit recipe',
+                  tooltip: l10n.editRecipe,
                   icon: const Icon(Icons.edit_outlined),
                   onPressed: widget.viewModel.deleting
                       ? null
@@ -66,7 +68,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                 ),
               if (recipe != null)
                 IconButton(
-                  tooltip: 'Delete recipe',
+                  tooltip: l10n.deleteRecipe,
                   icon: const Icon(Icons.delete_outline),
                   onPressed: widget.viewModel.deleting
                       ? null
@@ -84,7 +86,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                       child: Semantics(
                         liveRegion: true,
                         child: Text(
-                          error,
+                          error.message(l10n),
                           style: TextStyle(color: colors.onErrorContainer),
                         ),
                       ),
@@ -93,9 +95,7 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
           ),
           body: switch ((widget.viewModel.loading, recipe)) {
             (true, _) => const Center(child: CircularProgressIndicator()),
-            (false, null) => const Center(
-              child: Text('This recipe no longer exists'),
-            ),
+            (false, null) => Center(child: Text(l10n.recipeNoLongerExists)),
             (false, final Recipe recipe) => _RecipeDetails(recipe: recipe),
           },
         );
@@ -112,6 +112,7 @@ class _RecipeDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final l10n = AppLocalizations.of(context);
     final photo = recipe.photoPath;
     final procedure = recipe.procedure;
     return ListView(
@@ -126,12 +127,12 @@ class _RecipeDetails extends StatelessWidget {
                 File(photo),
                 height: 220,
                 fit: BoxFit.cover,
-                semanticLabel: 'Photo of ${recipe.title}',
+                semanticLabel: l10n.photoOf(recipe.title),
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),
               ),
             ),
           ),
-        Text(formatPortions(recipe.portions), style: textTheme.titleMedium),
+        Text(l10n.portions(recipe.portions), style: textTheme.titleMedium),
         if (recipe.categories.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -145,16 +146,16 @@ class _RecipeDetails extends StatelessWidget {
             ),
           ),
         const SizedBox(height: 24),
-        Text('Ingredients', style: textTheme.titleLarge),
+        Text(l10n.ingredients, style: textTheme.titleLarge),
         for (final ingredient in recipe.ingredients)
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(ingredient.name),
-            trailing: Text(formatQuantity(ingredient)),
+            trailing: Text(formatQuantity(l10n, ingredient)),
           ),
         if (procedure != null) ...[
           const SizedBox(height: 24),
-          Text('Procedure', style: textTheme.titleLarge),
+          Text(l10n.procedure, style: textTheme.titleLarge),
           const SizedBox(height: 8),
           Text(procedure, style: textTheme.bodyLarge),
         ],

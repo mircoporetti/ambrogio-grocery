@@ -6,6 +6,7 @@ import '../application/create_recipe.dart';
 import '../application/pick_recipe_photo.dart';
 import '../application/update_recipe.dart';
 import '../domain/recipe.dart';
+import 'recipe_error.dart';
 
 class RecipeFormViewModel extends ChangeNotifier {
   RecipeFormViewModel.create(CreateRecipe createRecipe, this._pickRecipePhoto)
@@ -32,8 +33,8 @@ class RecipeFormViewModel extends ChangeNotifier {
   bool _saving = false;
   bool get saving => _saving;
 
-  String? _error;
-  String? get error => _error;
+  RecipeError? _error;
+  RecipeError? get error => _error;
 
   Future<void> pickPhoto() async {
     final path = await _pickRecipePhoto();
@@ -51,7 +52,7 @@ class RecipeFormViewModel extends ChangeNotifier {
       return true;
     } on Exception catch (e, stackTrace) {
       log('Saving recipe failed', error: e, stackTrace: stackTrace);
-      _error = 'Could not save the recipe. Please try again.';
+      _error = RecipeError.saveFailed;
       return false;
     } finally {
       _saving = false;

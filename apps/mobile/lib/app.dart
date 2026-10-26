@@ -14,6 +14,7 @@ import 'grocery/ui/grocery_list_view_model.dart';
 import 'grocery/ui/grocery_lists_page.dart';
 import 'grocery/ui/grocery_lists_view_model.dart';
 import 'grocery/ui/plan_week_view_model.dart';
+import 'l10n/app_localizations.dart';
 import 'recipes/application/create_recipe.dart';
 import 'recipes/application/delete_recipe.dart';
 import 'recipes/application/list_recipes.dart';
@@ -28,12 +29,20 @@ import 'recipes/domain/photo_storage_port.dart';
 import 'recipes/domain/recipe_storage_port.dart';
 import 'recipes/ui/recipe_list_page.dart';
 import 'recipes/ui/recipe_list_view_model.dart';
+import 'settings/application/change_language.dart';
+import 'settings/application/watch_language_preference.dart';
+import 'settings/domain/language_preference_port.dart';
+import 'settings/ui/app_language_view_model.dart';
+import 'settings/ui/language_view_model.dart';
+import 'settings/ui/settings_page.dart';
+import 'settings/ui/settings_view_model.dart';
 
 class AmbrogioApp extends StatefulWidget {
   const AmbrogioApp({
     super.key,
     required this.recipeStorage,
     required this.groceryListStorage,
+    required this.languagePreference,
     this.clock,
     this.photoPicker,
     this.photoStorage,
@@ -41,6 +50,7 @@ class AmbrogioApp extends StatefulWidget {
 
   final RecipeStoragePort recipeStorage;
   final GroceryListStoragePort groceryListStorage;
+  final LanguagePreferencePort languagePreference;
   final ClockPort? clock;
   final PhotoPickerPort? photoPicker;
   final PhotoStoragePort? photoStorage;
@@ -73,6 +83,11 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
     widget.groceryListStorage,
     _clock,
   );
+  late final _watchLanguagePreference = WatchLanguagePreference(
+    widget.languagePreference,
+  );
+  late final _changeLanguage = ChangeLanguage(widget.languagePreference);
+  late final _appLanguage = AppLanguageViewModel(_watchLanguagePreference);
   late final _recipeList = RecipeListViewModel(
     WatchRecipes(widget.recipeStorage),
     _deleteRecipe,
@@ -81,13 +96,25 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
   @override
   void dispose() {
     _recipeList.dispose();
+    _appLanguage.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: _appLanguage,
+      builder: (context, _) =>
+          _appLanguage.ready ? _app() : const SizedBox.shrink(),
+    );
+  }
+
+  Widget _app() {
     return MaterialApp(
-      title: 'Ambrogio Grocery',
+      locale: _appLanguage.locale,
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(colorSchemeSeed: Colors.green),
       home: RecipeListPage(
         viewModel: _recipeList,
@@ -96,6 +123,11 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
         watchRecipe: _watchRecipe,
         deleteRecipe: _deleteRecipe,
         updateRecipe: _updateRecipe,
+        settingsPage: () => SettingsPage(
+          viewModel: SettingsViewModel(_watchLanguagePreference),
+          languageViewModel: () =>
+              LanguageViewModel(_watchLanguagePreference, _changeLanguage),
+        ),
         groceryListsPage: () => GroceryListsPage(
           viewModel: GroceryListsViewModel(
             _watchUpcomingGroceryLists,

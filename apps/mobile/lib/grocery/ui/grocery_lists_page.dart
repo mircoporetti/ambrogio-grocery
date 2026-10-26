@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../domain/grocery_list.dart';
 import '../domain/week.dart';
 import 'confirm_delete_grocery_list.dart';
@@ -70,16 +71,19 @@ class _GroceryListsPageState extends State<GroceryListsPage> {
         padding: const EdgeInsets.all(12),
         child: Semantics(
           liveRegion: true,
-          child: Text(error, style: TextStyle(color: colors.onErrorContainer)),
+          child: Text(
+            error.message(AppLocalizations.of(context)),
+            style: TextStyle(color: colors.onErrorContainer),
+          ),
         ),
       ),
     );
   }
 
-  String _subtitle(GroceryList list) {
-    final recipes = formatRecipeCount(list.recipes.length);
+  String _subtitle(AppLocalizations l10n, GroceryList list) {
+    final recipes = l10n.recipeCount(list.recipes.length);
     return list.week == widget.viewModel.currentWeek
-        ? 'This week · $recipes'
+        ? '${l10n.thisWeek} · $recipes'
         : recipes;
   }
 
@@ -90,11 +94,11 @@ class _GroceryListsPageState extends State<GroceryListsPage> {
       listenable: viewModel,
       builder: (context, _) => Scaffold(
         appBar: AppBar(
-          title: const Text('Grocery lists'),
+          title: Text(AppLocalizations.of(context).groceryLists),
           bottom: _errorBanner(context),
         ),
         floatingActionButton: FloatingActionButton(
-          tooltip: 'Plan a week',
+          tooltip: AppLocalizations.of(context).planAWeek,
           onPressed: _planWeek,
           child: const Icon(Icons.add),
         ),
@@ -104,11 +108,12 @@ class _GroceryListsPageState extends State<GroceryListsPage> {
   }
 
   Widget _body(GroceryListsViewModel viewModel) {
+    final l10n = AppLocalizations.of(context);
     if (viewModel.loading) {
       return const Center(child: CircularProgressIndicator());
     }
     if (viewModel.lists.isEmpty) {
-      return const Center(child: Text('No grocery lists yet'));
+      return Center(child: Text(l10n.noGroceryListsYet));
     }
     final colors = Theme.of(context).colorScheme;
     return ListView(
@@ -131,8 +136,8 @@ class _GroceryListsPageState extends State<GroceryListsPage> {
             ),
             child: ListTile(
               leading: const Icon(Icons.shopping_cart_outlined),
-              title: Text(formatWeek(list.week)),
-              subtitle: Text(_subtitle(list)),
+              title: Text(formatWeek(l10n, list.week)),
+              subtitle: Text(_subtitle(l10n, list)),
               trailing: const Icon(Icons.chevron_right),
               onTap: () => _openList(list),
             ),

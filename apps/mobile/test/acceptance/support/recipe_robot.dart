@@ -5,6 +5,8 @@ import 'package:ambrogio_grocery/grocery/domain/grocery_list_storage_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_picker_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_storage_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/recipe_storage_port.dart';
+import 'package:ambrogio_grocery/settings/data/shared_preferences_language_preference_adapter.dart';
+import 'package:ambrogio_grocery/settings/domain/language_preference_port.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -12,6 +14,7 @@ import 'fake_photo_picker_adapter.dart';
 import 'fake_photo_storage_adapter.dart';
 import 'fixed_clock_adapter.dart';
 import 'test_database.dart';
+import 'test_preferences.dart';
 
 class RecipeRobot {
   RecipeRobot(this.tester);
@@ -24,6 +27,7 @@ class RecipeRobot {
     PhotoStoragePort? photoStorage,
     GroceryListStoragePort? groceryListStorage,
     ClockPort? clock,
+    LanguagePreferencePort? languagePreference,
   }) async {
     await tester.pumpWidget(
       AmbrogioApp(
@@ -34,6 +38,9 @@ class RecipeRobot {
         clock: clock ?? FixedClockAdapter(today),
         photoPicker: photoPicker ?? FakePhotoPickerAdapter(),
         photoStorage: photoStorage ?? FakePhotoStorageAdapter(),
+        languagePreference:
+            languagePreference ??
+            SharedPreferencesLanguagePreferenceAdapter(inMemoryPreferences()),
       ),
     );
     await tester.pumpAndSettle();

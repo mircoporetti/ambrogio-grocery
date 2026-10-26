@@ -1,0 +1,141 @@
+{
+  "@@locale": "en",
+  "appTitle": "Ambrogio Grocery",
+  "recipes": "Recipes",
+  "noRecipesYet": "No recipes yet",
+  "newRecipe": "New recipe",
+  "editRecipe": "Edit recipe",
+  "deleteRecipe": "Delete recipe",
+  "recipeNoLongerExists": "This recipe no longer exists",
+  "photoOf": "Photo of {title}",
+  "@photoOf": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "portions": "{count, plural, =1{1 portion} other{{count} portions}}",
+  "@portions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ingredients": "Ingredients",
+  "procedure": "Procedure",
+  "categories": "Categories",
+  "save": "Save",
+  "titleLabel": "Title",
+  "titleRequired": "Title is required",
+  "portionsLabel": "Portions",
+  "portionsInvalid": "Portions must be a whole number of at least 1",
+  "ingredientLabel": "Ingredient",
+  "ingredientNameRequired": "Ingredient name is required",
+  "quantityLabel": "Quantity",
+  "quantityInvalid": "Quantity must be a number greater than 0",
+  "addIngredient": "Add ingredient",
+  "addAtLeastOneIngredient": "Add at least one ingredient",
+  "procedureOptionalLabel": "Procedure (optional)",
+  "categoryLabel": "Category",
+  "addCategory": "Add category",
+  "remove": "Remove {name}",
+  "@remove": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addPhotoOptional": "Add photo (optional)",
+  "changePhoto": "Change photo",
+  "saveRecipeFailed": "Could not save the recipe. Please try again.",
+  "deleteRecipeFailed": "Could not delete the recipe. Please try again.",
+  "confirmDeleteRecipe": "Delete {title}?",
+  "@confirmDeleteRecipe": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "cannotBeUndone": "This cannot be undone.",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "groceryLists": "Grocery lists",
+  "groceryList": "Grocery list",
+  "noGroceryListsYet": "No grocery lists yet",
+  "deleteGroceryList": "Delete grocery list",
+  "confirmDeleteGroceryList": "Delete the list for {week}?",
+  "@confirmDeleteGroceryList": {
+    "placeholders": {
+      "week": {
+        "type": "String"
+      }
+    }
+  },
+  "groceryListNoLongerExists": "This grocery list no longer exists",
+  "updateGroceryListFailed": "Could not update the grocery list. Please try again.",
+  "deleteGroceryListFailed": "Could not delete the grocery list. Please try again.",
+  "thisWeek": "This week",
+  "recipeCount": "{count, plural, =1{1 recipe} other{{count} recipes}}",
+  "@recipeCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "planAWeek": "Plan a week",
+  "planTheWeek": "Plan the week",
+  "earlierWeek": "Earlier week",
+  "laterWeek": "Later week",
+  "confirmReplaceGroceryList": "Replace the list for {week}?",
+  "@confirmReplaceGroceryList": {
+    "placeholders": {
+      "week": {
+        "type": "String"
+      }
+    }
+  },
+  "replaceGroceryListWarning": "The current list of that week will be lost.",
+  "replace": "Replace",
+  "recipesChosen": "{count, plural, =0{No recipes chosen yet} =1{1 recipe chosen} other{{count} recipes chosen}}",
+  "@recipesChosen": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "createGroceryList": "Create grocery list",
+  "addRecipesToPlan": "Add some recipes to plan your week",
+  "seenAllRecipes": "You've seen all your recipes",
+  "deckPosition": "{position} of {total}",
+  "@deckPosition": {
+    "placeholders": {
+      "position": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "skip": "Skip",
+  "cook": "Cook",
+  "weekIsOver": "{week} is over. Choose a later week.",
+  "@weekIsOver": {
+    "placeholders": {
+      "week": {
+        "type": "String"
+      }
+    }
+  },
+  "saveGroceryListFailed": "Could not save the grocery list. Please try again.",
+  "settings": "Settings",
+  "language": "Language",
+  "systemDefault": "System default",
+  "changeLanguageFailed": "Could not change the language. Please try again."
+}

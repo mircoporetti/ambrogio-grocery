@@ -9,7 +9,7 @@ import '../application/find_grocery_list.dart';
 import '../application/get_current_week.dart';
 import '../domain/past_week_exception.dart';
 import '../domain/week.dart';
-import 'week_format.dart';
+import 'grocery_error.dart';
 
 class PlanWeekViewModel extends ChangeNotifier {
   PlanWeekViewModel(
@@ -54,8 +54,8 @@ class PlanWeekViewModel extends ChangeNotifier {
   bool _saving = false;
   bool get saving => _saving;
 
-  String? _error;
-  String? get error => _error;
+  GroceryError? _error;
+  GroceryError? get error => _error;
 
   bool get canCreateGroceryList => _chosen.isNotEmpty && !_saving;
 
@@ -105,11 +105,11 @@ class PlanWeekViewModel extends ChangeNotifier {
       await _createGroceryList(_week, _chosen);
       return true;
     } on PastWeekException catch (e) {
-      _error = '${formatWeek(e.week)} is over. Choose a later week.';
+      _error = WeekIsOver(e.week);
       return false;
     } on Exception catch (e, stackTrace) {
       log('Saving grocery list failed', error: e, stackTrace: stackTrace);
-      _error = 'Could not save the grocery list. Please try again.';
+      _error = const SaveFailed();
       return false;
     } finally {
       _saving = false;

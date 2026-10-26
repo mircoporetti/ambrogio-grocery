@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 import '../application/delete_recipe.dart';
 import '../application/watch_recipes.dart';
 import '../domain/recipe.dart';
+import 'recipe_error.dart';
 
 class RecipeListViewModel extends ChangeNotifier {
   RecipeListViewModel(WatchRecipes watchRecipes, this._deleteRecipe) {
@@ -25,8 +26,8 @@ class RecipeListViewModel extends ChangeNotifier {
   bool _loading = true;
   bool get loading => _loading;
 
-  String? _error;
-  String? get error => _error;
+  RecipeError? _error;
+  RecipeError? get error => _error;
 
   Future<bool> delete(Recipe recipe) async {
     _error = null;
@@ -37,7 +38,7 @@ class RecipeListViewModel extends ChangeNotifier {
       return true;
     } on Exception catch (e, stackTrace) {
       log('Deleting recipe failed', error: e, stackTrace: stackTrace);
-      _error = 'Could not delete the recipe. Please try again.';
+      _error = RecipeError.deleteFailed;
       return false;
     } finally {
       notifyListeners();
