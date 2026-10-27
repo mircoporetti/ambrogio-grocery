@@ -1,0 +1,17 @@
+name: ambrogio_backend
+description: "Ambrogio Grocery backend: accounts and sync."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.11.1
+
+resolution: workspace
+
+dependencies:
+  shelf: 1.4.3
+  shelf_router: 1.1.5
+
+dev_dependencies:
+  http: 1.6.0
+  lints: 6.1.0
+  test: 1.30.0

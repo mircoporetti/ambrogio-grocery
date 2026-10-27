@@ -6,8 +6,8 @@ You keep your recipes in the app, choose what you want to cook during the
 week, and get a single grocery list for the whole week.
 
 Today the app runs on Android and iOS and stores everything on the device.
-User accounts and a backend to share data across devices are planned for
-later.
+A Dart backend for user accounts and sharing data across devices is being
+built in `apps/backend`.
 
 ## Setup
 
@@ -19,7 +19,8 @@ SDK for Android, Xcode and CocoaPods for iOS (see [iOS](#ios)). Check with
 flutter pub get        # from the repo root, resolves all packages
 ```
 
-All the commands below run from `apps/mobile`.
+All the commands below run from `apps/mobile`, except the
+[Backend](#backend) ones.
 
 ## Run
 
@@ -70,6 +71,17 @@ regenerate the drift code and bump `schemaVersion` with a migration:
 
 ```sh
 dart run build_runner build
+```
+
+## Backend
+
+A plain Dart server built on [shelf](https://pub.dev/packages/shelf). The
+commands run from `apps/backend`.
+
+```sh
+dart run bin/server.dart          # listens on port 8080, or $PORT
+curl localhost:8080/health        # {"status":"ok"}
+dart test                         # acceptance tests over real HTTP
 ```
 
 ## Android
