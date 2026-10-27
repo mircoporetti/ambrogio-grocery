@@ -65,6 +65,8 @@ class GroceryLists extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get uuid => text().unique()();
   TextColumn get weekStart => text().unique()();
+  // UTC microseconds since the epoch; ticking doesn't change it.
+  IntColumn get updatedAt => integer().withDefault(const Constant(0))();
 }
 
 @DataClassName('GroceryListRecipeRow')
@@ -86,6 +88,19 @@ class GroceryListItems extends Table {
   RealColumn get quantity => real()();
   TextColumn get unit => text()();
   BoolColumn get ticked => boolean().withDefault(const Constant(false))();
+  TextColumn get uuid => text().unique()();
+  // UTC microseconds since the epoch.
+  IntColumn get tickedAt => integer().nullable()();
+}
+
+/// A deletion is a week with no list.
+@DataClassName('PendingGroceryListChangeRow')
+class PendingGroceryListChanges extends Table {
+  TextColumn get weekStart => text()();
+  IntColumn get updatedAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {weekStart};
 }
 
 const _randomUuid =
@@ -105,6 +120,7 @@ const _randomUuid =
     GroceryListRecipes,
     GroceryListItems,
     PendingRecipeChanges,
+    PendingGroceryListChanges,
     SyncCursors,
   ],
 )
@@ -114,7 +130,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.onDevice() : super(driftDatabase(name: 'ambrogio_grocery'));
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -175,6 +191,33 @@ class AppDatabase extends _$AppDatabase {
         await customStatement(
           'INSERT INTO pending_recipe_changes (recipe_uuid, updated_at) '
           'SELECT uuid, updated_at FROM recipes',
+        );
+      }
+      if (from < 8) {
+        // Before 4 the grocery tables were just created with every column.
+        if (from >= 4) {
+          await m.addColumn(groceryLists, groceryLists.updatedAt);
+          await m.alterTable(
+            TableMigration(
+              groceryListItems,
+              newColumns: [groceryListItems.uuid, groceryListItems.tickedAt],
+              columnTransformer: {
+                groceryListItems.uuid: const CustomExpression<String>(
+                  _randomUuid,
+                ),
+              },
+            ),
+          );
+        }
+        await customStatement('UPDATE grocery_lists SET updated_at = ?', [
+          DateTime.now().toUtc().microsecondsSinceEpoch,
+        ]);
+        await m.createTable(pendingGroceryListChanges);
+        // Lists made before sync are uploaded at the first login.
+        await customStatement(
+          'INSERT INTO pending_grocery_list_changes '
+          '(week_start, updated_at) '
+          'SELECT week_start, updated_at FROM grocery_lists',
         );
       }
     },

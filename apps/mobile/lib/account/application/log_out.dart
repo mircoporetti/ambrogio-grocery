@@ -10,7 +10,6 @@ class LogOut {
   final AccountApiPort _api;
   final SessionStoragePort _sessions;
 
-  /// Removes the account's data from the phone; it stays on the server.
   final Future<void> Function() _forgetLocalData;
 
   Future<void> call() async {

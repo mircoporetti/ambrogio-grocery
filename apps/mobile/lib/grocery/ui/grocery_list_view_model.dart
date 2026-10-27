@@ -7,6 +7,7 @@ import '../application/delete_grocery_list.dart';
 import '../application/tick_grocery_item.dart';
 import '../application/watch_grocery_list.dart';
 import '../domain/grocery_item.dart';
+import '../domain/grocery_item_id.dart';
 import '../domain/grocery_list.dart';
 import '../domain/week.dart';
 import 'grocery_error.dart';
@@ -42,16 +43,17 @@ class GroceryListViewModel extends ChangeNotifier {
   bool _deleting = false;
   bool get deleting => _deleting;
 
-  List<(int, GroceryItem)> get items => [...?_list?.items.indexed];
+  List<GroceryItem> get items => [...?_list?.items];
 
-  Future<void> toggle(int index) async {
+  Future<void> toggle(GroceryItemId id) async {
     final list = _list;
-    if (list == null) return;
-    final ticked = !list.items[index].ticked;
+    final item = list?.items.where((i) => i.id == id).firstOrNull;
+    if (list == null || item == null) return;
+    final ticked = !item.ticked;
     _error = null;
     notifyListeners();
     try {
-      await _tickGroceryItem(list.id, index, ticked: ticked);
+      await _tickGroceryItem(list.id, id, ticked: ticked);
     } on Exception catch (e, stackTrace) {
       log('Ticking grocery item failed', error: e, stackTrace: stackTrace);
       _error = const UpdateFailed();

@@ -1,7 +1,6 @@
 import 'recipe.dart';
 import 'recipe_id.dart';
 
-
 class RecipeChange {
   RecipeChange({required this.id, required DateTime updatedAt, this.recipe})
     : updatedAt = updatedAt.toUtc();

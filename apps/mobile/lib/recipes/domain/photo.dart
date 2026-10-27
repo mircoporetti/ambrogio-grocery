@@ -9,7 +9,6 @@ class Photo {
 
   final PhotoId id;
 
-  /// Null when the photo is not on this phone, as for a recipe synced from
-  /// another device: photos are not synced yet.
+  /// Null when the photo isn't on this phone: photos aren't synced yet.
   final String? path;
 }

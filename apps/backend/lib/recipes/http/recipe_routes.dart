@@ -38,9 +38,7 @@ class RecipeRoutes {
 
   Future<Response> _pullChanges(Request request) async {
     final account = _authenticate(bearerToken(request));
-    final query = PullRecipeChangesRequest.fromQuery(
-      request.url.queryParameters,
-    );
+    final query = PullChangesRequest.fromQuery(request.url.queryParameters);
     final after = switch (query.since) {
       null => 0,
       final since => int.tryParse(since) ?? -1,

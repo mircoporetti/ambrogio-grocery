@@ -9,7 +9,8 @@ class CallWithSession {
   final AccountApiPort _api;
   final SessionStoragePort _sessions;
 
-
+  // The server ends a session whose refresh token is used twice, so
+  // concurrent calls share one renewal.
   Future<Session?>? _renewing;
 
   Future<T?> call<T>(Future<T> Function(String accessToken) request) async {

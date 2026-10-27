@@ -57,7 +57,29 @@ class Recipes extends Table {
   Set<Column> get primaryKey => {accountId, id};
 }
 
-@DriftDatabase(tables: [Accounts, Sessions, RefreshTokens, Recipes])
+@DataClassName('GroceryListRow')
+@TableIndex(
+  name: 'grocery_lists_account_cursor',
+  columns: {#accountId, #changeCursor},
+  unique: true,
+)
+class GroceryLists extends Table {
+  UuidColumn get accountId => customType(
+    PgTypes.uuid,
+  ).references(Accounts, #id, onDelete: KeyAction.cascade)();
+  TextColumn get week => text()();
+  TimestampColumn get updatedAt => customType(PgTypes.timestampWithTimezone)();
+  // Null once deleted: the row stays so other devices learn about it.
+  Column<Object> get list => customType(PgTypes.jsonb).nullable()();
+  IntColumn get changeCursor => integer()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, week};
+}
+
+@DriftDatabase(
+  tables: [Accounts, Sessions, RefreshTokens, Recipes, GroceryLists],
+)
 class BackendDatabase extends _$BackendDatabase {
   BackendDatabase(super.executor);
 
@@ -70,7 +92,7 @@ class BackendDatabase extends _$BackendDatabase {
       );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -78,6 +100,10 @@ class BackendDatabase extends _$BackendDatabase {
       if (from < 2) {
         await m.createTable(recipes);
         await m.createIndex(recipesAccountCursor);
+      }
+      if (from < 3) {
+        await m.createTable(groceryLists);
+        await m.createIndex(groceryListsAccountCursor);
       }
     },
   );

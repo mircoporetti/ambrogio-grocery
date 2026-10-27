@@ -1175,6 +1175,384 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
   }
 }
 
+class $GroceryListsTable extends GroceryLists
+    with TableInfo<$GroceryListsTable, GroceryListRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GroceryListsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _accountIdMeta = const VerificationMeta(
+    'accountId',
+  );
+  @override
+  late final GeneratedColumn<UuidValue> accountId = GeneratedColumn<UuidValue>(
+    'account_id',
+    aliasedName,
+    false,
+    type: PgTypes.uuid,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES accounts (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _weekMeta = const VerificationMeta('week');
+  @override
+  late final GeneratedColumn<String> week = GeneratedColumn<String>(
+    'week',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<PgDateTime> updatedAt =
+      GeneratedColumn<PgDateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: PgTypes.timestampWithTimezone,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _listMeta = const VerificationMeta('list');
+  @override
+  late final GeneratedColumn<Object> list = GeneratedColumn<Object>(
+    'list',
+    aliasedName,
+    true,
+    type: PgTypes.jsonb,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _changeCursorMeta = const VerificationMeta(
+    'changeCursor',
+  );
+  @override
+  late final GeneratedColumn<int> changeCursor = GeneratedColumn<int>(
+    'change_cursor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    accountId,
+    week,
+    updatedAt,
+    list,
+    changeCursor,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'grocery_lists';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GroceryListRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('account_id')) {
+      context.handle(
+        _accountIdMeta,
+        accountId.isAcceptableOrUnknown(data['account_id']!, _accountIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_accountIdMeta);
+    }
+    if (data.containsKey('week')) {
+      context.handle(
+        _weekMeta,
+        week.isAcceptableOrUnknown(data['week']!, _weekMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_weekMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('list')) {
+      context.handle(
+        _listMeta,
+        list.isAcceptableOrUnknown(data['list']!, _listMeta),
+      );
+    }
+    if (data.containsKey('change_cursor')) {
+      context.handle(
+        _changeCursorMeta,
+        changeCursor.isAcceptableOrUnknown(
+          data['change_cursor']!,
+          _changeCursorMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_changeCursorMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {accountId, week};
+  @override
+  GroceryListRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GroceryListRow(
+      accountId: attachedDatabase.typeMapping.read(
+        PgTypes.uuid,
+        data['${effectivePrefix}account_id'],
+      )!,
+      week: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}week'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        PgTypes.timestampWithTimezone,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      list: attachedDatabase.typeMapping.read(
+        PgTypes.jsonb,
+        data['${effectivePrefix}list'],
+      ),
+      changeCursor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}change_cursor'],
+      )!,
+    );
+  }
+
+  @override
+  $GroceryListsTable createAlias(String alias) {
+    return $GroceryListsTable(attachedDatabase, alias);
+  }
+}
+
+class GroceryListRow extends DataClass implements Insertable<GroceryListRow> {
+  final UuidValue accountId;
+  final String week;
+  final PgDateTime updatedAt;
+  final Object? list;
+  final int changeCursor;
+  const GroceryListRow({
+    required this.accountId,
+    required this.week,
+    required this.updatedAt,
+    this.list,
+    required this.changeCursor,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['account_id'] = Variable<UuidValue>(accountId, PgTypes.uuid);
+    map['week'] = Variable<String>(week);
+    map['updated_at'] = Variable<PgDateTime>(
+      updatedAt,
+      PgTypes.timestampWithTimezone,
+    );
+    if (!nullToAbsent || list != null) {
+      map['list'] = Variable<Object>(list, PgTypes.jsonb);
+    }
+    map['change_cursor'] = Variable<int>(changeCursor);
+    return map;
+  }
+
+  GroceryListsCompanion toCompanion(bool nullToAbsent) {
+    return GroceryListsCompanion(
+      accountId: Value(accountId),
+      week: Value(week),
+      updatedAt: Value(updatedAt),
+      list: list == null && nullToAbsent ? const Value.absent() : Value(list),
+      changeCursor: Value(changeCursor),
+    );
+  }
+
+  factory GroceryListRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GroceryListRow(
+      accountId: serializer.fromJson<UuidValue>(json['accountId']),
+      week: serializer.fromJson<String>(json['week']),
+      updatedAt: serializer.fromJson<PgDateTime>(json['updatedAt']),
+      list: serializer.fromJson<Object?>(json['list']),
+      changeCursor: serializer.fromJson<int>(json['changeCursor']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'accountId': serializer.toJson<UuidValue>(accountId),
+      'week': serializer.toJson<String>(week),
+      'updatedAt': serializer.toJson<PgDateTime>(updatedAt),
+      'list': serializer.toJson<Object?>(list),
+      'changeCursor': serializer.toJson<int>(changeCursor),
+    };
+  }
+
+  GroceryListRow copyWith({
+    UuidValue? accountId,
+    String? week,
+    PgDateTime? updatedAt,
+    Value<Object?> list = const Value.absent(),
+    int? changeCursor,
+  }) => GroceryListRow(
+    accountId: accountId ?? this.accountId,
+    week: week ?? this.week,
+    updatedAt: updatedAt ?? this.updatedAt,
+    list: list.present ? list.value : this.list,
+    changeCursor: changeCursor ?? this.changeCursor,
+  );
+  GroceryListRow copyWithCompanion(GroceryListsCompanion data) {
+    return GroceryListRow(
+      accountId: data.accountId.present ? data.accountId.value : this.accountId,
+      week: data.week.present ? data.week.value : this.week,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      list: data.list.present ? data.list.value : this.list,
+      changeCursor: data.changeCursor.present
+          ? data.changeCursor.value
+          : this.changeCursor,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroceryListRow(')
+          ..write('accountId: $accountId, ')
+          ..write('week: $week, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('list: $list, ')
+          ..write('changeCursor: $changeCursor')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(accountId, week, updatedAt, list, changeCursor);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GroceryListRow &&
+          other.accountId == this.accountId &&
+          other.week == this.week &&
+          other.updatedAt == this.updatedAt &&
+          other.list == this.list &&
+          other.changeCursor == this.changeCursor);
+}
+
+class GroceryListsCompanion extends UpdateCompanion<GroceryListRow> {
+  final Value<UuidValue> accountId;
+  final Value<String> week;
+  final Value<PgDateTime> updatedAt;
+  final Value<Object?> list;
+  final Value<int> changeCursor;
+  final Value<int> rowid;
+  const GroceryListsCompanion({
+    this.accountId = const Value.absent(),
+    this.week = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.list = const Value.absent(),
+    this.changeCursor = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  GroceryListsCompanion.insert({
+    required UuidValue accountId,
+    required String week,
+    required PgDateTime updatedAt,
+    this.list = const Value.absent(),
+    required int changeCursor,
+    this.rowid = const Value.absent(),
+  }) : accountId = Value(accountId),
+       week = Value(week),
+       updatedAt = Value(updatedAt),
+       changeCursor = Value(changeCursor);
+  static Insertable<GroceryListRow> custom({
+    Expression<UuidValue>? accountId,
+    Expression<String>? week,
+    Expression<PgDateTime>? updatedAt,
+    Expression<Object>? list,
+    Expression<int>? changeCursor,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (accountId != null) 'account_id': accountId,
+      if (week != null) 'week': week,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (list != null) 'list': list,
+      if (changeCursor != null) 'change_cursor': changeCursor,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  GroceryListsCompanion copyWith({
+    Value<UuidValue>? accountId,
+    Value<String>? week,
+    Value<PgDateTime>? updatedAt,
+    Value<Object?>? list,
+    Value<int>? changeCursor,
+    Value<int>? rowid,
+  }) {
+    return GroceryListsCompanion(
+      accountId: accountId ?? this.accountId,
+      week: week ?? this.week,
+      updatedAt: updatedAt ?? this.updatedAt,
+      list: list ?? this.list,
+      changeCursor: changeCursor ?? this.changeCursor,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (accountId.present) {
+      map['account_id'] = Variable<UuidValue>(accountId.value, PgTypes.uuid);
+    }
+    if (week.present) {
+      map['week'] = Variable<String>(week.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<PgDateTime>(
+        updatedAt.value,
+        PgTypes.timestampWithTimezone,
+      );
+    }
+    if (list.present) {
+      map['list'] = Variable<Object>(list.value, PgTypes.jsonb);
+    }
+    if (changeCursor.present) {
+      map['change_cursor'] = Variable<int>(changeCursor.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroceryListsCompanion(')
+          ..write('accountId: $accountId, ')
+          ..write('week: $week, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('list: $list, ')
+          ..write('changeCursor: $changeCursor, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$BackendDatabase extends GeneratedDatabase {
   _$BackendDatabase(QueryExecutor e) : super(e);
   $BackendDatabaseManager get managers => $BackendDatabaseManager(this);
@@ -1182,10 +1560,16 @@ abstract class _$BackendDatabase extends GeneratedDatabase {
   late final $SessionsTable sessions = $SessionsTable(this);
   late final $RefreshTokensTable refreshTokens = $RefreshTokensTable(this);
   late final $RecipesTable recipes = $RecipesTable(this);
+  late final $GroceryListsTable groceryLists = $GroceryListsTable(this);
   late final Index
   recipesAccountCursor = Index.byDialect('recipes_account_cursor', {
     SqlDialect.postgres:
         'CREATE UNIQUE INDEX recipes_account_cursor ON recipes (account_id, change_cursor)',
+  });
+  late final Index
+  groceryListsAccountCursor = Index.byDialect('grocery_lists_account_cursor', {
+    SqlDialect.postgres:
+        'CREATE UNIQUE INDEX grocery_lists_account_cursor ON grocery_lists (account_id, change_cursor)',
   });
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -1196,7 +1580,9 @@ abstract class _$BackendDatabase extends GeneratedDatabase {
     sessions,
     refreshTokens,
     recipes,
+    groceryLists,
     recipesAccountCursor,
+    groceryListsAccountCursor,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -1220,6 +1606,13 @@ abstract class _$BackendDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('recipes', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'accounts',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('grocery_lists', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -1275,6 +1668,24 @@ final class $$AccountsTableReferences
     ).filter((f) => f.accountId.id.sqlEquals($_itemColumn<UuidValue>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_recipesRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$GroceryListsTable, List<GroceryListRow>>
+  _groceryListsRefsTable(_$BackendDatabase db) => MultiTypedResultKey.fromTable(
+    db.groceryLists,
+    aliasName: 'accounts__id__grocery_lists__account_id',
+  );
+
+  $$GroceryListsTableProcessedTableManager get groceryListsRefs {
+    final manager = $$GroceryListsTableTableManager(
+      $_db,
+      $_db.groceryLists,
+    ).filter((f) => f.accountId.id.sqlEquals($_itemColumn<UuidValue>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_groceryListsRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -1346,6 +1757,31 @@ class $$AccountsTableFilterComposer
           }) => $$RecipesTableFilterComposer(
             $db: $db,
             $table: $db.recipes,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> groceryListsRefs(
+    Expression<bool> Function($$GroceryListsTableFilterComposer f) f,
+  ) {
+    final $$GroceryListsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.groceryLists,
+      getReferencedColumn: (t) => t.accountId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroceryListsTableFilterComposer(
+            $db: $db,
+            $table: $db.groceryLists,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -1450,6 +1886,31 @@ class $$AccountsTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> groceryListsRefs<T extends Object>(
+    Expression<T> Function($$GroceryListsTableAnnotationComposer a) f,
+  ) {
+    final $$GroceryListsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.groceryLists,
+      getReferencedColumn: (t) => t.accountId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$GroceryListsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.groceryLists,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$AccountsTableTableManager
@@ -1465,7 +1926,11 @@ class $$AccountsTableTableManager
           $$AccountsTableUpdateCompanionBuilder,
           (AccountRow, $$AccountsTableReferences),
           AccountRow,
-          PrefetchHooks Function({bool sessionsRefs, bool recipesRefs})
+          PrefetchHooks Function({
+            bool sessionsRefs,
+            bool recipesRefs,
+            bool groceryListsRefs,
+          })
         > {
   $$AccountsTableTableManager(_$BackendDatabase db, $AccountsTable table)
     : super(
@@ -1510,50 +1975,89 @@ class $$AccountsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({sessionsRefs = false, recipesRefs = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [
-                if (sessionsRefs) db.sessions,
-                if (recipesRefs) db.recipes,
-              ],
-              addJoins: null,
-              getPrefetchedDataCallback: (items) async {
-                return [
-                  if (sessionsRefs)
-                    await $_getPrefetchedData<
-                      AccountRow,
-                      $AccountsTable,
-                      SessionRow
-                    >(
-                      currentTable: table,
-                      referencedTable: $$AccountsTableReferences
-                          ._sessionsRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$AccountsTableReferences(db, table, p0).sessionsRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.accountId == item.id),
-                      typedResults: items,
-                    ),
-                  if (recipesRefs)
-                    await $_getPrefetchedData<
-                      AccountRow,
-                      $AccountsTable,
-                      RecipeRow
-                    >(
-                      currentTable: table,
-                      referencedTable: $$AccountsTableReferences
-                          ._recipesRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$AccountsTableReferences(db, table, p0).recipesRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.accountId == item.id),
-                      typedResults: items,
-                    ),
-                ];
+          prefetchHooksCallback:
+              ({
+                sessionsRefs = false,
+                recipesRefs = false,
+                groceryListsRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (sessionsRefs) db.sessions,
+                    if (recipesRefs) db.recipes,
+                    if (groceryListsRefs) db.groceryLists,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (sessionsRefs)
+                        await $_getPrefetchedData<
+                          AccountRow,
+                          $AccountsTable,
+                          SessionRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$AccountsTableReferences
+                              ._sessionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$AccountsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).sessionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.accountId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (recipesRefs)
+                        await $_getPrefetchedData<
+                          AccountRow,
+                          $AccountsTable,
+                          RecipeRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$AccountsTableReferences
+                              ._recipesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$AccountsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).recipesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.accountId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (groceryListsRefs)
+                        await $_getPrefetchedData<
+                          AccountRow,
+                          $AccountsTable,
+                          GroceryListRow
+                        >(
+                          currentTable: table,
+                          referencedTable: $$AccountsTableReferences
+                              ._groceryListsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$AccountsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).groceryListsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.accountId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
               },
-            );
-          },
         ),
       );
 }
@@ -1570,7 +2074,11 @@ typedef $$AccountsTableProcessedTableManager =
       $$AccountsTableUpdateCompanionBuilder,
       (AccountRow, $$AccountsTableReferences),
       AccountRow,
-      PrefetchHooks Function({bool sessionsRefs, bool recipesRefs})
+      PrefetchHooks Function({
+        bool sessionsRefs,
+        bool recipesRefs,
+        bool groceryListsRefs,
+      })
     >;
 typedef $$SessionsTableCreateCompanionBuilder =
     SessionsCompanion Function({
@@ -2551,6 +3059,328 @@ typedef $$RecipesTableProcessedTableManager =
       RecipeRow,
       PrefetchHooks Function({bool accountId})
     >;
+typedef $$GroceryListsTableCreateCompanionBuilder =
+    GroceryListsCompanion Function({
+      required UuidValue accountId,
+      required String week,
+      required PgDateTime updatedAt,
+      Value<Object?> list,
+      required int changeCursor,
+      Value<int> rowid,
+    });
+typedef $$GroceryListsTableUpdateCompanionBuilder =
+    GroceryListsCompanion Function({
+      Value<UuidValue> accountId,
+      Value<String> week,
+      Value<PgDateTime> updatedAt,
+      Value<Object?> list,
+      Value<int> changeCursor,
+      Value<int> rowid,
+    });
+
+final class $$GroceryListsTableReferences
+    extends
+        BaseReferences<_$BackendDatabase, $GroceryListsTable, GroceryListRow> {
+  $$GroceryListsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $AccountsTable _accountIdTable(_$BackendDatabase db) =>
+      db.accounts.createAlias('grocery_lists__account_id__accounts__id');
+
+  $$AccountsTableProcessedTableManager get accountId {
+    final $_column = $_itemColumn<UuidValue>('account_id')!;
+
+    final manager = $$AccountsTableTableManager(
+      $_db,
+      $_db.accounts,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_accountIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$GroceryListsTableFilterComposer
+    extends Composer<_$BackendDatabase, $GroceryListsTable> {
+  $$GroceryListsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get week => $composableBuilder(
+    column: $table.week,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<PgDateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Object> get list => $composableBuilder(
+    column: $table.list,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get changeCursor => $composableBuilder(
+    column: $table.changeCursor,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$AccountsTableFilterComposer get accountId {
+    final $$AccountsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.accountId,
+      referencedTable: $db.accounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AccountsTableFilterComposer(
+            $db: $db,
+            $table: $db.accounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$GroceryListsTableOrderingComposer
+    extends Composer<_$BackendDatabase, $GroceryListsTable> {
+  $$GroceryListsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get week => $composableBuilder(
+    column: $table.week,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<PgDateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Object> get list => $composableBuilder(
+    column: $table.list,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get changeCursor => $composableBuilder(
+    column: $table.changeCursor,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$AccountsTableOrderingComposer get accountId {
+    final $$AccountsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.accountId,
+      referencedTable: $db.accounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AccountsTableOrderingComposer(
+            $db: $db,
+            $table: $db.accounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$GroceryListsTableAnnotationComposer
+    extends Composer<_$BackendDatabase, $GroceryListsTable> {
+  $$GroceryListsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get week =>
+      $composableBuilder(column: $table.week, builder: (column) => column);
+
+  GeneratedColumn<PgDateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<Object> get list =>
+      $composableBuilder(column: $table.list, builder: (column) => column);
+
+  GeneratedColumn<int> get changeCursor => $composableBuilder(
+    column: $table.changeCursor,
+    builder: (column) => column,
+  );
+
+  $$AccountsTableAnnotationComposer get accountId {
+    final $$AccountsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.accountId,
+      referencedTable: $db.accounts,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AccountsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.accounts,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$GroceryListsTableTableManager
+    extends
+        RootTableManager<
+          _$BackendDatabase,
+          $GroceryListsTable,
+          GroceryListRow,
+          $$GroceryListsTableFilterComposer,
+          $$GroceryListsTableOrderingComposer,
+          $$GroceryListsTableAnnotationComposer,
+          $$GroceryListsTableCreateCompanionBuilder,
+          $$GroceryListsTableUpdateCompanionBuilder,
+          (GroceryListRow, $$GroceryListsTableReferences),
+          GroceryListRow,
+          PrefetchHooks Function({bool accountId})
+        > {
+  $$GroceryListsTableTableManager(
+    _$BackendDatabase db,
+    $GroceryListsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GroceryListsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GroceryListsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GroceryListsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<UuidValue> accountId = const Value.absent(),
+                Value<String> week = const Value.absent(),
+                Value<PgDateTime> updatedAt = const Value.absent(),
+                Value<Object?> list = const Value.absent(),
+                Value<int> changeCursor = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => GroceryListsCompanion(
+                accountId: accountId,
+                week: week,
+                updatedAt: updatedAt,
+                list: list,
+                changeCursor: changeCursor,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required UuidValue accountId,
+                required String week,
+                required PgDateTime updatedAt,
+                Value<Object?> list = const Value.absent(),
+                required int changeCursor,
+                Value<int> rowid = const Value.absent(),
+              }) => GroceryListsCompanion.insert(
+                accountId: accountId,
+                week: week,
+                updatedAt: updatedAt,
+                list: list,
+                changeCursor: changeCursor,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$GroceryListsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({accountId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (accountId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.accountId,
+                                referencedTable: $$GroceryListsTableReferences
+                                    ._accountIdTable(db),
+                                referencedColumn: $$GroceryListsTableReferences
+                                    ._accountIdTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$GroceryListsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$BackendDatabase,
+      $GroceryListsTable,
+      GroceryListRow,
+      $$GroceryListsTableFilterComposer,
+      $$GroceryListsTableOrderingComposer,
+      $$GroceryListsTableAnnotationComposer,
+      $$GroceryListsTableCreateCompanionBuilder,
+      $$GroceryListsTableUpdateCompanionBuilder,
+      (GroceryListRow, $$GroceryListsTableReferences),
+      GroceryListRow,
+      PrefetchHooks Function({bool accountId})
+    >;
 
 class $BackendDatabaseManager {
   final _$BackendDatabase _db;
@@ -2563,4 +3393,6 @@ class $BackendDatabaseManager {
       $$RefreshTokensTableTableManager(_db, _db.refreshTokens);
   $$RecipesTableTableManager get recipes =>
       $$RecipesTableTableManager(_db, _db.recipes);
+  $$GroceryListsTableTableManager get groceryLists =>
+      $$GroceryListsTableTableManager(_db, _db.groceryLists);
 }

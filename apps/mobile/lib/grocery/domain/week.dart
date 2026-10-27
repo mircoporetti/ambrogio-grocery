@@ -13,7 +13,11 @@ class Week implements Comparable<Week> {
     return Week.containing(monday);
   }
 
+  factory Week.fromKey(String key) => Week.startingOn(DateTime.parse(key));
+
   final DateTime start;
+
+  String get key => start.toIso8601String().substring(0, 10);
 
   DateTime get end => DateTime(start.year, start.month, start.day + 6);
 

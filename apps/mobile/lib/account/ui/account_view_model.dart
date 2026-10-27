@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
-import '../../recipes/application/upload_pending_recipes.dart';
+import '../../sync/application/upload_pending_changes.dart';
 import '../application/log_out.dart';
 import '../application/watch_session.dart';
 import '../domain/session.dart';
@@ -11,7 +11,7 @@ class AccountViewModel extends ChangeNotifier {
   AccountViewModel(
     WatchSession watchSession,
     this._logOut,
-    this._uploadPendingRecipes,
+    this._uploadPendingChanges,
   ) {
     _subscription = watchSession().listen((session) {
       _session = session;
@@ -21,7 +21,7 @@ class AccountViewModel extends ChangeNotifier {
   }
 
   final LogOut _logOut;
-  final UploadPendingRecipes _uploadPendingRecipes;
+  final UploadPendingChanges _uploadPendingChanges;
   late final StreamSubscription<Session?> _subscription;
 
   Session? _session;
@@ -31,7 +31,7 @@ class AccountViewModel extends ChangeNotifier {
   bool get loading => _loading;
 
   Future<bool> logOut() async {
-    if (!await _uploadPendingRecipes()) return false;
+    if (!await _uploadPendingChanges()) return false;
     await _logOut();
     return true;
   }

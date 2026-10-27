@@ -37,9 +37,7 @@ class HttpRecipeSyncApiAdapter implements RecipeSyncApiPort {
   Future<RecipeChangesPage> pull(String accessToken, {String? since}) async {
     final url = _baseUrl
         .resolve(recipeChangesPath)
-        .replace(
-          queryParameters: PullRecipeChangesRequest(since: since).toQuery(),
-        );
+        .replace(queryParameters: PullChangesRequest(since: since).toQuery());
     final body = await _send(http.Request('GET', url), accessToken);
     try {
       final response = PullRecipeChangesResponse.fromJson(jsonDecode(body));

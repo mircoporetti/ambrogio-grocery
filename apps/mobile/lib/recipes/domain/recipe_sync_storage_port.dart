@@ -1,6 +1,5 @@
 import 'recipe_change.dart';
 
-
 abstract interface class RecipeSyncStoragePort {
   Future<List<RecipeChange>> pendingChanges();
 

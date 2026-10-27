@@ -49,4 +49,30 @@ class GroceryList {
   final Week week;
   final List<String> recipes;
   final List<GroceryItem> items;
+
+  GroceryList withTicksFrom(GroceryList other) {
+    final theirs = {for (final item in other.items) item.id: item};
+    return GroceryList(
+      id: id,
+      week: week,
+      recipes: recipes,
+      items: [
+        for (final item in items)
+          switch (theirs[item.id]) {
+            null => item,
+            final their => item.mergedWith(their),
+          },
+      ],
+    );
+  }
+
+  bool sameTicksAs(GroceryList other) {
+    final theirs = {for (final item in other.items) item.id: item};
+    return items.length == other.items.length &&
+        items.every(
+          (item) =>
+              theirs[item.id]?.ticked == item.ticked &&
+              theirs[item.id]?.tickedAt == item.tickedAt,
+        );
+  }
 }

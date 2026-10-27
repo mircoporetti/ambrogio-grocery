@@ -8,7 +8,6 @@ import 'package:ambrogio_grocery/recipes/domain/recipe_sync_exceptions.dart';
 
 import 'fake_account_api_adapter.dart';
 
-
 class FakeRecipeSyncApiAdapter implements RecipeSyncApiPort {
   FakeRecipeSyncApiAdapter(this._accounts);
 

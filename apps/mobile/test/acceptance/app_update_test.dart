@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:ambrogio_grocery/grocery/data/drift_grocery_list_storage_adapter.dart';
+import 'package:ambrogio_grocery/grocery/domain/week.dart';
 import 'package:ambrogio_grocery/recipes/data/drift_recipe_storage_adapter.dart';
 import 'package:ambrogio_grocery/recipes/domain/ingredient.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +9,7 @@ import 'package:sqlite3/sqlite3.dart';
 
 import 'support/account_robot.dart';
 import 'support/fake_account_api_adapter.dart';
+import 'support/fake_grocery_list_sync_api_adapter.dart';
 import 'support/fake_recipe_sync_api_adapter.dart';
 import 'support/grocery_robot.dart';
 import 'support/recipe_robot.dart';
@@ -175,6 +177,68 @@ void main() {
     expect(uploaded.title, 'Carbonara');
     expect(uploaded.photo!.id, recipe.photo!.id);
   });
+
+  testWidgets('grocery lists saved before sync survive the update, can be '
+      'ticked and are uploaded at the first login', (tester) async {
+    final file = newDatabaseFile();
+    _writeVersion7Database(file);
+    final accounts = FakeAccountApiAdapter()
+      ..givenAccount('ada@example.com', 'secret-pw');
+    final server = FakeGroceryListSyncApiAdapter(accounts);
+
+    final db = openFileDatabase(file);
+    addTearDown(db.close);
+    await RecipeRobot(tester).launchApp(
+      DriftRecipeStorageAdapter(db, documentsDir: testDocumentsDir),
+      groceryListStorage: DriftGroceryListStorageAdapter(db),
+      accountApi: accounts,
+      groceryListSyncApi: server,
+    );
+
+    final robot = GroceryRobot(tester);
+    await robot.openGroceryLists();
+    await robot.openGroceryList('19 – 25 Oct');
+    expect(robot.groceryList, ['Guanciale 150 g', 'Spaghetti 320 g']);
+    expect(robot.isTicked('Guanciale'), isTrue);
+    await robot.tick('Spaghetti');
+    await robot.goBack();
+    await robot.goBack();
+
+    await AccountRobot(tester).logIn('ada@example.com', 'secret-pw');
+
+    final uploaded = server.listOf(
+      'ada@example.com',
+      Week.containing(DateTime(2026, 10, 19)),
+    )!;
+    expect(uploaded.recipes, ['Carbonara']);
+    expect(
+      {for (final i in uploaded.items) i.ingredient.name: i.ticked},
+      {'Guanciale': true, 'Spaghetti': true},
+    );
+    expect(uploaded.items.map((i) => i.id).toSet(), hasLength(2));
+  });
+}
+
+// Schema version 7 synced recipes but not grocery lists: items had no ids.
+void _writeVersion7Database(File file) {
+  final raw = sqlite3.open(file.path);
+  raw.execute('''
+    CREATE TABLE "photos" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "uuid" TEXT NOT NULL UNIQUE, "path" TEXT NULL);
+    CREATE TABLE "recipes" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "uuid" TEXT NOT NULL UNIQUE, "title" TEXT NOT NULL, "portions" INTEGER NOT NULL, "procedure" TEXT NULL, "photo_id" TEXT NULL REFERENCES photos (uuid), "updated_at" INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE "recipe_ingredients" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "recipe_id" INTEGER NOT NULL REFERENCES recipes (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "name" TEXT NOT NULL, "quantity" REAL NOT NULL, "unit" TEXT NOT NULL);
+    CREATE TABLE "recipe_categories" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "recipe_id" INTEGER NOT NULL REFERENCES recipes (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "name" TEXT NOT NULL);
+    CREATE TABLE "grocery_lists" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "uuid" TEXT NOT NULL UNIQUE, "week_start" TEXT NOT NULL UNIQUE);
+    CREATE TABLE "grocery_list_recipes" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "list_id" INTEGER NOT NULL REFERENCES grocery_lists (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "title" TEXT NOT NULL);
+    CREATE TABLE "grocery_list_items" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "list_id" INTEGER NOT NULL REFERENCES grocery_lists (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "name" TEXT NOT NULL, "quantity" REAL NOT NULL, "unit" TEXT NOT NULL, "ticked" INTEGER NOT NULL DEFAULT 0 CHECK ("ticked" IN (0, 1)));
+    CREATE TABLE "pending_recipe_changes" ("recipe_uuid" TEXT NOT NULL, "updated_at" INTEGER NOT NULL, PRIMARY KEY ("recipe_uuid"));
+    CREATE TABLE "sync_cursors" ("name" TEXT NOT NULL, "cursor" TEXT NOT NULL, PRIMARY KEY ("name"));
+    INSERT INTO grocery_lists (uuid, week_start) VALUES ('7c1e2d3f-4a5b-4c6d-8e7f-9a0b1c2d3e4f', '2026-10-19');
+    INSERT INTO grocery_list_recipes (list_id, position, title) VALUES (1, 0, 'Carbonara');
+    INSERT INTO grocery_list_items (list_id, position, name, quantity, unit, ticked) VALUES (1, 0, 'Guanciale', 150, 'grams', 1);
+    INSERT INTO grocery_list_items (list_id, position, name, quantity, unit) VALUES (1, 1, 'Spaghetti', 320, 'grams');
+    PRAGMA user_version = 7;
+  ''');
+  raw.close();
 }
 
 // Schema version 6 had no sync: no change times and no pending changes, and

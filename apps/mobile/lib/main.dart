@@ -10,6 +10,7 @@ import 'account/data/shared_preferences_log_in_prompt_adapter.dart';
 import 'app.dart';
 import 'database/app_database.dart';
 import 'grocery/data/drift_grocery_list_storage_adapter.dart';
+import 'grocery/data/http_grocery_list_sync_api_adapter.dart';
 import 'recipes/data/drift_recipe_storage_adapter.dart';
 import 'recipes/data/http_recipe_sync_api_adapter.dart';
 import 'settings/data/shared_preferences_language_preference_adapter.dart';
@@ -27,6 +28,7 @@ Future<void> main() async {
     database,
     documentsDir: documents.path,
   );
+  final groceryLists = DriftGroceryListStorageAdapter(database);
   final apiUrl = Uri.parse(_apiUrl);
   final client = http.Client();
   runApp(
@@ -34,7 +36,9 @@ Future<void> main() async {
       recipeStorage: recipes,
       recipeSyncStorage: recipes,
       recipeSyncApi: HttpRecipeSyncApiAdapter(apiUrl, client),
-      groceryListStorage: DriftGroceryListStorageAdapter(database),
+      groceryListStorage: groceryLists,
+      groceryListSyncStorage: groceryLists,
+      groceryListSyncApi: HttpGroceryListSyncApiAdapter(apiUrl, client),
       languagePreference: SharedPreferencesLanguagePreferenceAdapter(
         SharedPreferencesAsync(),
       ),

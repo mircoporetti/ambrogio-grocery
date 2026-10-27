@@ -17,13 +17,18 @@ import 'account/ui/log_in_view_model.dart';
 import 'grocery/application/create_grocery_list.dart';
 import 'grocery/application/delete_grocery_list.dart';
 import 'grocery/application/find_grocery_list.dart';
+import 'grocery/application/forget_local_grocery_lists.dart';
 import 'grocery/application/get_current_week.dart';
+import 'grocery/application/sync_grocery_lists.dart';
 import 'grocery/application/tick_grocery_item.dart';
 import 'grocery/application/watch_grocery_list.dart';
+import 'grocery/application/watch_pending_grocery_list_changes.dart';
 import 'grocery/application/watch_upcoming_grocery_lists.dart';
 import 'grocery/data/system_clock_adapter.dart';
 import 'grocery/domain/clock_port.dart';
 import 'grocery/domain/grocery_list_storage_port.dart';
+import 'grocery/domain/grocery_list_sync_api_port.dart';
+import 'grocery/domain/grocery_list_sync_storage_port.dart';
 import 'grocery/ui/grocery_list_view_model.dart';
 import 'grocery/ui/grocery_lists_page.dart';
 import 'grocery/ui/grocery_lists_view_model.dart';
@@ -34,10 +39,8 @@ import 'recipes/application/delete_recipe.dart';
 import 'recipes/application/forget_local_recipes.dart';
 import 'recipes/application/list_recipes.dart';
 import 'recipes/application/pick_recipe_photo.dart';
-import 'recipes/application/recipe_sync_lock.dart';
 import 'recipes/application/sync_recipes.dart';
 import 'recipes/application/update_recipe.dart';
-import 'recipes/application/upload_pending_recipes.dart';
 import 'recipes/application/watch_pending_recipe_changes.dart';
 import 'recipes/application/watch_recipe.dart';
 import 'recipes/application/watch_recipes.dart';
@@ -50,7 +53,6 @@ import 'recipes/domain/recipe_sync_api_port.dart';
 import 'recipes/domain/recipe_sync_storage_port.dart';
 import 'recipes/ui/recipe_list_page.dart';
 import 'recipes/ui/recipe_list_view_model.dart';
-import 'recipes/ui/recipe_sync_view_model.dart';
 import 'settings/application/change_language.dart';
 import 'settings/application/watch_language_preference.dart';
 import 'settings/domain/language_preference_port.dart';
@@ -58,6 +60,12 @@ import 'settings/ui/app_language_view_model.dart';
 import 'settings/ui/language_view_model.dart';
 import 'settings/ui/settings_page.dart';
 import 'settings/ui/settings_view_model.dart';
+import 'sync/application/forget_local_data.dart';
+import 'sync/application/sync_all.dart';
+import 'sync/application/sync_lock.dart';
+import 'sync/application/upload_pending_changes.dart';
+import 'sync/application/watch_pending_changes.dart';
+import 'sync/ui/sync_view_model.dart';
 
 class AmbrogioApp extends StatefulWidget {
   const AmbrogioApp({
@@ -70,6 +78,8 @@ class AmbrogioApp extends StatefulWidget {
     required this.logInPrompt,
     required this.recipeSyncStorage,
     required this.recipeSyncApi,
+    required this.groceryListSyncStorage,
+    required this.groceryListSyncApi,
     this.clock,
     this.photoPicker,
     this.photoStorage,
@@ -83,6 +93,8 @@ class AmbrogioApp extends StatefulWidget {
   final LogInPromptPort logInPrompt;
   final RecipeSyncStoragePort recipeSyncStorage;
   final RecipeSyncApiPort recipeSyncApi;
+  final GroceryListSyncStoragePort groceryListSyncStorage;
+  final GroceryListSyncApiPort groceryListSyncApi;
   final ClockPort? clock;
   final PhotoPickerPort? photoPicker;
   final PhotoStoragePort? photoStorage;
@@ -123,31 +135,50 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
   late final _logIn = LogIn(widget.accountApi, widget.sessionStorage);
   late final _createAccount = CreateAccount(widget.accountApi, _logIn);
   late final _watchSession = WatchSession(widget.sessionStorage);
-  late final _recipeSyncLock = RecipeSyncLock();
-  late final _syncRecipes = SyncRecipes(
-    widget.recipeSyncStorage,
-    widget.recipeSyncApi,
-    CallWithSession(widget.accountApi, widget.sessionStorage),
-    _recipeSyncLock,
+  late final _callWithSession = CallWithSession(
+    widget.accountApi,
+    widget.sessionStorage,
   );
-  late final _uploadPendingRecipes = UploadPendingRecipes(
+  late final _syncLock = SyncLock();
+  late final _syncAll = SyncAll(
+    SyncRecipes(
+      widget.recipeSyncStorage,
+      widget.recipeSyncApi,
+      _callWithSession,
+    ),
+    SyncGroceryLists(
+      widget.groceryListSyncStorage,
+      widget.groceryListSyncApi,
+      _callWithSession,
+    ),
+    _syncLock,
+  );
+  late final _watchPendingChanges = WatchPendingChanges(
+    WatchPendingRecipeChanges(widget.recipeSyncStorage),
+    WatchPendingGroceryListChanges(widget.groceryListSyncStorage),
+  );
+  late final _uploadPendingChanges = UploadPendingChanges(
     widget.recipeSyncStorage,
-    _syncRecipes,
+    widget.groceryListSyncStorage,
+    _syncAll,
   );
   late final _logOut = LogOut(
     widget.accountApi,
     widget.sessionStorage,
-    ForgetLocalRecipes(
-      widget.recipeStorage,
-      widget.recipeSyncStorage,
-      _photoStorage,
-      _recipeSyncLock,
+    ForgetLocalData(
+      ForgetLocalRecipes(
+        widget.recipeStorage,
+        widget.recipeSyncStorage,
+        _photoStorage,
+      ),
+      ForgetLocalGroceryLists(widget.groceryListSyncStorage),
+      _syncLock,
     ).call,
   );
-  late final _recipeSync = RecipeSyncViewModel(
+  late final _sync = SyncViewModel(
     _watchSession,
-    WatchPendingRecipeChanges(widget.recipeSyncStorage),
-    _syncRecipes,
+    _watchPendingChanges,
+    _syncAll,
   );
   late final _logInPrompt = LogInPromptViewModel(
     ShouldAskToLogIn(widget.logInPrompt, widget.sessionStorage),
@@ -161,12 +192,12 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
   @override
   void initState() {
     super.initState();
-    _recipeSync;
+    _sync;
   }
 
   @override
   void dispose() {
-    _recipeSync.dispose();
+    _sync.dispose();
     _recipeList.dispose();
     _appLanguage.dispose();
     super.dispose();
@@ -205,7 +236,7 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
             accountViewModel: AccountViewModel(
               _watchSession,
               _logOut,
-              _uploadPendingRecipes,
+              _uploadPendingChanges,
             ),
             logInViewModel: () => LogInViewModel(_logIn, _createAccount),
           ),

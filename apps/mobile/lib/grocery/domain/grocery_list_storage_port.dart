@@ -1,3 +1,4 @@
+import 'grocery_item_id.dart';
 import 'grocery_list.dart';
 import 'grocery_list_id.dart';
 import 'week.dart';
@@ -7,7 +8,11 @@ abstract interface class GroceryListStoragePort {
 
   Future<void> delete(GroceryListId id);
 
-  Future<void> tickItem(GroceryListId id, int index, {required bool ticked});
+  Future<void> tickItem(
+    GroceryListId id,
+    GroceryItemId item, {
+    required bool ticked,
+  });
 
   Future<List<GroceryList>> findAll();
 

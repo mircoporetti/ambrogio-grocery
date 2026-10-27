@@ -4,6 +4,7 @@ abstract final class ErrorCodes {
   static const invalidRequest = 'invalid_request';
   static const unauthorized = 'unauthorized';
   static const invalidRecipe = 'invalid_recipe';
+  static const invalidGroceryList = 'invalid_grocery_list';
   static const tooManyChanges = 'too_many_changes';
 }
 

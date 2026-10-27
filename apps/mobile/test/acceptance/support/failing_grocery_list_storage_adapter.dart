@@ -1,3 +1,4 @@
+import 'package:ambrogio_grocery/grocery/domain/grocery_item_id.dart';
 import 'package:ambrogio_grocery/grocery/domain/grocery_list.dart';
 import 'package:ambrogio_grocery/grocery/domain/grocery_list_id.dart';
 import 'package:ambrogio_grocery/grocery/domain/grocery_list_storage_port.dart';
@@ -26,11 +27,11 @@ class FailingGroceryListStorageAdapter implements GroceryListStoragePort {
   @override
   Future<void> tickItem(
     GroceryListId id,
-    int index, {
+    GroceryItemId item, {
     required bool ticked,
   }) async {
     if (failSaves) throw Exception('Simulated storage failure');
-    await _real.tickItem(id, index, ticked: ticked);
+    await _real.tickItem(id, item, ticked: ticked);
   }
 
   @override

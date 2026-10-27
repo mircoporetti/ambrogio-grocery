@@ -34,7 +34,6 @@ class InvalidRefreshTokenException extends AccountException {
   const InvalidRefreshTokenException();
 }
 
-/// The server refused the access token, usually because it expired.
 class AccessTokenRejectedException extends AccountException {
   const AccessTokenRejectedException();
 }

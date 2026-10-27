@@ -17,6 +17,10 @@ import 'accounts/domain/clock_port.dart';
 import 'accounts/domain/password_hasher_port.dart';
 import 'accounts/http/account_routes.dart';
 import 'database/backend_database.dart';
+import 'grocery/application/pull_grocery_list_changes.dart';
+import 'grocery/application/push_grocery_list_changes.dart';
+import 'grocery/data/drift_grocery_list_storage_adapter.dart';
+import 'grocery/http/grocery_list_routes.dart';
 import 'health/http/health_routes.dart';
 import 'recipes/application/pull_recipe_changes.dart';
 import 'recipes/application/push_recipe_changes.dart';
@@ -34,6 +38,7 @@ Future<HttpServer> startServer({
   final accounts = DriftAccountStorageAdapter(database);
   final sessions = DriftSessionStorageAdapter(database);
   final recipes = DriftRecipeStorageAdapter(database);
+  final groceryLists = DriftGroceryListStorageAdapter(database);
   final authenticate = Authenticate(accessTokens, clock);
   final accountRoutes = AccountRoutes(
     RegisterAccount(accounts, passwordHasher),
@@ -48,11 +53,17 @@ Future<HttpServer> startServer({
     PushRecipeChanges(recipes),
     PullRecipeChanges(recipes),
   );
+  final groceryListRoutes = GroceryListRoutes(
+    authenticate,
+    PushGroceryListChanges(groceryLists),
+    PullGroceryListChanges(groceryLists),
+  );
 
   final router = Router()
     ..mount('/', HealthRoutes().router.call)
     ..mount('/', accountRoutes.router.call)
-    ..mount('/', recipeRoutes.router.call);
+    ..mount('/', recipeRoutes.router.call)
+    ..mount('/', groceryListRoutes.router.call);
   final handler = const Pipeline()
       .addMiddleware(logRequests())
       .addHandler(router.call);

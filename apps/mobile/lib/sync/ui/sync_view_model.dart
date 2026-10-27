@@ -4,16 +4,13 @@ import 'package:flutter/widgets.dart';
 
 import '../../account/application/watch_session.dart';
 import '../../account/domain/session.dart';
-import '../application/sync_recipes.dart';
-import '../application/watch_pending_recipe_changes.dart';
+import '../application/sync_all.dart';
+import '../application/watch_pending_changes.dart';
 
-/// Keeps the recipes in sync for the whole app: at login and app start,
-/// after each change on the phone, and when the app comes back to the
-/// foreground.
-class RecipeSyncViewModel extends ChangeNotifier {
-  RecipeSyncViewModel(
+class SyncViewModel extends ChangeNotifier {
+  SyncViewModel(
     WatchSession watchSession,
-    WatchPendingRecipeChanges watchPending,
+    WatchPendingChanges watchPending,
     this._sync,
   ) {
     _session = watchSession().listen((session) {
@@ -32,7 +29,7 @@ class RecipeSyncViewModel extends ChangeNotifier {
     );
   }
 
-  final SyncRecipes _sync;
+  final SyncAll _sync;
   late final StreamSubscription<Session?> _session;
   late final StreamSubscription<int> _pending;
   late final AppLifecycleListener _lifecycle;

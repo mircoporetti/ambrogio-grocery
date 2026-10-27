@@ -6,29 +6,16 @@ import '../domain/recipe_change.dart';
 import '../domain/recipe_sync_api_port.dart';
 import '../domain/recipe_sync_exceptions.dart';
 import '../domain/recipe_sync_storage_port.dart';
-import 'recipe_sync_lock.dart';
 
-/// Pushes the recipes changed on the phone, then pulls what changed on the
-/// server. Does nothing when nobody is logged in. Failures leave the
-/// pending changes for the next sync.
 class SyncRecipes {
-  SyncRecipes(this._storage, this._api, this._callWithSession, this._lock);
+  SyncRecipes(this._storage, this._api, this._callWithSession);
 
   static const _pushBatch = 1000;
 
   final RecipeSyncStoragePort _storage;
   final RecipeSyncApiPort _api;
   final CallWithSession _callWithSession;
-  final RecipeSyncLock _lock;
-
-  Future<void>? _queued;
-
-  Future<void> call() => _queued ??= _lock.run(() {
-    _queued = null;
-    return _sync();
-  });
-
-  Future<void> _sync() async {
+  Future<void> call() async {
     try {
       await _callWithSession((accessToken) async {
         await _push(accessToken);

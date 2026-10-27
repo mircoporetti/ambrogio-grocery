@@ -1,4 +1,5 @@
-class RecipeSyncLock {
+/// Clearing the phone at logout must never interleave with a sync.
+class SyncLock {
   Future<void> _last = Future.value();
 
   Future<T> run<T>(Future<T> Function() task) {

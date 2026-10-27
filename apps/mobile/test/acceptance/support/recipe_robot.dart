@@ -5,6 +5,8 @@ import 'package:ambrogio_grocery/app.dart';
 import 'package:ambrogio_grocery/grocery/data/drift_grocery_list_storage_adapter.dart';
 import 'package:ambrogio_grocery/grocery/domain/clock_port.dart';
 import 'package:ambrogio_grocery/grocery/domain/grocery_list_storage_port.dart';
+import 'package:ambrogio_grocery/grocery/domain/grocery_list_sync_api_port.dart';
+import 'package:ambrogio_grocery/grocery/domain/grocery_list_sync_storage_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_picker_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_storage_port.dart';
 import 'package:ambrogio_grocery/recipes/data/drift_recipe_storage_adapter.dart';
@@ -17,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fake_account_api_adapter.dart';
+import 'fake_grocery_list_sync_api_adapter.dart';
 import 'fake_photo_picker_adapter.dart';
 import 'fake_recipe_sync_api_adapter.dart';
 import 'fake_photo_storage_adapter.dart';
@@ -41,8 +44,15 @@ class RecipeRobot {
     SessionStoragePort? sessionStorage,
     LogInPromptPort? logInPrompt,
     RecipeSyncApiPort? recipeSyncApi,
+    GroceryListSyncApiPort? groceryListSyncApi,
   }) async {
     final api = accountApi ?? FakeAccountApiAdapter();
+    final fakeAccounts = api is FakeAccountApiAdapter
+        ? api
+        : FakeAccountApiAdapter();
+    final lists =
+        groceryListStorage ??
+        DriftGroceryListStorageAdapter(openInMemoryDatabase());
     await tester.pumpWidget(
       AmbrogioApp(
         recipeStorage: storage,
@@ -53,14 +63,15 @@ class RecipeRobot {
             documentsDir: testDocumentsDir,
           ),
         },
-        recipeSyncApi:
-            recipeSyncApi ??
-            FakeRecipeSyncApiAdapter(
-              api is FakeAccountApiAdapter ? api : FakeAccountApiAdapter(),
-            ),
-        groceryListStorage:
-            groceryListStorage ??
-            DriftGroceryListStorageAdapter(openInMemoryDatabase()),
+        recipeSyncApi: recipeSyncApi ?? FakeRecipeSyncApiAdapter(fakeAccounts),
+        groceryListStorage: lists,
+        // Tests that wrap the storage to make it fail don't sync.
+        groceryListSyncStorage: switch (lists) {
+          final GroceryListSyncStoragePort sync => sync,
+          _ => DriftGroceryListStorageAdapter(openInMemoryDatabase()),
+        },
+        groceryListSyncApi:
+            groceryListSyncApi ?? FakeGroceryListSyncApiAdapter(fakeAccounts),
         clock: clock ?? FixedClockAdapter(today),
         photoPicker: photoPicker ?? FakePhotoPickerAdapter(),
         photoStorage: photoStorage ?? FakePhotoStorageAdapter(),

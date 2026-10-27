@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../recipes/ui/formatting.dart';
 import '../domain/grocery_item.dart';
+import '../domain/grocery_item_id.dart';
 import '../domain/grocery_list.dart';
 import 'confirm_delete_grocery_list.dart';
 import 'grocery_list_view_model.dart';
@@ -94,8 +95,8 @@ class _GroceryListItems extends StatelessWidget {
   });
 
   final GroceryList list;
-  final List<(int, GroceryItem)> items;
-  final void Function(int index) onToggle;
+  final List<GroceryItem> items;
+  final void Function(GroceryItemId item) onToggle;
 
   @override
   Widget build(BuildContext context) {
@@ -116,8 +117,8 @@ class _GroceryListItems extends StatelessWidget {
             ],
           ),
         ),
-        for (final (index, item) in items)
-          _GroceryItemTile(item: item, onToggle: () => onToggle(index)),
+        for (final item in items)
+          _GroceryItemTile(item: item, onToggle: () => onToggle(item.id)),
       ],
     );
   }

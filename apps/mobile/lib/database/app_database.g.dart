@@ -1430,8 +1430,20 @@ class $GroceryListsTable extends GroceryLists
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, uuid, weekStart];
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, uuid, weekStart, updatedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1463,6 +1475,12 @@ class $GroceryListsTable extends GroceryLists
     } else if (isInserting) {
       context.missing(_weekStartMeta);
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -1484,6 +1502,10 @@ class $GroceryListsTable extends GroceryLists
         DriftSqlType.string,
         data['${effectivePrefix}week_start'],
       )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
     );
   }
 
@@ -1497,10 +1519,12 @@ class GroceryListRow extends DataClass implements Insertable<GroceryListRow> {
   final int id;
   final String uuid;
   final String weekStart;
+  final int updatedAt;
   const GroceryListRow({
     required this.id,
     required this.uuid,
     required this.weekStart,
+    required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1508,6 +1532,7 @@ class GroceryListRow extends DataClass implements Insertable<GroceryListRow> {
     map['id'] = Variable<int>(id);
     map['uuid'] = Variable<String>(uuid);
     map['week_start'] = Variable<String>(weekStart);
+    map['updated_at'] = Variable<int>(updatedAt);
     return map;
   }
 
@@ -1516,6 +1541,7 @@ class GroceryListRow extends DataClass implements Insertable<GroceryListRow> {
       id: Value(id),
       uuid: Value(uuid),
       weekStart: Value(weekStart),
+      updatedAt: Value(updatedAt),
     );
   }
 
@@ -1528,6 +1554,7 @@ class GroceryListRow extends DataClass implements Insertable<GroceryListRow> {
       id: serializer.fromJson<int>(json['id']),
       uuid: serializer.fromJson<String>(json['uuid']),
       weekStart: serializer.fromJson<String>(json['weekStart']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
   }
   @override
@@ -1537,20 +1564,27 @@ class GroceryListRow extends DataClass implements Insertable<GroceryListRow> {
       'id': serializer.toJson<int>(id),
       'uuid': serializer.toJson<String>(uuid),
       'weekStart': serializer.toJson<String>(weekStart),
+      'updatedAt': serializer.toJson<int>(updatedAt),
     };
   }
 
-  GroceryListRow copyWith({int? id, String? uuid, String? weekStart}) =>
-      GroceryListRow(
-        id: id ?? this.id,
-        uuid: uuid ?? this.uuid,
-        weekStart: weekStart ?? this.weekStart,
-      );
+  GroceryListRow copyWith({
+    int? id,
+    String? uuid,
+    String? weekStart,
+    int? updatedAt,
+  }) => GroceryListRow(
+    id: id ?? this.id,
+    uuid: uuid ?? this.uuid,
+    weekStart: weekStart ?? this.weekStart,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
   GroceryListRow copyWithCompanion(GroceryListsCompanion data) {
     return GroceryListRow(
       id: data.id.present ? data.id.value : this.id,
       uuid: data.uuid.present ? data.uuid.value : this.uuid,
       weekStart: data.weekStart.present ? data.weekStart.value : this.weekStart,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -1559,46 +1593,53 @@ class GroceryListRow extends DataClass implements Insertable<GroceryListRow> {
     return (StringBuffer('GroceryListRow(')
           ..write('id: $id, ')
           ..write('uuid: $uuid, ')
-          ..write('weekStart: $weekStart')
+          ..write('weekStart: $weekStart, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, uuid, weekStart);
+  int get hashCode => Object.hash(id, uuid, weekStart, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is GroceryListRow &&
           other.id == this.id &&
           other.uuid == this.uuid &&
-          other.weekStart == this.weekStart);
+          other.weekStart == this.weekStart &&
+          other.updatedAt == this.updatedAt);
 }
 
 class GroceryListsCompanion extends UpdateCompanion<GroceryListRow> {
   final Value<int> id;
   final Value<String> uuid;
   final Value<String> weekStart;
+  final Value<int> updatedAt;
   const GroceryListsCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
     this.weekStart = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   GroceryListsCompanion.insert({
     this.id = const Value.absent(),
     required String uuid,
     required String weekStart,
+    this.updatedAt = const Value.absent(),
   }) : uuid = Value(uuid),
        weekStart = Value(weekStart);
   static Insertable<GroceryListRow> custom({
     Expression<int>? id,
     Expression<String>? uuid,
     Expression<String>? weekStart,
+    Expression<int>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (uuid != null) 'uuid': uuid,
       if (weekStart != null) 'week_start': weekStart,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -1606,11 +1647,13 @@ class GroceryListsCompanion extends UpdateCompanion<GroceryListRow> {
     Value<int>? id,
     Value<String>? uuid,
     Value<String>? weekStart,
+    Value<int>? updatedAt,
   }) {
     return GroceryListsCompanion(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       weekStart: weekStart ?? this.weekStart,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -1626,6 +1669,9 @@ class GroceryListsCompanion extends UpdateCompanion<GroceryListRow> {
     if (weekStart.present) {
       map['week_start'] = Variable<String>(weekStart.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
     return map;
   }
 
@@ -1634,7 +1680,8 @@ class GroceryListsCompanion extends UpdateCompanion<GroceryListRow> {
     return (StringBuffer('GroceryListsCompanion(')
           ..write('id: $id, ')
           ..write('uuid: $uuid, ')
-          ..write('weekStart: $weekStart')
+          ..write('weekStart: $weekStart, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -2025,6 +2072,27 @@ class $GroceryListItemsTable extends GroceryListItems
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _uuidMeta = const VerificationMeta('uuid');
+  @override
+  late final GeneratedColumn<String> uuid = GeneratedColumn<String>(
+    'uuid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _tickedAtMeta = const VerificationMeta(
+    'tickedAt',
+  );
+  @override
+  late final GeneratedColumn<int> tickedAt = GeneratedColumn<int>(
+    'ticked_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2034,6 +2102,8 @@ class $GroceryListItemsTable extends GroceryListItems
     quantity,
     unit,
     ticked,
+    uuid,
+    tickedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2096,6 +2166,20 @@ class $GroceryListItemsTable extends GroceryListItems
         ticked.isAcceptableOrUnknown(data['ticked']!, _tickedMeta),
       );
     }
+    if (data.containsKey('uuid')) {
+      context.handle(
+        _uuidMeta,
+        uuid.isAcceptableOrUnknown(data['uuid']!, _uuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_uuidMeta);
+    }
+    if (data.containsKey('ticked_at')) {
+      context.handle(
+        _tickedAtMeta,
+        tickedAt.isAcceptableOrUnknown(data['ticked_at']!, _tickedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -2133,6 +2217,14 @@ class $GroceryListItemsTable extends GroceryListItems
         DriftSqlType.bool,
         data['${effectivePrefix}ticked'],
       )!,
+      uuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}uuid'],
+      )!,
+      tickedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ticked_at'],
+      ),
     );
   }
 
@@ -2151,6 +2243,8 @@ class GroceryListItemRow extends DataClass
   final double quantity;
   final String unit;
   final bool ticked;
+  final String uuid;
+  final int? tickedAt;
   const GroceryListItemRow({
     required this.id,
     required this.listId,
@@ -2159,6 +2253,8 @@ class GroceryListItemRow extends DataClass
     required this.quantity,
     required this.unit,
     required this.ticked,
+    required this.uuid,
+    this.tickedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2170,6 +2266,10 @@ class GroceryListItemRow extends DataClass
     map['quantity'] = Variable<double>(quantity);
     map['unit'] = Variable<String>(unit);
     map['ticked'] = Variable<bool>(ticked);
+    map['uuid'] = Variable<String>(uuid);
+    if (!nullToAbsent || tickedAt != null) {
+      map['ticked_at'] = Variable<int>(tickedAt);
+    }
     return map;
   }
 
@@ -2182,6 +2282,10 @@ class GroceryListItemRow extends DataClass
       quantity: Value(quantity),
       unit: Value(unit),
       ticked: Value(ticked),
+      uuid: Value(uuid),
+      tickedAt: tickedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tickedAt),
     );
   }
 
@@ -2198,6 +2302,8 @@ class GroceryListItemRow extends DataClass
       quantity: serializer.fromJson<double>(json['quantity']),
       unit: serializer.fromJson<String>(json['unit']),
       ticked: serializer.fromJson<bool>(json['ticked']),
+      uuid: serializer.fromJson<String>(json['uuid']),
+      tickedAt: serializer.fromJson<int?>(json['tickedAt']),
     );
   }
   @override
@@ -2211,6 +2317,8 @@ class GroceryListItemRow extends DataClass
       'quantity': serializer.toJson<double>(quantity),
       'unit': serializer.toJson<String>(unit),
       'ticked': serializer.toJson<bool>(ticked),
+      'uuid': serializer.toJson<String>(uuid),
+      'tickedAt': serializer.toJson<int?>(tickedAt),
     };
   }
 
@@ -2222,6 +2330,8 @@ class GroceryListItemRow extends DataClass
     double? quantity,
     String? unit,
     bool? ticked,
+    String? uuid,
+    Value<int?> tickedAt = const Value.absent(),
   }) => GroceryListItemRow(
     id: id ?? this.id,
     listId: listId ?? this.listId,
@@ -2230,6 +2340,8 @@ class GroceryListItemRow extends DataClass
     quantity: quantity ?? this.quantity,
     unit: unit ?? this.unit,
     ticked: ticked ?? this.ticked,
+    uuid: uuid ?? this.uuid,
+    tickedAt: tickedAt.present ? tickedAt.value : this.tickedAt,
   );
   GroceryListItemRow copyWithCompanion(GroceryListItemsCompanion data) {
     return GroceryListItemRow(
@@ -2240,6 +2352,8 @@ class GroceryListItemRow extends DataClass
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
       unit: data.unit.present ? data.unit.value : this.unit,
       ticked: data.ticked.present ? data.ticked.value : this.ticked,
+      uuid: data.uuid.present ? data.uuid.value : this.uuid,
+      tickedAt: data.tickedAt.present ? data.tickedAt.value : this.tickedAt,
     );
   }
 
@@ -2252,14 +2366,25 @@ class GroceryListItemRow extends DataClass
           ..write('name: $name, ')
           ..write('quantity: $quantity, ')
           ..write('unit: $unit, ')
-          ..write('ticked: $ticked')
+          ..write('ticked: $ticked, ')
+          ..write('uuid: $uuid, ')
+          ..write('tickedAt: $tickedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, listId, position, name, quantity, unit, ticked);
+  int get hashCode => Object.hash(
+    id,
+    listId,
+    position,
+    name,
+    quantity,
+    unit,
+    ticked,
+    uuid,
+    tickedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2270,7 +2395,9 @@ class GroceryListItemRow extends DataClass
           other.name == this.name &&
           other.quantity == this.quantity &&
           other.unit == this.unit &&
-          other.ticked == this.ticked);
+          other.ticked == this.ticked &&
+          other.uuid == this.uuid &&
+          other.tickedAt == this.tickedAt);
 }
 
 class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
@@ -2281,6 +2408,8 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
   final Value<double> quantity;
   final Value<String> unit;
   final Value<bool> ticked;
+  final Value<String> uuid;
+  final Value<int?> tickedAt;
   const GroceryListItemsCompanion({
     this.id = const Value.absent(),
     this.listId = const Value.absent(),
@@ -2289,6 +2418,8 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
     this.quantity = const Value.absent(),
     this.unit = const Value.absent(),
     this.ticked = const Value.absent(),
+    this.uuid = const Value.absent(),
+    this.tickedAt = const Value.absent(),
   });
   GroceryListItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -2298,11 +2429,14 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
     required double quantity,
     required String unit,
     this.ticked = const Value.absent(),
+    required String uuid,
+    this.tickedAt = const Value.absent(),
   }) : listId = Value(listId),
        position = Value(position),
        name = Value(name),
        quantity = Value(quantity),
-       unit = Value(unit);
+       unit = Value(unit),
+       uuid = Value(uuid);
   static Insertable<GroceryListItemRow> custom({
     Expression<int>? id,
     Expression<int>? listId,
@@ -2311,6 +2445,8 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
     Expression<double>? quantity,
     Expression<String>? unit,
     Expression<bool>? ticked,
+    Expression<String>? uuid,
+    Expression<int>? tickedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2320,6 +2456,8 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
       if (quantity != null) 'quantity': quantity,
       if (unit != null) 'unit': unit,
       if (ticked != null) 'ticked': ticked,
+      if (uuid != null) 'uuid': uuid,
+      if (tickedAt != null) 'ticked_at': tickedAt,
     });
   }
 
@@ -2331,6 +2469,8 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
     Value<double>? quantity,
     Value<String>? unit,
     Value<bool>? ticked,
+    Value<String>? uuid,
+    Value<int?>? tickedAt,
   }) {
     return GroceryListItemsCompanion(
       id: id ?? this.id,
@@ -2340,6 +2480,8 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
       quantity: quantity ?? this.quantity,
       unit: unit ?? this.unit,
       ticked: ticked ?? this.ticked,
+      uuid: uuid ?? this.uuid,
+      tickedAt: tickedAt ?? this.tickedAt,
     );
   }
 
@@ -2367,6 +2509,12 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
     if (ticked.present) {
       map['ticked'] = Variable<bool>(ticked.value);
     }
+    if (uuid.present) {
+      map['uuid'] = Variable<String>(uuid.value);
+    }
+    if (tickedAt.present) {
+      map['ticked_at'] = Variable<int>(tickedAt.value);
+    }
     return map;
   }
 
@@ -2379,7 +2527,9 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
           ..write('name: $name, ')
           ..write('quantity: $quantity, ')
           ..write('unit: $unit, ')
-          ..write('ticked: $ticked')
+          ..write('ticked: $ticked, ')
+          ..write('uuid: $uuid, ')
+          ..write('tickedAt: $tickedAt')
           ..write(')'))
         .toString();
   }
@@ -2603,6 +2753,238 @@ class PendingRecipeChangesCompanion
   String toString() {
     return (StringBuffer('PendingRecipeChangesCompanion(')
           ..write('recipeUuid: $recipeUuid, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PendingGroceryListChangesTable extends PendingGroceryListChanges
+    with
+        TableInfo<
+          $PendingGroceryListChangesTable,
+          PendingGroceryListChangeRow
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingGroceryListChangesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _weekStartMeta = const VerificationMeta(
+    'weekStart',
+  );
+  @override
+  late final GeneratedColumn<String> weekStart = GeneratedColumn<String>(
+    'week_start',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [weekStart, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_grocery_list_changes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PendingGroceryListChangeRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('week_start')) {
+      context.handle(
+        _weekStartMeta,
+        weekStart.isAcceptableOrUnknown(data['week_start']!, _weekStartMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_weekStartMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {weekStart};
+  @override
+  PendingGroceryListChangeRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingGroceryListChangeRow(
+      weekStart: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}week_start'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PendingGroceryListChangesTable createAlias(String alias) {
+    return $PendingGroceryListChangesTable(attachedDatabase, alias);
+  }
+}
+
+class PendingGroceryListChangeRow extends DataClass
+    implements Insertable<PendingGroceryListChangeRow> {
+  final String weekStart;
+  final int updatedAt;
+  const PendingGroceryListChangeRow({
+    required this.weekStart,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['week_start'] = Variable<String>(weekStart);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  PendingGroceryListChangesCompanion toCompanion(bool nullToAbsent) {
+    return PendingGroceryListChangesCompanion(
+      weekStart: Value(weekStart),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory PendingGroceryListChangeRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingGroceryListChangeRow(
+      weekStart: serializer.fromJson<String>(json['weekStart']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'weekStart': serializer.toJson<String>(weekStart),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  PendingGroceryListChangeRow copyWith({String? weekStart, int? updatedAt}) =>
+      PendingGroceryListChangeRow(
+        weekStart: weekStart ?? this.weekStart,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  PendingGroceryListChangeRow copyWithCompanion(
+    PendingGroceryListChangesCompanion data,
+  ) {
+    return PendingGroceryListChangeRow(
+      weekStart: data.weekStart.present ? data.weekStart.value : this.weekStart,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingGroceryListChangeRow(')
+          ..write('weekStart: $weekStart, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(weekStart, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingGroceryListChangeRow &&
+          other.weekStart == this.weekStart &&
+          other.updatedAt == this.updatedAt);
+}
+
+class PendingGroceryListChangesCompanion
+    extends UpdateCompanion<PendingGroceryListChangeRow> {
+  final Value<String> weekStart;
+  final Value<int> updatedAt;
+  final Value<int> rowid;
+  const PendingGroceryListChangesCompanion({
+    this.weekStart = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PendingGroceryListChangesCompanion.insert({
+    required String weekStart,
+    required int updatedAt,
+    this.rowid = const Value.absent(),
+  }) : weekStart = Value(weekStart),
+       updatedAt = Value(updatedAt);
+  static Insertable<PendingGroceryListChangeRow> custom({
+    Expression<String>? weekStart,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (weekStart != null) 'week_start': weekStart,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PendingGroceryListChangesCompanion copyWith({
+    Value<String>? weekStart,
+    Value<int>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return PendingGroceryListChangesCompanion(
+      weekStart: weekStart ?? this.weekStart,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (weekStart.present) {
+      map['week_start'] = Variable<String>(weekStart.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingGroceryListChangesCompanion(')
+          ..write('weekStart: $weekStart, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -2836,6 +3218,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final $PendingRecipeChangesTable pendingRecipeChanges =
       $PendingRecipeChangesTable(this);
+  late final $PendingGroceryListChangesTable pendingGroceryListChanges =
+      $PendingGroceryListChangesTable(this);
   late final $SyncCursorsTable syncCursors = $SyncCursorsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -2850,6 +3234,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     groceryListRecipes,
     groceryListItems,
     pendingRecipeChanges,
+    pendingGroceryListChanges,
     syncCursors,
   ];
   @override
@@ -4326,12 +4711,14 @@ typedef $$GroceryListsTableCreateCompanionBuilder =
       Value<int> id,
       required String uuid,
       required String weekStart,
+      Value<int> updatedAt,
     });
 typedef $$GroceryListsTableUpdateCompanionBuilder =
     GroceryListsCompanion Function({
       Value<int> id,
       Value<String> uuid,
       Value<String> weekStart,
+      Value<int> updatedAt,
     });
 
 final class $$GroceryListsTableReferences
@@ -4404,6 +4791,11 @@ class $$GroceryListsTableFilterComposer
 
   ColumnFilters<String> get weekStart => $composableBuilder(
     column: $table.weekStart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4481,6 +4873,11 @@ class $$GroceryListsTableOrderingComposer
     column: $table.weekStart,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$GroceryListsTableAnnotationComposer
@@ -4500,6 +4897,9 @@ class $$GroceryListsTableAnnotationComposer
 
   GeneratedColumn<String> get weekStart =>
       $composableBuilder(column: $table.weekStart, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   Expression<T> groceryListRecipesRefs<T extends Object>(
     Expression<T> Function($$GroceryListRecipesTableAnnotationComposer a) f,
@@ -4587,20 +4987,24 @@ class $$GroceryListsTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> uuid = const Value.absent(),
                 Value<String> weekStart = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
               }) => GroceryListsCompanion(
                 id: id,
                 uuid: uuid,
                 weekStart: weekStart,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required String uuid,
                 required String weekStart,
+                Value<int> updatedAt = const Value.absent(),
               }) => GroceryListsCompanion.insert(
                 id: id,
                 uuid: uuid,
                 weekStart: weekStart,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -5005,6 +5409,8 @@ typedef $$GroceryListItemsTableCreateCompanionBuilder =
       required double quantity,
       required String unit,
       Value<bool> ticked,
+      required String uuid,
+      Value<int?> tickedAt,
     });
 typedef $$GroceryListItemsTableUpdateCompanionBuilder =
     GroceryListItemsCompanion Function({
@@ -5015,6 +5421,8 @@ typedef $$GroceryListItemsTableUpdateCompanionBuilder =
       Value<double> quantity,
       Value<String> unit,
       Value<bool> ticked,
+      Value<String> uuid,
+      Value<int?> tickedAt,
     });
 
 final class $$GroceryListItemsTableReferences
@@ -5087,6 +5495,16 @@ class $$GroceryListItemsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get tickedAt => $composableBuilder(
+    column: $table.tickedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$GroceryListsTableFilterComposer get listId {
     final $$GroceryListsTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -5150,6 +5568,16 @@ class $$GroceryListItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get uuid => $composableBuilder(
+    column: $table.uuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get tickedAt => $composableBuilder(
+    column: $table.tickedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$GroceryListsTableOrderingComposer get listId {
     final $$GroceryListsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -5200,6 +5628,12 @@ class $$GroceryListItemsTableAnnotationComposer
 
   GeneratedColumn<bool> get ticked =>
       $composableBuilder(column: $table.ticked, builder: (column) => column);
+
+  GeneratedColumn<String> get uuid =>
+      $composableBuilder(column: $table.uuid, builder: (column) => column);
+
+  GeneratedColumn<int> get tickedAt =>
+      $composableBuilder(column: $table.tickedAt, builder: (column) => column);
 
   $$GroceryListsTableAnnotationComposer get listId {
     final $$GroceryListsTableAnnotationComposer composer = $composerBuilder(
@@ -5262,6 +5696,8 @@ class $$GroceryListItemsTableTableManager
                 Value<double> quantity = const Value.absent(),
                 Value<String> unit = const Value.absent(),
                 Value<bool> ticked = const Value.absent(),
+                Value<String> uuid = const Value.absent(),
+                Value<int?> tickedAt = const Value.absent(),
               }) => GroceryListItemsCompanion(
                 id: id,
                 listId: listId,
@@ -5270,6 +5706,8 @@ class $$GroceryListItemsTableTableManager
                 quantity: quantity,
                 unit: unit,
                 ticked: ticked,
+                uuid: uuid,
+                tickedAt: tickedAt,
               ),
           createCompanionCallback:
               ({
@@ -5280,6 +5718,8 @@ class $$GroceryListItemsTableTableManager
                 required double quantity,
                 required String unit,
                 Value<bool> ticked = const Value.absent(),
+                required String uuid,
+                Value<int?> tickedAt = const Value.absent(),
               }) => GroceryListItemsCompanion.insert(
                 id: id,
                 listId: listId,
@@ -5288,6 +5728,8 @@ class $$GroceryListItemsTableTableManager
                 quantity: quantity,
                 unit: unit,
                 ticked: ticked,
+                uuid: uuid,
+                tickedAt: tickedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -5519,6 +5961,168 @@ typedef $$PendingRecipeChangesTableProcessedTableManager =
       PendingRecipeChangeRow,
       PrefetchHooks Function()
     >;
+typedef $$PendingGroceryListChangesTableCreateCompanionBuilder =
+    PendingGroceryListChangesCompanion Function({
+      required String weekStart,
+      required int updatedAt,
+      Value<int> rowid,
+    });
+typedef $$PendingGroceryListChangesTableUpdateCompanionBuilder =
+    PendingGroceryListChangesCompanion Function({
+      Value<String> weekStart,
+      Value<int> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$PendingGroceryListChangesTableFilterComposer
+    extends Composer<_$AppDatabase, $PendingGroceryListChangesTable> {
+  $$PendingGroceryListChangesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get weekStart => $composableBuilder(
+    column: $table.weekStart,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PendingGroceryListChangesTableOrderingComposer
+    extends Composer<_$AppDatabase, $PendingGroceryListChangesTable> {
+  $$PendingGroceryListChangesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get weekStart => $composableBuilder(
+    column: $table.weekStart,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PendingGroceryListChangesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PendingGroceryListChangesTable> {
+  $$PendingGroceryListChangesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get weekStart =>
+      $composableBuilder(column: $table.weekStart, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$PendingGroceryListChangesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PendingGroceryListChangesTable,
+          PendingGroceryListChangeRow,
+          $$PendingGroceryListChangesTableFilterComposer,
+          $$PendingGroceryListChangesTableOrderingComposer,
+          $$PendingGroceryListChangesTableAnnotationComposer,
+          $$PendingGroceryListChangesTableCreateCompanionBuilder,
+          $$PendingGroceryListChangesTableUpdateCompanionBuilder,
+          (
+            PendingGroceryListChangeRow,
+            BaseReferences<
+              _$AppDatabase,
+              $PendingGroceryListChangesTable,
+              PendingGroceryListChangeRow
+            >,
+          ),
+          PendingGroceryListChangeRow,
+          PrefetchHooks Function()
+        > {
+  $$PendingGroceryListChangesTableTableManager(
+    _$AppDatabase db,
+    $PendingGroceryListChangesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingGroceryListChangesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$PendingGroceryListChangesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PendingGroceryListChangesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> weekStart = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PendingGroceryListChangesCompanion(
+                weekStart: weekStart,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String weekStart,
+                required int updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PendingGroceryListChangesCompanion.insert(
+                weekStart: weekStart,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PendingGroceryListChangesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PendingGroceryListChangesTable,
+      PendingGroceryListChangeRow,
+      $$PendingGroceryListChangesTableFilterComposer,
+      $$PendingGroceryListChangesTableOrderingComposer,
+      $$PendingGroceryListChangesTableAnnotationComposer,
+      $$PendingGroceryListChangesTableCreateCompanionBuilder,
+      $$PendingGroceryListChangesTableUpdateCompanionBuilder,
+      (
+        PendingGroceryListChangeRow,
+        BaseReferences<
+          _$AppDatabase,
+          $PendingGroceryListChangesTable,
+          PendingGroceryListChangeRow
+        >,
+      ),
+      PendingGroceryListChangeRow,
+      PrefetchHooks Function()
+    >;
 typedef $$SyncCursorsTableCreateCompanionBuilder =
     SyncCursorsCompanion Function({
       required String name,
@@ -5682,6 +6286,11 @@ class $AppDatabaseManager {
       $$GroceryListItemsTableTableManager(_db, _db.groceryListItems);
   $$PendingRecipeChangesTableTableManager get pendingRecipeChanges =>
       $$PendingRecipeChangesTableTableManager(_db, _db.pendingRecipeChanges);
+  $$PendingGroceryListChangesTableTableManager get pendingGroceryListChanges =>
+      $$PendingGroceryListChangesTableTableManager(
+        _db,
+        _db.pendingGroceryListChanges,
+      );
   $$SyncCursorsTableTableManager get syncCursors =>
       $$SyncCursorsTableTableManager(_db, _db.syncCursors);
 }

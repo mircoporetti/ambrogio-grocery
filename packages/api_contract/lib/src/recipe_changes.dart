@@ -2,8 +2,6 @@ import 'json.dart';
 
 const recipeChangesPath = '/recipes/changes';
 
-const maxRecipeChangesPerPush = 1000;
-
 class IngredientBody {
   const IngredientBody({
     required this.name,
@@ -123,29 +121,6 @@ class PushRecipeChangesRequest {
 
   Map<String, Object?> toJson() => {
     'changes': [for (final change in changes) change.toJson()],
-  };
-}
-
-class PullRecipeChangesRequest {
-  const PullRecipeChangesRequest({this.since, this.limit});
-
-  factory PullRecipeChangesRequest.fromQuery(Map<String, String> query) {
-    final limit = query['limit'];
-    return PullRecipeChangesRequest(
-      since: query['since'],
-      limit: limit == null
-          ? null
-          : int.tryParse(limit) ??
-                (throw const FormatException('Expected an integer limit')),
-    );
-  }
-
-  final String? since;
-  final int? limit;
-
-  Map<String, String> toQuery() => {
-    'since': ?since,
-    if (limit case final limit?) 'limit': '$limit',
   };
 }
 

@@ -50,8 +50,7 @@ class DriftRecipeStorageAdapter
     await _deleteUnusedPhotos();
   });
 
-  /// Now, but always after the recipe's last change: a version pulled from a
-  /// device whose clock runs ahead must not win over an edit made after it.
+  /// Never before the last change: another phone's clock may run ahead.
   Future<int> _nextUpdatedAt(RecipeId id) async {
     final now = DateTime.now().toUtc().microsecondsSinceEpoch;
     final last = await _localUpdatedAt(id.value);
