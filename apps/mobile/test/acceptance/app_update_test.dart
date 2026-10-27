@@ -58,7 +58,45 @@ void main() {
 
     expect(find.text('Carbonara'), findsOneWidget);
     final recipe = (await storage.findAll()).single;
-    expect(recipe.photoPath, '$testDocumentsDir/photos/carbonara.jpg');
+    expect(recipe.photo?.path, '$testDocumentsDir/photos/carbonara.jpg');
+  });
+
+  testWidgets('photos saved before photo ids survive the update', (
+    tester,
+  ) async {
+    final file = newDatabaseFile();
+    _writeVersion5Database(file);
+
+    final db = openFileDatabase(file);
+    addTearDown(db.close);
+    final storage = DriftRecipeStorageAdapter(
+      db,
+      documentsDir: testDocumentsDir,
+    );
+    final robot = RecipeRobot(tester);
+    await robot.launchApp(storage);
+
+    expect(find.text('Carbonara'), findsOneWidget);
+    expect(find.text('Pancakes'), findsOneWidget);
+    expect(find.text('Risotto'), findsOneWidget);
+    final [carbonara, pancakes, risotto] = await storage.findAll();
+    expect(carbonara.photo!.path, '$testDocumentsDir/photos/carbonara.jpg');
+    expect(pancakes.photo!.path, '$testDocumentsDir/photos/pancakes.jpg');
+    expect(carbonara.photo!.id, isNot(pancakes.photo!.id));
+    expect(risotto.photo, isNull);
+    expect(carbonara.ingredients, [
+      Ingredient(name: 'Spaghetti', quantity: 320, unit: MeasureUnit.grams),
+    ]);
+    expect(carbonara.categories, ['Pasta']);
+
+    await robot.openRecipe('Carbonara');
+    await robot.editOpenRecipe();
+    await robot.enterTitle('Carbonara classica');
+    await robot.save();
+
+    final edited = (await storage.findAll()).first;
+    expect(edited.title, 'Carbonara classica');
+    expect(edited.photo!.id, carbonara.photo!.id);
   });
 
   testWidgets('after the update, grocery lists can be saved', (tester) async {
@@ -105,6 +143,28 @@ void main() {
     await robot.tick('Guanciale');
     expect(robot.isTicked('Guanciale'), isTrue);
   });
+}
+
+// Schema version 5 stored the photo's relative path on the recipe.
+void _writeVersion5Database(File file) {
+  final raw = sqlite3.open(file.path);
+  raw.execute('''
+    CREATE TABLE "recipes" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "uuid" TEXT NOT NULL UNIQUE, "title" TEXT NOT NULL, "portions" INTEGER NOT NULL, "procedure" TEXT NULL, "photo_path" TEXT NULL);
+    CREATE TABLE "recipe_ingredients" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "recipe_id" INTEGER NOT NULL REFERENCES recipes (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "name" TEXT NOT NULL, "quantity" REAL NOT NULL, "unit" TEXT NOT NULL);
+    CREATE TABLE "recipe_categories" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "recipe_id" INTEGER NOT NULL REFERENCES recipes (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "name" TEXT NOT NULL);
+    CREATE TABLE "grocery_lists" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "uuid" TEXT NOT NULL UNIQUE, "week_start" TEXT NOT NULL UNIQUE);
+    CREATE TABLE "grocery_list_recipes" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "list_id" INTEGER NOT NULL REFERENCES grocery_lists (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "title" TEXT NOT NULL);
+    CREATE TABLE "grocery_list_items" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "list_id" INTEGER NOT NULL REFERENCES grocery_lists (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "name" TEXT NOT NULL, "quantity" REAL NOT NULL, "unit" TEXT NOT NULL, "ticked" INTEGER NOT NULL DEFAULT 0 CHECK ("ticked" IN (0, 1)));
+    INSERT INTO recipes (uuid, title, portions, photo_path) VALUES ('4b6f1c2e-8a3d-4f5b-9c7e-1d2a3b4c5d6e', 'Carbonara', 4, 'photos/carbonara.jpg');
+    INSERT INTO recipes (uuid, title, portions, photo_path) VALUES ('9d8c7b6a-5e4f-4a3b-8c2d-1e0f9a8b7c6d', 'Pancakes', 2, 'photos/pancakes.jpg');
+    INSERT INTO recipes (uuid, title, portions) VALUES ('2a3b4c5d-6e7f-4a8b-9c0d-1e2f3a4b5c6d', 'Risotto', 2);
+    INSERT INTO recipe_ingredients (recipe_id, position, name, quantity, unit) VALUES (1, 0, 'Spaghetti', 320, 'grams');
+    INSERT INTO recipe_ingredients (recipe_id, position, name, quantity, unit) VALUES (2, 0, 'Flour', 100, 'grams');
+    INSERT INTO recipe_ingredients (recipe_id, position, name, quantity, unit) VALUES (3, 0, 'Rice', 300, 'grams');
+    INSERT INTO recipe_categories (recipe_id, position, name) VALUES (1, 0, 'Pasta');
+    PRAGMA user_version = 5;
+  ''');
+  raw.close();
 }
 
 // Schema version 4 had no ticks on grocery list items.

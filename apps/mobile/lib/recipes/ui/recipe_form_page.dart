@@ -116,7 +116,7 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
         portions: int.parse(_portions.text.trim()),
         ingredients: _ingredients,
         procedure: procedure.isEmpty ? null : procedure,
-        photoPath: widget.viewModel.photoPath,
+        photo: widget.viewModel.photo,
         categories: _categories,
       ),
     );
@@ -180,7 +180,7 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
               ListenableBuilder(
                 listenable: widget.viewModel,
                 builder: (_, _) => _PhotoField(
-                  photoPath: widget.viewModel.photoPath,
+                  photoPath: widget.viewModel.photo?.path,
                   onPick: widget.viewModel.pickPhoto,
                 ),
               ),

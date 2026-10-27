@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import '../application/create_recipe.dart';
 import '../application/pick_recipe_photo.dart';
 import '../application/update_recipe.dart';
+import '../domain/photo.dart';
 import '../domain/recipe.dart';
 import 'recipe_error.dart';
 
@@ -18,7 +19,7 @@ class RecipeFormViewModel extends ChangeNotifier {
     this._pickRecipePhoto,
     Recipe this.initial,
   ) : _submit = updateRecipe.call,
-      _photoPath = initial.photoPath;
+      _photo = initial.photo;
 
   final Future<void> Function(Recipe) _submit;
   final PickRecipePhoto _pickRecipePhoto;
@@ -27,8 +28,8 @@ class RecipeFormViewModel extends ChangeNotifier {
 
   bool get isEditing => initial != null;
 
-  String? _photoPath;
-  String? get photoPath => _photoPath;
+  Photo? _photo;
+  Photo? get photo => _photo;
 
   bool _saving = false;
   bool get saving => _saving;
@@ -37,9 +38,9 @@ class RecipeFormViewModel extends ChangeNotifier {
   RecipeError? get error => _error;
 
   Future<void> pickPhoto() async {
-    final path = await _pickRecipePhoto();
-    if (path == null) return;
-    _photoPath = path;
+    final photo = await _pickRecipePhoto();
+    if (photo == null) return;
+    _photo = photo;
     notifyListeners();
   }
 

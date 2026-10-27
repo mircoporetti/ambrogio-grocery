@@ -25,6 +25,11 @@ void main() {
     await robot.enterPortions('4');
     await robot.addIngredient('Spaghetti', '320', 'g');
     await robot.save();
+    final firstStorage = DriftRecipeStorageAdapter(
+      firstLaunch,
+      documentsDir: oldFolder,
+    );
+    final photoId = (await firstStorage.findAll()).single.photo!.id;
     await robot.closeApp();
     await firstLaunch.close();
 
@@ -37,6 +42,7 @@ void main() {
     await robot.launchApp(storage);
 
     final recipe = (await storage.findAll()).single;
-    expect(recipe.photoPath, '$newFolder/photos/carbonara.jpg');
+    expect(recipe.photo!.path, '$newFolder/photos/carbonara.jpg');
+    expect(recipe.photo!.id, photoId);
   });
 }

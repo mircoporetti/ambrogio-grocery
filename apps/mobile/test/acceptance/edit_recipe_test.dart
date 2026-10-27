@@ -139,6 +139,7 @@ void main() {
     await robot.enterPortions('4');
     await robot.addIngredient('Spaghetti', '320', 'g');
     await robot.save();
+    final oldPhoto = (await storage.findAll()).single.photo!;
 
     await robot.openRecipe('Carbonara');
     await robot.editOpenRecipe();
@@ -146,7 +147,9 @@ void main() {
     await robot.changePhoto();
     await robot.save();
 
-    expect((await storage.findAll()).single.photoPath, '/photos/new.jpg');
+    final newPhoto = (await storage.findAll()).single.photo!;
+    expect(newPhoto.path, '/photos/new.jpg');
+    expect(newPhoto.id, isNot(oldPhoto.id));
     expect(photoStorage.deleted, ['/photos/old.jpg']);
   });
 
@@ -165,13 +168,16 @@ void main() {
     await robot.enterPortions('4');
     await robot.addIngredient('Spaghetti', '320', 'g');
     await robot.save();
+    final photo = (await storage.findAll()).single.photo!;
 
     await robot.openRecipe('Carbonara');
     await robot.editOpenRecipe();
     await robot.enterTitle('Carbonara classica');
     await robot.save();
 
-    expect((await storage.findAll()).single.photoPath, '/photos/old.jpg');
+    final kept = (await storage.findAll()).single.photo!;
+    expect(kept.id, photo.id);
+    expect(kept.path, '/photos/old.jpg');
     expect(photoStorage.deleted, isEmpty);
   });
 }

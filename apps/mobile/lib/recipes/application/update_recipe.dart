@@ -13,8 +13,8 @@ class UpdateRecipe {
   Future<void> call(Recipe recipe) async {
     final previous = await _recipes.findById(recipe.id);
     await _recipes.save(recipe);
-    final oldPhoto = previous?.photoPath;
-    if (oldPhoto == null || oldPhoto == recipe.photoPath) return;
+    final oldPhoto = previous?.photo;
+    if (oldPhoto == null || oldPhoto.id == recipe.photo?.id) return;
     try {
       await _photos.delete(oldPhoto);
     } on Exception catch (e, stackTrace) {

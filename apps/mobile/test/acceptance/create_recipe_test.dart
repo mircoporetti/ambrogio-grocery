@@ -156,7 +156,7 @@ void main() {
 
     expect(find.text('Carbonara'), findsOneWidget);
     final saved = (await storage.findAll()).single;
-    expect(saved.photoPath, '/photos/carbonara.jpg');
+    expect(saved.photo?.path, '/photos/carbonara.jpg');
   });
 
   testWidgets('the photo stays optional if the user cancels the picker', (
@@ -174,7 +174,7 @@ void main() {
     await robot.save();
 
     final saved = (await storage.findAll()).single;
-    expect(saved.photoPath, isNull);
+    expect(saved.photo, isNull);
   });
 
   testWidgets('if saving fails, the form keeps the input and can retry', (

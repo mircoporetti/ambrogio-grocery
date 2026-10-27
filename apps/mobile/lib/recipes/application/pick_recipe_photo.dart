@@ -1,3 +1,4 @@
+import '../domain/photo.dart';
 import '../domain/photo_picker_port.dart';
 
 class PickRecipePhoto {
@@ -5,5 +6,8 @@ class PickRecipePhoto {
 
   final PhotoPickerPort _photoPicker;
 
-  Future<String?> call() => _photoPicker.pick();
+  Future<Photo?> call() async {
+    final path = await _photoPicker.pick();
+    return path == null ? null : Photo(path: path);
+  }
 }

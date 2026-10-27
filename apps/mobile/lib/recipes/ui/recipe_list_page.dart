@@ -184,7 +184,7 @@ class _RecipeTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final photo = recipe.photoPath;
+    final photo = recipe.photo?.path;
     return ListTile(
       leading: CircleAvatar(
         backgroundImage: photo == null ? null : FileImage(File(photo)),

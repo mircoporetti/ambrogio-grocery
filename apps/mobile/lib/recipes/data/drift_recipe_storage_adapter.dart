@@ -3,6 +3,8 @@ import 'package:path/path.dart' as p;
 
 import '../../database/app_database.dart';
 import '../domain/ingredient.dart';
+import '../domain/photo.dart';
+import '../domain/photo_id.dart';
 import '../domain/recipe.dart';
 import '../domain/recipe_id.dart';
 import '../domain/recipe_storage_port.dart';
@@ -27,12 +29,24 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
 
   @override
   Future<void> save(Recipe recipe) => _db.transaction(() async {
+    final photo = recipe.photo;
+    if (photo != null) {
+      await _db
+          .into(_db.photos)
+          .insert(
+            PhotosCompanion.insert(
+              uuid: photo.id.value,
+              path: _toStored(photo.path)!,
+            ),
+            mode: InsertMode.insertOrIgnore,
+          );
+    }
     final row = RecipesCompanion.insert(
       uuid: recipe.id.value,
       title: recipe.title,
       portions: recipe.portions,
       procedure: Value(recipe.procedure),
-      photoPath: Value(_toStored(recipe.photoPath)),
+      photoId: Value(photo?.id.value),
     );
     final existing = await (_db.select(
       _db.recipes,
@@ -73,16 +87,29 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
           ),
       ]);
     });
+    await _deleteUnusedPhotos();
   });
 
   @override
-  Future<void> delete(RecipeId id) =>
-      (_db.delete(_db.recipes)..where((r) => r.uuid.equals(id.value))).go();
+  Future<void> delete(RecipeId id) => _db.transaction(() async {
+    await (_db.delete(_db.recipes)..where((r) => r.uuid.equals(id.value))).go();
+    await _deleteUnusedPhotos();
+  });
+
+  Future<void> _deleteUnusedPhotos() => _db.customStatement(
+    'DELETE FROM photos WHERE uuid NOT IN '
+    '(SELECT photo_id FROM recipes WHERE photo_id IS NOT NULL)',
+  );
 
   Stream<void> _changes() => _db
       .customSelect(
         'SELECT 1',
-        readsFrom: {_db.recipes, _db.recipeIngredients, _db.recipeCategories},
+        readsFrom: {
+          _db.recipes,
+          _db.recipeIngredients,
+          _db.recipeCategories,
+          _db.photos,
+        },
       )
       .watch();
 
@@ -131,6 +158,13 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
             ),
           );
     }
+    final photoIds = [for (final row in recipes) ?row.photoId];
+    final photos = {
+      for (final row in await (_db.select(
+        _db.photos,
+      )..where((p) => p.uuid.isIn(photoIds))).get())
+        row.uuid: Photo(id: PhotoId(row.uuid), path: _fromStored(row.path)!),
+    };
     final categoriesByRecipe = <int, List<String>>{};
     for (final row in categories) {
       categoriesByRecipe.putIfAbsent(row.recipeId, () => []).add(row.name);
@@ -144,7 +178,7 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
           portions: row.portions,
           ingredients: ingredientsByRecipe[row.id] ?? const [],
           procedure: row.procedure,
-          photoPath: _fromStored(row.photoPath),
+          photo: photos[row.photoId],
           categories: categoriesByRecipe[row.id] ?? const [],
         ),
     ];

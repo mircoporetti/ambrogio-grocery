@@ -113,7 +113,7 @@ class _RecipeDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context);
-    final photo = recipe.photoPath;
+    final photo = recipe.photo?.path;
     final procedure = recipe.procedure;
     return ListView(
       padding: const EdgeInsets.all(16),

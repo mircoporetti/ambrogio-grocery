@@ -1,4 +1,5 @@
 import 'ingredient.dart';
+import 'photo.dart';
 import 'recipe_id.dart';
 
 class Recipe {
@@ -8,7 +9,7 @@ class Recipe {
     required this.portions,
     required List<Ingredient> ingredients,
     this.procedure,
-    this.photoPath,
+    this.photo,
     List<String> categories = const [],
   }) : id = id ?? RecipeId.generate(),
        ingredients = List.unmodifiable(ingredients),
@@ -33,7 +34,7 @@ class Recipe {
   final int portions;
   final List<Ingredient> ingredients;
   final String? procedure;
-  final String? photoPath;
+  final Photo? photo;
   final List<String> categories;
 }
 

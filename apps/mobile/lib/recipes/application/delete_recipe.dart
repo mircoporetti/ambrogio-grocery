@@ -12,7 +12,7 @@ class DeleteRecipe {
 
   Future<void> call(Recipe recipe) async {
     await _recipes.delete(recipe.id);
-    final photo = recipe.photoPath;
+    final photo = recipe.photo;
     if (photo == null) return;
     try {
       await _photos.delete(photo);
