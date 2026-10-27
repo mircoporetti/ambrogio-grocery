@@ -75,14 +75,39 @@ dart run build_runner build
 
 ## Backend
 
-A plain Dart server built on [shelf](https://pub.dev/packages/shelf). The
-commands run from `apps/backend`.
+A plain Dart server built on [shelf](https://pub.dev/packages/shelf), with
+a Postgres database. Requires Docker for the local database. The commands
+run from `apps/backend`.
 
 ```sh
+docker compose up -d --wait       # local Postgres on port 5433
 dart run bin/server.dart          # listens on port 8080, or $PORT
 curl localhost:8080/health        # {"status":"ok"}
-dart test                         # acceptance tests over real HTTP
+dart test                         # acceptance tests over real HTTP and Postgres
+docker compose down               # stop the database (data is kept)
 ```
+
+`dart test` starts the database itself if it isn't running (Docker must be
+running). Each test creates its own empty database on it and drops it
+afterwards. The database keeps running after the tests; stop it with
+`docker compose down`.
+
+The server reads its configuration from environment variables. The defaults
+match `compose.yaml`:
+
+| Variable      | Default     |
+|---------------|-------------|
+| `JWT_SECRET`  | none, required: signs access tokens, at least 32 random bytes (`openssl rand -base64 48`) |
+| `PORT`        | `8080`      |
+| `DB_HOST`     | `localhost` |
+| `DB_PORT`     | `5433`      |
+| `DB_NAME`     | `ambrogio`  |
+| `DB_USER`     | `ambrogio`  |
+| `DB_PASSWORD` | `ambrogio`  |
+| `DB_SSL`      | `disable` for localhost, `require` otherwise |
+
+After changing tables in `lib/database/backend_database.dart`, run
+`dart run build_runner build` and bump `schemaVersion` with a migration.
 
 ## Android
 

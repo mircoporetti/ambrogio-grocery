@@ -1,0 +1,20 @@
+# Local development database only. The credentials are not secret.
+name: ambrogio
+services:
+  postgres:
+    image: postgres:18.6
+    environment:
+      POSTGRES_USER: ambrogio
+      POSTGRES_PASSWORD: ambrogio
+      POSTGRES_DB: ambrogio
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "ambrogio"]
+      interval: 2s
+      retries: 15
+
+volumes:
+  postgres:
