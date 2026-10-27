@@ -1,5 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'account/application/answer_log_in_prompt.dart';
+import 'account/application/create_account.dart';
+import 'account/application/log_in.dart';
+import 'account/application/log_out.dart';
+import 'account/application/should_ask_to_log_in.dart';
+import 'account/application/watch_session.dart';
+import 'account/domain/account_api_port.dart';
+import 'account/domain/log_in_prompt_port.dart';
+import 'account/domain/session_storage_port.dart';
+import 'account/ui/account_view_model.dart';
+import 'account/ui/log_in_prompt.dart';
+import 'account/ui/log_in_prompt_view_model.dart';
+import 'account/ui/log_in_view_model.dart';
 import 'grocery/application/create_grocery_list.dart';
 import 'grocery/application/delete_grocery_list.dart';
 import 'grocery/application/find_grocery_list.dart';
@@ -43,6 +56,9 @@ class AmbrogioApp extends StatefulWidget {
     required this.recipeStorage,
     required this.groceryListStorage,
     required this.languagePreference,
+    required this.accountApi,
+    required this.sessionStorage,
+    required this.logInPrompt,
     this.clock,
     this.photoPicker,
     this.photoStorage,
@@ -51,6 +67,9 @@ class AmbrogioApp extends StatefulWidget {
   final RecipeStoragePort recipeStorage;
   final GroceryListStoragePort groceryListStorage;
   final LanguagePreferencePort languagePreference;
+  final AccountApiPort accountApi;
+  final SessionStoragePort sessionStorage;
+  final LogInPromptPort logInPrompt;
   final ClockPort? clock;
   final PhotoPickerPort? photoPicker;
   final PhotoStoragePort? photoStorage;
@@ -88,6 +107,14 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
   );
   late final _changeLanguage = ChangeLanguage(widget.languagePreference);
   late final _appLanguage = AppLanguageViewModel(_watchLanguagePreference);
+  late final _logIn = LogIn(widget.accountApi, widget.sessionStorage);
+  late final _createAccount = CreateAccount(widget.accountApi, _logIn);
+  late final _logOut = LogOut(widget.accountApi, widget.sessionStorage);
+  late final _watchSession = WatchSession(widget.sessionStorage);
+  late final _logInPrompt = LogInPromptViewModel(
+    ShouldAskToLogIn(widget.logInPrompt, widget.sessionStorage),
+    AnswerLogInPrompt(widget.logInPrompt),
+  );
   late final _recipeList = RecipeListViewModel(
     WatchRecipes(widget.recipeStorage),
     _deleteRecipe,
@@ -116,35 +143,41 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(colorSchemeSeed: Colors.green),
-      home: RecipeListPage(
-        viewModel: _recipeList,
-        createRecipe: _createRecipe,
-        pickRecipePhoto: _pickRecipePhoto,
-        watchRecipe: _watchRecipe,
-        deleteRecipe: _deleteRecipe,
-        updateRecipe: _updateRecipe,
-        settingsPage: () => SettingsPage(
-          viewModel: SettingsViewModel(_watchLanguagePreference),
-          languageViewModel: () =>
-              LanguageViewModel(_watchLanguagePreference, _changeLanguage),
-        ),
-        groceryListsPage: () => GroceryListsPage(
-          viewModel: GroceryListsViewModel(
-            _watchUpcomingGroceryLists,
-            _getCurrentWeek,
-            _deleteGroceryList,
+      home: LogInPrompt(
+        viewModel: _logInPrompt,
+        logInViewModel: () => LogInViewModel(_logIn, _createAccount),
+        child: RecipeListPage(
+          viewModel: _recipeList,
+          createRecipe: _createRecipe,
+          pickRecipePhoto: _pickRecipePhoto,
+          watchRecipe: _watchRecipe,
+          deleteRecipe: _deleteRecipe,
+          updateRecipe: _updateRecipe,
+          settingsPage: () => SettingsPage(
+            viewModel: SettingsViewModel(_watchLanguagePreference),
+            languageViewModel: () =>
+                LanguageViewModel(_watchLanguagePreference, _changeLanguage),
+            accountViewModel: AccountViewModel(_watchSession, _logOut),
+            logInViewModel: () => LogInViewModel(_logIn, _createAccount),
           ),
-          planWeekViewModel: () => PlanWeekViewModel(
-            _listRecipes,
-            _createGroceryList,
-            _findGroceryList,
-            _getCurrentWeek,
-          ),
-          groceryListViewModel: (week) => GroceryListViewModel(
-            _watchGroceryList,
-            _tickGroceryItem,
-            _deleteGroceryList,
-            week,
+          groceryListsPage: () => GroceryListsPage(
+            viewModel: GroceryListsViewModel(
+              _watchUpcomingGroceryLists,
+              _getCurrentWeek,
+              _deleteGroceryList,
+            ),
+            planWeekViewModel: () => PlanWeekViewModel(
+              _listRecipes,
+              _createGroceryList,
+              _findGroceryList,
+              _getCurrentWeek,
+            ),
+            groceryListViewModel: (week) => GroceryListViewModel(
+              _watchGroceryList,
+              _tickGroceryItem,
+              _deleteGroceryList,
+              week,
+            ),
           ),
         ),
       ),

@@ -247,4 +247,62 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get changeLanguageFailed =>
       'Could not change the language. Please try again.';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get notLoggedIn => 'Not logged in';
+
+  @override
+  String get logIn => 'Log in';
+
+  @override
+  String get logOut => 'Log out';
+
+  @override
+  String get createAccount => 'Create account';
+
+  @override
+  String get switchToCreateAccount => 'Create an account';
+
+  @override
+  String get switchToLogIn => 'I already have an account';
+
+  @override
+  String get emailLabel => 'Email';
+
+  @override
+  String get passwordLabel => 'Password';
+
+  @override
+  String get emailRequired => 'Email is required';
+
+  @override
+  String get passwordRequired => 'Password is required';
+
+  @override
+  String get invalidCredentials => 'Wrong email or password.';
+
+  @override
+  String get emailTaken => 'An account with this email already exists.';
+
+  @override
+  String get invalidEmail => 'Enter a valid email address.';
+
+  @override
+  String get passwordTooShort => 'The password must be at least 8 characters.';
+
+  @override
+  String get passwordTooLong => 'The password is too long.';
+
+  @override
+  String get serverUnreachable =>
+      'Could not reach the server. Check your connection and try again.';
+
+  @override
+  String get somethingWentWrong => 'Something went wrong. Please try again.';
+
+  @override
+  String get logInLater => 'You can log in later in Settings.';
 }

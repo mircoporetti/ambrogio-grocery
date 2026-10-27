@@ -1,3 +1,6 @@
+import 'package:ambrogio_grocery/account/domain/account_api_port.dart';
+import 'package:ambrogio_grocery/account/domain/log_in_prompt_port.dart';
+import 'package:ambrogio_grocery/account/domain/session_storage_port.dart';
 import 'package:ambrogio_grocery/app.dart';
 import 'package:ambrogio_grocery/grocery/data/drift_grocery_list_storage_adapter.dart';
 import 'package:ambrogio_grocery/grocery/domain/clock_port.dart';
@@ -10,11 +13,13 @@ import 'package:ambrogio_grocery/settings/domain/language_preference_port.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fake_account_api_adapter.dart';
 import 'fake_photo_picker_adapter.dart';
 import 'fake_photo_storage_adapter.dart';
 import 'fixed_clock_adapter.dart';
 import 'test_database.dart';
 import 'test_preferences.dart';
+import 'test_secure_storage.dart';
 
 class RecipeRobot {
   RecipeRobot(this.tester);
@@ -28,6 +33,9 @@ class RecipeRobot {
     GroceryListStoragePort? groceryListStorage,
     ClockPort? clock,
     LanguagePreferencePort? languagePreference,
+    AccountApiPort? accountApi,
+    SessionStoragePort? sessionStorage,
+    LogInPromptPort? logInPrompt,
   }) async {
     await tester.pumpWidget(
       AmbrogioApp(
@@ -41,6 +49,9 @@ class RecipeRobot {
         languagePreference:
             languagePreference ??
             SharedPreferencesLanguagePreferenceAdapter(inMemoryPreferences()),
+        accountApi: accountApi ?? FakeAccountApiAdapter(),
+        sessionStorage: sessionStorage ?? emptySecureStorage(),
+        logInPrompt: logInPrompt ?? await answeredLogInPrompt(),
       ),
     );
     await tester.pumpAndSettle();

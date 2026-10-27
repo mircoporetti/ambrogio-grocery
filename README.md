@@ -37,6 +37,16 @@ from the list but `flutter devices` shows it, restart IntelliJ. Use a full
 restart, not hot reload, after changing `main.dart`, the database or the
 dependencies.
 
+The app talks to the [backend](#backend) for accounts. It uses
+`http://localhost:8080` unless you pass another address:
+
+```sh
+flutter run -d <device id> --dart-define=API_URL=http://10.0.2.2:8080       # Android emulator
+flutter run -d <device id> --dart-define=API_URL=http://<your Mac's IP>:8080 # a phone on the same Wi-Fi
+```
+
+Recipes and grocery lists work without an account or a backend.
+
 These are debug builds: on an iPhone the app only opens while IntelliJ or
 `flutter run` is connected. To install a build you can open on its own, see
 [Android](#android) and [iOS](#ios).
