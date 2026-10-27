@@ -305,4 +305,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get logInLater => 'You can log in later in Settings.';
+
+  @override
+  String get unsyncedChangesWillBeLost =>
+      'Some changes haven\'t been synced yet. If you log out now, they\'ll be lost.';
+
+  @override
+  String get logOutAnyway => 'Log out anyway';
 }

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 
@@ -6,16 +8,21 @@ import '../domain/ingredient.dart';
 import '../domain/photo.dart';
 import '../domain/photo_id.dart';
 import '../domain/recipe.dart';
+import '../domain/recipe_change.dart';
 import '../domain/recipe_id.dart';
 import '../domain/recipe_storage_port.dart';
+import '../domain/recipe_sync_storage_port.dart';
 
-class DriftRecipeStorageAdapter implements RecipeStoragePort {
+class DriftRecipeStorageAdapter
+    implements RecipeStoragePort, RecipeSyncStoragePort {
   DriftRecipeStorageAdapter(this._db, {required String documentsDir})
     : _documentsDir = documentsDir;
 
   final AppDatabase _db;
 
   final String _documentsDir;
+
+  static const _cursorName = 'recipes';
 
   String? _toStored(String? path) {
     if (path == null || !p.isWithin(_documentsDir, path)) return path;
@@ -29,14 +36,60 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
 
   @override
   Future<void> save(Recipe recipe) => _db.transaction(() async {
+    final updatedAt = await _nextUpdatedAt(recipe.id);
+    await _write(recipe, updatedAt);
+    await _markPending(recipe.id, updatedAt);
+    await _deleteUnusedPhotos();
+  });
+
+  @override
+  Future<void> delete(RecipeId id) => _db.transaction(() async {
+    final updatedAt = await _nextUpdatedAt(id);
+    await (_db.delete(_db.recipes)..where((r) => r.uuid.equals(id.value))).go();
+    await _markPending(id, updatedAt);
+    await _deleteUnusedPhotos();
+  });
+
+  /// Now, but always after the recipe's last change: a version pulled from a
+  /// device whose clock runs ahead must not win over an edit made after it.
+  Future<int> _nextUpdatedAt(RecipeId id) async {
+    final now = DateTime.now().toUtc().microsecondsSinceEpoch;
+    final last = await _localUpdatedAt(id.value);
+    return last == null ? now : max(now, last + 1);
+  }
+
+  Future<int?> _localUpdatedAt(String uuid) async {
+    final recipe = await (_db.select(
+      _db.recipes,
+    )..where((r) => r.uuid.equals(uuid))).getSingleOrNull();
+    final pending = await (_db.select(
+      _db.pendingRecipeChanges,
+    )..where((c) => c.recipeUuid.equals(uuid))).getSingleOrNull();
+    return [?recipe?.updatedAt, ?pending?.updatedAt].fold<int?>(
+      null,
+      (latest, time) => latest == null ? time : max(latest, time),
+    );
+  }
+
+  Future<void> _markPending(RecipeId id, int updatedAt) => _db
+      .into(_db.pendingRecipeChanges)
+      .insertOnConflictUpdate(
+        PendingRecipeChangesCompanion.insert(
+          recipeUuid: id.value,
+          updatedAt: updatedAt,
+        ),
+      );
+
+  Future<void> _write(Recipe recipe, int updatedAt) async {
     final photo = recipe.photo;
     if (photo != null) {
+      // A synced photo has no path; keep the file if this phone has it.
       await _db
           .into(_db.photos)
           .insert(
             PhotosCompanion.insert(
               uuid: photo.id.value,
-              path: _toStored(photo.path)!,
+              path: Value(_toStored(photo.path)),
             ),
             mode: InsertMode.insertOrIgnore,
           );
@@ -47,6 +100,7 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
       portions: recipe.portions,
       procedure: Value(recipe.procedure),
       photoId: Value(photo?.id.value),
+      updatedAt: Value(updatedAt),
     );
     final existing = await (_db.select(
       _db.recipes,
@@ -87,19 +141,101 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
           ),
       ]);
     });
-    await _deleteUnusedPhotos();
-  });
-
-  @override
-  Future<void> delete(RecipeId id) => _db.transaction(() async {
-    await (_db.delete(_db.recipes)..where((r) => r.uuid.equals(id.value))).go();
-    await _deleteUnusedPhotos();
-  });
+  }
 
   Future<void> _deleteUnusedPhotos() => _db.customStatement(
     'DELETE FROM photos WHERE uuid NOT IN '
     '(SELECT photo_id FROM recipes WHERE photo_id IS NOT NULL)',
   );
+
+  @override
+  Future<List<RecipeChange>> pendingChanges() => _db.transaction(() async {
+    final pending = await (_db.select(
+      _db.pendingRecipeChanges,
+    )..orderBy([(c) => OrderingTerm.asc(c.updatedAt)])).get();
+    if (pending.isEmpty) return const <RecipeChange>[];
+    final recipes = {
+      for (final recipe in await _load(
+        uuids: [for (final c in pending) c.recipeUuid],
+      ))
+        recipe.id.value: recipe,
+    };
+    return [
+      for (final change in pending)
+        RecipeChange(
+          id: RecipeId(change.recipeUuid),
+          updatedAt: _time(change.updatedAt),
+          recipe: recipes[change.recipeUuid],
+        ),
+    ];
+  });
+
+  @override
+  Stream<int> watchPendingCount() {
+    final count = countAll();
+    return (_db.selectOnly(
+      _db.pendingRecipeChanges,
+    )..addColumns([count])).map((row) => row.read(count)!).watchSingle();
+  }
+
+  @override
+  Future<void> markPushed(List<RecipeChange> changes) =>
+      _db.transaction(() async {
+        for (final change in changes) {
+          await (_db.delete(_db.pendingRecipeChanges)..where(
+                (c) =>
+                    c.recipeUuid.equals(change.id.value) &
+                    c.updatedAt.equals(_micros(change.updatedAt)),
+              ))
+              .go();
+        }
+      });
+
+  @override
+  Future<void> applyPulled(RecipeChangesPage page) => _db.transaction(() async {
+    for (final change in page.changes) {
+      final updatedAt = _micros(change.updatedAt);
+      final local = await _localUpdatedAt(change.id.value);
+      if (local != null && updatedAt <= local) continue;
+      switch (change.recipe) {
+        case null:
+          await (_db.delete(
+            _db.recipes,
+          )..where((r) => r.uuid.equals(change.id.value))).go();
+        case final recipe:
+          await _write(recipe, updatedAt);
+      }
+      await (_db.delete(
+        _db.pendingRecipeChanges,
+      )..where((c) => c.recipeUuid.equals(change.id.value))).go();
+    }
+    await _deleteUnusedPhotos();
+    await _db
+        .into(_db.syncCursors)
+        .insertOnConflictUpdate(
+          SyncCursorsCompanion.insert(name: _cursorName, cursor: page.cursor),
+        );
+  });
+
+  @override
+  Future<String?> cursor() async => (await (_db.select(
+    _db.syncCursors,
+  )..where((c) => c.name.equals(_cursorName))).getSingleOrNull())?.cursor;
+
+  @override
+  Future<void> clear() => _db.transaction(() async {
+    await _db.delete(_db.pendingRecipeChanges).go();
+    await (_db.delete(
+      _db.syncCursors,
+    )..where((c) => c.name.equals(_cursorName))).go();
+    await _db.delete(_db.recipes).go();
+    await _db.delete(_db.photos).go();
+  });
+
+  static int _micros(DateTime time) => time.toUtc().microsecondsSinceEpoch;
+
+  static DateTime _time(int micros) =>
+      DateTime.fromMicrosecondsSinceEpoch(micros, isUtc: true);
 
   Stream<void> _changes() => _db
       .customSelect(
@@ -117,70 +253,72 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
   Stream<List<Recipe>> watchAll() => _changes().asyncMap((_) => findAll());
 
   @override
-  Stream<Recipe?> watchById(RecipeId id) =>
-      _changes().asyncMap((_) async => (await _load(id: id)).firstOrNull);
+  Stream<Recipe?> watchById(RecipeId id) => _changes().asyncMap(
+    (_) async => (await _load(uuids: [id.value])).firstOrNull,
+  );
 
   @override
   Future<List<Recipe>> findAll() => _load();
 
   @override
   Future<Recipe?> findById(RecipeId id) async =>
-      (await _load(id: id)).firstOrNull;
+      (await _load(uuids: [id.value])).firstOrNull;
 
-  Future<List<Recipe>> _load({RecipeId? id}) => _db.transaction(() async {
-    final recipeQuery = _db.select(_db.recipes)
-      ..orderBy([(r) => OrderingTerm.asc(r.id)]);
-    if (id != null) recipeQuery.where((r) => r.uuid.equals(id.value));
-    final recipes = await recipeQuery.get();
-    if (recipes.isEmpty) return const <Recipe>[];
+  Future<List<Recipe>> _load({List<String>? uuids}) =>
+      _db.transaction(() async {
+        final recipeQuery = _db.select(_db.recipes)
+          ..orderBy([(r) => OrderingTerm.asc(r.id)]);
+        if (uuids != null) recipeQuery.where((r) => r.uuid.isIn(uuids));
+        final recipes = await recipeQuery.get();
+        if (recipes.isEmpty) return const <Recipe>[];
 
-    final rowIds = recipes.map((r) => r.id).toList();
-    final ingredients =
-        await (_db.select(_db.recipeIngredients)
-              ..where((i) => i.recipeId.isIn(rowIds))
-              ..orderBy([(i) => OrderingTerm.asc(i.position)]))
-            .get();
-    final categories =
-        await (_db.select(_db.recipeCategories)
-              ..where((c) => c.recipeId.isIn(rowIds))
-              ..orderBy([(c) => OrderingTerm.asc(c.position)]))
-            .get();
+        final rowIds = recipes.map((r) => r.id).toList();
+        final ingredients =
+            await (_db.select(_db.recipeIngredients)
+                  ..where((i) => i.recipeId.isIn(rowIds))
+                  ..orderBy([(i) => OrderingTerm.asc(i.position)]))
+                .get();
+        final categories =
+            await (_db.select(_db.recipeCategories)
+                  ..where((c) => c.recipeId.isIn(rowIds))
+                  ..orderBy([(c) => OrderingTerm.asc(c.position)]))
+                .get();
 
-    final ingredientsByRecipe = <int, List<Ingredient>>{};
-    for (final row in ingredients) {
-      ingredientsByRecipe
-          .putIfAbsent(row.recipeId, () => [])
-          .add(
-            Ingredient(
-              name: row.name,
-              quantity: row.quantity,
-              unit: MeasureUnit.values.byName(row.unit),
+        final ingredientsByRecipe = <int, List<Ingredient>>{};
+        for (final row in ingredients) {
+          ingredientsByRecipe
+              .putIfAbsent(row.recipeId, () => [])
+              .add(
+                Ingredient(
+                  name: row.name,
+                  quantity: row.quantity,
+                  unit: MeasureUnit.values.byName(row.unit),
+                ),
+              );
+        }
+        final photoIds = [for (final row in recipes) ?row.photoId];
+        final photos = {
+          for (final row in await (_db.select(
+            _db.photos,
+          )..where((p) => p.uuid.isIn(photoIds))).get())
+            row.uuid: Photo(id: PhotoId(row.uuid), path: _fromStored(row.path)),
+        };
+        final categoriesByRecipe = <int, List<String>>{};
+        for (final row in categories) {
+          categoriesByRecipe.putIfAbsent(row.recipeId, () => []).add(row.name);
+        }
+
+        return [
+          for (final row in recipes)
+            Recipe(
+              id: RecipeId(row.uuid),
+              title: row.title,
+              portions: row.portions,
+              ingredients: ingredientsByRecipe[row.id] ?? const [],
+              procedure: row.procedure,
+              photo: photos[row.photoId],
+              categories: categoriesByRecipe[row.id] ?? const [],
             ),
-          );
-    }
-    final photoIds = [for (final row in recipes) ?row.photoId];
-    final photos = {
-      for (final row in await (_db.select(
-        _db.photos,
-      )..where((p) => p.uuid.isIn(photoIds))).get())
-        row.uuid: Photo(id: PhotoId(row.uuid), path: _fromStored(row.path)!),
-    };
-    final categoriesByRecipe = <int, List<String>>{};
-    for (final row in categories) {
-      categoriesByRecipe.putIfAbsent(row.recipeId, () => []).add(row.name);
-    }
-
-    return [
-      for (final row in recipes)
-        Recipe(
-          id: RecipeId(row.uuid),
-          title: row.title,
-          portions: row.portions,
-          ingredients: ingredientsByRecipe[row.id] ?? const [],
-          procedure: row.procedure,
-          photo: photos[row.photoId],
-          categories: categoriesByRecipe[row.id] ?? const [],
-        ),
-    ];
-  });
+        ];
+      });
 }

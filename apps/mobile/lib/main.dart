@@ -11,6 +11,7 @@ import 'app.dart';
 import 'database/app_database.dart';
 import 'grocery/data/drift_grocery_list_storage_adapter.dart';
 import 'recipes/data/drift_recipe_storage_adapter.dart';
+import 'recipes/data/http_recipe_sync_api_adapter.dart';
 import 'settings/data/shared_preferences_language_preference_adapter.dart';
 
 const _apiUrl = String.fromEnvironment(
@@ -22,17 +23,22 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final documents = await getApplicationDocumentsDirectory();
   final database = AppDatabase.onDevice();
+  final recipes = DriftRecipeStorageAdapter(
+    database,
+    documentsDir: documents.path,
+  );
+  final apiUrl = Uri.parse(_apiUrl);
+  final client = http.Client();
   runApp(
     AmbrogioApp(
-      recipeStorage: DriftRecipeStorageAdapter(
-        database,
-        documentsDir: documents.path,
-      ),
+      recipeStorage: recipes,
+      recipeSyncStorage: recipes,
+      recipeSyncApi: HttpRecipeSyncApiAdapter(apiUrl, client),
       groceryListStorage: DriftGroceryListStorageAdapter(database),
       languagePreference: SharedPreferencesLanguagePreferenceAdapter(
         SharedPreferencesAsync(),
       ),
-      accountApi: HttpAccountApiAdapter(Uri.parse(_apiUrl), http.Client()),
+      accountApi: HttpAccountApiAdapter(apiUrl, client),
       sessionStorage: SecureStorageSessionAdapter(const FlutterSecureStorage()),
       logInPrompt: SharedPreferencesLogInPromptAdapter(
         SharedPreferencesAsync(),

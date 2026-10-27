@@ -43,6 +43,30 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Future<void> _logOut() async {
+    final account = widget.accountViewModel;
+    if (await account.logOut() || !mounted) return;
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.logOut),
+        content: Text(l10n.unsyncedChangesWillBeLost),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.logOutAnyway),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await account.logOutAnyway();
+  }
+
   void _openLanguage() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -91,7 +115,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ListTile(
                   leading: const Icon(Icons.logout),
                   title: Text(l10n.logOut),
-                  onTap: account.logOut,
+                  onTap: _logOut,
                 ),
             ],
           );

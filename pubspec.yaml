@@ -4,8 +4,7 @@ publish_to: none
 environment:
   sdk: ^3.11.1
 
-# Dart pub workspace: one shared lockfile / dependency resolution for every
-# package in the monorepo. Each package still builds and ships on its own.
 workspace:
   - apps/mobile
   - apps/backend
+  - packages/api_contract

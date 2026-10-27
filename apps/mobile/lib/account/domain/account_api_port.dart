@@ -5,6 +5,8 @@ abstract interface class AccountApiPort {
 
   Future<AuthTokens> logIn({required String email, required String password});
 
+  Future<AuthTokens> refresh(String refreshToken);
+
   Future<String> currentEmail(String accessToken);
 
   Future<void> logOut(String refreshToken);

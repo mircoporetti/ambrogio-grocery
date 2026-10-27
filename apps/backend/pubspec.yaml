@@ -8,6 +8,8 @@ environment:
 resolution: workspace
 
 dependencies:
+  ambrogio_api_contract:
+    path: ../../packages/api_contract
   bcrypt: 1.2.0
   crypto: 3.0.7
   dart_jsonwebtoken: 3.4.1

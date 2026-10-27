@@ -50,6 +50,17 @@ class AccountRobot {
 
   Future<void> logOut() => _tap(find.text('Log out'));
 
+  bool get isWarnedAboutUnsyncedChanges => find
+      .text(
+        "Some changes haven't been synced yet. If you log out now, they'll be lost.",
+      )
+      .evaluate()
+      .isNotEmpty;
+
+  Future<void> logOutAnyway() => _tap(find.text('Log out anyway'));
+
+  Future<void> stayLoggedIn() => _tap(find.text('Cancel'));
+
   bool get isAskedToLogIn =>
       find.text('You can log in later in Settings.').evaluate().isNotEmpty;
 

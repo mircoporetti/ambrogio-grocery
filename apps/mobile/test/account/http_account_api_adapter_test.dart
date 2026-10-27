@@ -7,8 +7,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
-// The app's acceptance tests use a fake API, so this checks the one adapter
-// they can't: the requests it sends and how it reads the backend's answers.
 void main() {
   final baseUrl = Uri.parse('http://api.test:8080');
 
@@ -72,6 +70,29 @@ void main() {
     expect(jsonDecode(sent[2].body), {'refreshToken': 'the-refresh'});
   });
 
+  test('renews the tokens with the refresh token', () async {
+    late http.Request sent;
+    final api = HttpAccountApiAdapter(
+      baseUrl,
+      MockClient((request) async {
+        sent = request;
+        return json(200, {
+          'tokenType': 'Bearer',
+          'accessToken': 'new-access',
+          'expiresIn': 900,
+          'refreshToken': 'new-refresh',
+        });
+      }),
+    );
+
+    final tokens = await api.refresh('old-refresh');
+
+    expect(sent.method, 'POST');
+    expect(sent.url.toString(), 'http://api.test:8080/sessions/refresh');
+    expect(jsonDecode(sent.body), {'refreshToken': 'old-refresh'});
+    expect((tokens.access, tokens.refresh), ('new-access', 'new-refresh'));
+  });
+
   test('turns the backend error codes into exceptions', () async {
     final expected = {
       (400, 'invalid_email'): isA<InvalidEmailException>(),
@@ -79,6 +100,8 @@ void main() {
       (400, 'password_too_long'): isA<PasswordTooLongException>(),
       (409, 'email_taken'): isA<EmailTakenException>(),
       (401, 'invalid_credentials'): isA<InvalidCredentialsException>(),
+      (401, 'invalid_refresh_token'): isA<InvalidRefreshTokenException>(),
+      (401, 'unauthorized'): isA<AccessTokenRejectedException>(),
       (400, 'invalid_request'): isA<UnexpectedResponseException>(),
       (500, 'anything'): isA<UnexpectedResponseException>(),
     };

@@ -5,5 +5,5 @@ class FakePhotoStorageAdapter implements PhotoStoragePort {
   final deleted = <String>[];
 
   @override
-  Future<void> delete(Photo photo) async => deleted.add(photo.path);
+  Future<void> delete(Photo photo) async => deleted.add(photo.path!);
 }

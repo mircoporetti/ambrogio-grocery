@@ -36,9 +36,9 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, PhotoRow> {
   late final GeneratedColumn<String> path = GeneratedColumn<String>(
     'path',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   @override
   List<GeneratedColumn> get $columns => [id, uuid, path];
@@ -70,8 +70,6 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, PhotoRow> {
         _pathMeta,
         path.isAcceptableOrUnknown(data['path']!, _pathMeta),
       );
-    } else if (isInserting) {
-      context.missing(_pathMeta);
     }
     return context;
   }
@@ -93,7 +91,7 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, PhotoRow> {
       path: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}path'],
-      )!,
+      ),
     );
   }
 
@@ -106,19 +104,25 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, PhotoRow> {
 class PhotoRow extends DataClass implements Insertable<PhotoRow> {
   final int id;
   final String uuid;
-  final String path;
-  const PhotoRow({required this.id, required this.uuid, required this.path});
+  final String? path;
+  const PhotoRow({required this.id, required this.uuid, this.path});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['uuid'] = Variable<String>(uuid);
-    map['path'] = Variable<String>(path);
+    if (!nullToAbsent || path != null) {
+      map['path'] = Variable<String>(path);
+    }
     return map;
   }
 
   PhotosCompanion toCompanion(bool nullToAbsent) {
-    return PhotosCompanion(id: Value(id), uuid: Value(uuid), path: Value(path));
+    return PhotosCompanion(
+      id: Value(id),
+      uuid: Value(uuid),
+      path: path == null && nullToAbsent ? const Value.absent() : Value(path),
+    );
   }
 
   factory PhotoRow.fromJson(
@@ -129,7 +133,7 @@ class PhotoRow extends DataClass implements Insertable<PhotoRow> {
     return PhotoRow(
       id: serializer.fromJson<int>(json['id']),
       uuid: serializer.fromJson<String>(json['uuid']),
-      path: serializer.fromJson<String>(json['path']),
+      path: serializer.fromJson<String?>(json['path']),
     );
   }
   @override
@@ -138,14 +142,18 @@ class PhotoRow extends DataClass implements Insertable<PhotoRow> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'uuid': serializer.toJson<String>(uuid),
-      'path': serializer.toJson<String>(path),
+      'path': serializer.toJson<String?>(path),
     };
   }
 
-  PhotoRow copyWith({int? id, String? uuid, String? path}) => PhotoRow(
+  PhotoRow copyWith({
+    int? id,
+    String? uuid,
+    Value<String?> path = const Value.absent(),
+  }) => PhotoRow(
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
-    path: path ?? this.path,
+    path: path.present ? path.value : this.path,
   );
   PhotoRow copyWithCompanion(PhotosCompanion data) {
     return PhotoRow(
@@ -179,7 +187,7 @@ class PhotoRow extends DataClass implements Insertable<PhotoRow> {
 class PhotosCompanion extends UpdateCompanion<PhotoRow> {
   final Value<int> id;
   final Value<String> uuid;
-  final Value<String> path;
+  final Value<String?> path;
   const PhotosCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
@@ -188,9 +196,8 @@ class PhotosCompanion extends UpdateCompanion<PhotoRow> {
   PhotosCompanion.insert({
     this.id = const Value.absent(),
     required String uuid,
-    required String path,
-  }) : uuid = Value(uuid),
-       path = Value(path);
+    this.path = const Value.absent(),
+  }) : uuid = Value(uuid);
   static Insertable<PhotoRow> custom({
     Expression<int>? id,
     Expression<String>? uuid,
@@ -206,7 +213,7 @@ class PhotosCompanion extends UpdateCompanion<PhotoRow> {
   PhotosCompanion copyWith({
     Value<int>? id,
     Value<String>? uuid,
-    Value<String>? path,
+    Value<String?>? path,
   }) {
     return PhotosCompanion(
       id: id ?? this.id,
@@ -314,6 +321,18 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, RecipeRow> {
       'REFERENCES photos (uuid)',
     ),
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -322,6 +341,7 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, RecipeRow> {
     portions,
     procedure,
     photoId,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -374,6 +394,12 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, RecipeRow> {
         photoId.isAcceptableOrUnknown(data['photo_id']!, _photoIdMeta),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -407,6 +433,10 @@ class $RecipesTable extends Recipes with TableInfo<$RecipesTable, RecipeRow> {
         DriftSqlType.string,
         data['${effectivePrefix}photo_id'],
       ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
     );
   }
 
@@ -423,6 +453,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
   final int portions;
   final String? procedure;
   final String? photoId;
+  final int updatedAt;
   const RecipeRow({
     required this.id,
     required this.uuid,
@@ -430,6 +461,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
     required this.portions,
     this.procedure,
     this.photoId,
+    required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -444,6 +476,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
     if (!nullToAbsent || photoId != null) {
       map['photo_id'] = Variable<String>(photoId);
     }
+    map['updated_at'] = Variable<int>(updatedAt);
     return map;
   }
 
@@ -459,6 +492,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
       photoId: photoId == null && nullToAbsent
           ? const Value.absent()
           : Value(photoId),
+      updatedAt: Value(updatedAt),
     );
   }
 
@@ -474,6 +508,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
       portions: serializer.fromJson<int>(json['portions']),
       procedure: serializer.fromJson<String?>(json['procedure']),
       photoId: serializer.fromJson<String?>(json['photoId']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
     );
   }
   @override
@@ -486,6 +521,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
       'portions': serializer.toJson<int>(portions),
       'procedure': serializer.toJson<String?>(procedure),
       'photoId': serializer.toJson<String?>(photoId),
+      'updatedAt': serializer.toJson<int>(updatedAt),
     };
   }
 
@@ -496,6 +532,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
     int? portions,
     Value<String?> procedure = const Value.absent(),
     Value<String?> photoId = const Value.absent(),
+    int? updatedAt,
   }) => RecipeRow(
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
@@ -503,6 +540,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
     portions: portions ?? this.portions,
     procedure: procedure.present ? procedure.value : this.procedure,
     photoId: photoId.present ? photoId.value : this.photoId,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
   RecipeRow copyWithCompanion(RecipesCompanion data) {
     return RecipeRow(
@@ -512,6 +550,7 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
       portions: data.portions.present ? data.portions.value : this.portions,
       procedure: data.procedure.present ? data.procedure.value : this.procedure,
       photoId: data.photoId.present ? data.photoId.value : this.photoId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -523,14 +562,15 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
           ..write('title: $title, ')
           ..write('portions: $portions, ')
           ..write('procedure: $procedure, ')
-          ..write('photoId: $photoId')
+          ..write('photoId: $photoId, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
   int get hashCode =>
-      Object.hash(id, uuid, title, portions, procedure, photoId);
+      Object.hash(id, uuid, title, portions, procedure, photoId, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -540,7 +580,8 @@ class RecipeRow extends DataClass implements Insertable<RecipeRow> {
           other.title == this.title &&
           other.portions == this.portions &&
           other.procedure == this.procedure &&
-          other.photoId == this.photoId);
+          other.photoId == this.photoId &&
+          other.updatedAt == this.updatedAt);
 }
 
 class RecipesCompanion extends UpdateCompanion<RecipeRow> {
@@ -550,6 +591,7 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
   final Value<int> portions;
   final Value<String?> procedure;
   final Value<String?> photoId;
+  final Value<int> updatedAt;
   const RecipesCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
@@ -557,6 +599,7 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
     this.portions = const Value.absent(),
     this.procedure = const Value.absent(),
     this.photoId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   RecipesCompanion.insert({
     this.id = const Value.absent(),
@@ -565,6 +608,7 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
     required int portions,
     this.procedure = const Value.absent(),
     this.photoId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : uuid = Value(uuid),
        title = Value(title),
        portions = Value(portions);
@@ -575,6 +619,7 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
     Expression<int>? portions,
     Expression<String>? procedure,
     Expression<String>? photoId,
+    Expression<int>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -583,6 +628,7 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
       if (portions != null) 'portions': portions,
       if (procedure != null) 'procedure': procedure,
       if (photoId != null) 'photo_id': photoId,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -593,6 +639,7 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
     Value<int>? portions,
     Value<String?>? procedure,
     Value<String?>? photoId,
+    Value<int>? updatedAt,
   }) {
     return RecipesCompanion(
       id: id ?? this.id,
@@ -601,6 +648,7 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
       portions: portions ?? this.portions,
       procedure: procedure ?? this.procedure,
       photoId: photoId ?? this.photoId,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -625,6 +673,9 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
     if (photoId.present) {
       map['photo_id'] = Variable<String>(photoId.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
     return map;
   }
 
@@ -636,7 +687,8 @@ class RecipesCompanion extends UpdateCompanion<RecipeRow> {
           ..write('title: $title, ')
           ..write('portions: $portions, ')
           ..write('procedure: $procedure, ')
-          ..write('photoId: $photoId')
+          ..write('photoId: $photoId, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -2333,6 +2385,439 @@ class GroceryListItemsCompanion extends UpdateCompanion<GroceryListItemRow> {
   }
 }
 
+class $PendingRecipeChangesTable extends PendingRecipeChanges
+    with TableInfo<$PendingRecipeChangesTable, PendingRecipeChangeRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PendingRecipeChangesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _recipeUuidMeta = const VerificationMeta(
+    'recipeUuid',
+  );
+  @override
+  late final GeneratedColumn<String> recipeUuid = GeneratedColumn<String>(
+    'recipe_uuid',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<int> updatedAt = GeneratedColumn<int>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [recipeUuid, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'pending_recipe_changes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PendingRecipeChangeRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('recipe_uuid')) {
+      context.handle(
+        _recipeUuidMeta,
+        recipeUuid.isAcceptableOrUnknown(data['recipe_uuid']!, _recipeUuidMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recipeUuidMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {recipeUuid};
+  @override
+  PendingRecipeChangeRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PendingRecipeChangeRow(
+      recipeUuid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recipe_uuid'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PendingRecipeChangesTable createAlias(String alias) {
+    return $PendingRecipeChangesTable(attachedDatabase, alias);
+  }
+}
+
+class PendingRecipeChangeRow extends DataClass
+    implements Insertable<PendingRecipeChangeRow> {
+  final String recipeUuid;
+  final int updatedAt;
+  const PendingRecipeChangeRow({
+    required this.recipeUuid,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['recipe_uuid'] = Variable<String>(recipeUuid);
+    map['updated_at'] = Variable<int>(updatedAt);
+    return map;
+  }
+
+  PendingRecipeChangesCompanion toCompanion(bool nullToAbsent) {
+    return PendingRecipeChangesCompanion(
+      recipeUuid: Value(recipeUuid),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory PendingRecipeChangeRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PendingRecipeChangeRow(
+      recipeUuid: serializer.fromJson<String>(json['recipeUuid']),
+      updatedAt: serializer.fromJson<int>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'recipeUuid': serializer.toJson<String>(recipeUuid),
+      'updatedAt': serializer.toJson<int>(updatedAt),
+    };
+  }
+
+  PendingRecipeChangeRow copyWith({String? recipeUuid, int? updatedAt}) =>
+      PendingRecipeChangeRow(
+        recipeUuid: recipeUuid ?? this.recipeUuid,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  PendingRecipeChangeRow copyWithCompanion(PendingRecipeChangesCompanion data) {
+    return PendingRecipeChangeRow(
+      recipeUuid: data.recipeUuid.present
+          ? data.recipeUuid.value
+          : this.recipeUuid,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingRecipeChangeRow(')
+          ..write('recipeUuid: $recipeUuid, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(recipeUuid, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PendingRecipeChangeRow &&
+          other.recipeUuid == this.recipeUuid &&
+          other.updatedAt == this.updatedAt);
+}
+
+class PendingRecipeChangesCompanion
+    extends UpdateCompanion<PendingRecipeChangeRow> {
+  final Value<String> recipeUuid;
+  final Value<int> updatedAt;
+  final Value<int> rowid;
+  const PendingRecipeChangesCompanion({
+    this.recipeUuid = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PendingRecipeChangesCompanion.insert({
+    required String recipeUuid,
+    required int updatedAt,
+    this.rowid = const Value.absent(),
+  }) : recipeUuid = Value(recipeUuid),
+       updatedAt = Value(updatedAt);
+  static Insertable<PendingRecipeChangeRow> custom({
+    Expression<String>? recipeUuid,
+    Expression<int>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (recipeUuid != null) 'recipe_uuid': recipeUuid,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PendingRecipeChangesCompanion copyWith({
+    Value<String>? recipeUuid,
+    Value<int>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return PendingRecipeChangesCompanion(
+      recipeUuid: recipeUuid ?? this.recipeUuid,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (recipeUuid.present) {
+      map['recipe_uuid'] = Variable<String>(recipeUuid.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<int>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PendingRecipeChangesCompanion(')
+          ..write('recipeUuid: $recipeUuid, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncCursorsTable extends SyncCursors
+    with TableInfo<$SyncCursorsTable, SyncCursorRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncCursorsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _cursorMeta = const VerificationMeta('cursor');
+  @override
+  late final GeneratedColumn<String> cursor = GeneratedColumn<String>(
+    'cursor',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [name, cursor];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_cursors';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncCursorRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('cursor')) {
+      context.handle(
+        _cursorMeta,
+        cursor.isAcceptableOrUnknown(data['cursor']!, _cursorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_cursorMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {name};
+  @override
+  SyncCursorRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncCursorRow(
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      cursor: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cursor'],
+      )!,
+    );
+  }
+
+  @override
+  $SyncCursorsTable createAlias(String alias) {
+    return $SyncCursorsTable(attachedDatabase, alias);
+  }
+}
+
+class SyncCursorRow extends DataClass implements Insertable<SyncCursorRow> {
+  final String name;
+  final String cursor;
+  const SyncCursorRow({required this.name, required this.cursor});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['name'] = Variable<String>(name);
+    map['cursor'] = Variable<String>(cursor);
+    return map;
+  }
+
+  SyncCursorsCompanion toCompanion(bool nullToAbsent) {
+    return SyncCursorsCompanion(name: Value(name), cursor: Value(cursor));
+  }
+
+  factory SyncCursorRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncCursorRow(
+      name: serializer.fromJson<String>(json['name']),
+      cursor: serializer.fromJson<String>(json['cursor']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'name': serializer.toJson<String>(name),
+      'cursor': serializer.toJson<String>(cursor),
+    };
+  }
+
+  SyncCursorRow copyWith({String? name, String? cursor}) =>
+      SyncCursorRow(name: name ?? this.name, cursor: cursor ?? this.cursor);
+  SyncCursorRow copyWithCompanion(SyncCursorsCompanion data) {
+    return SyncCursorRow(
+      name: data.name.present ? data.name.value : this.name,
+      cursor: data.cursor.present ? data.cursor.value : this.cursor,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncCursorRow(')
+          ..write('name: $name, ')
+          ..write('cursor: $cursor')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(name, cursor);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncCursorRow &&
+          other.name == this.name &&
+          other.cursor == this.cursor);
+}
+
+class SyncCursorsCompanion extends UpdateCompanion<SyncCursorRow> {
+  final Value<String> name;
+  final Value<String> cursor;
+  final Value<int> rowid;
+  const SyncCursorsCompanion({
+    this.name = const Value.absent(),
+    this.cursor = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncCursorsCompanion.insert({
+    required String name,
+    required String cursor,
+    this.rowid = const Value.absent(),
+  }) : name = Value(name),
+       cursor = Value(cursor);
+  static Insertable<SyncCursorRow> custom({
+    Expression<String>? name,
+    Expression<String>? cursor,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (name != null) 'name': name,
+      if (cursor != null) 'cursor': cursor,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncCursorsCompanion copyWith({
+    Value<String>? name,
+    Value<String>? cursor,
+    Value<int>? rowid,
+  }) {
+    return SyncCursorsCompanion(
+      name: name ?? this.name,
+      cursor: cursor ?? this.cursor,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (cursor.present) {
+      map['cursor'] = Variable<String>(cursor.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncCursorsCompanion(')
+          ..write('name: $name, ')
+          ..write('cursor: $cursor, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2349,6 +2834,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GroceryListItemsTable groceryListItems = $GroceryListItemsTable(
     this,
   );
+  late final $PendingRecipeChangesTable pendingRecipeChanges =
+      $PendingRecipeChangesTable(this);
+  late final $SyncCursorsTable syncCursors = $SyncCursorsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2361,6 +2849,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     groceryLists,
     groceryListRecipes,
     groceryListItems,
+    pendingRecipeChanges,
+    syncCursors,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -2399,13 +2889,13 @@ typedef $$PhotosTableCreateCompanionBuilder =
     PhotosCompanion Function({
       Value<int> id,
       required String uuid,
-      required String path,
+      Value<String?> path,
     });
 typedef $$PhotosTableUpdateCompanionBuilder =
     PhotosCompanion Function({
       Value<int> id,
       Value<String> uuid,
-      Value<String> path,
+      Value<String?> path,
     });
 
 final class $$PhotosTableReferences
@@ -2581,13 +3071,13 @@ class $$PhotosTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> uuid = const Value.absent(),
-                Value<String> path = const Value.absent(),
+                Value<String?> path = const Value.absent(),
               }) => PhotosCompanion(id: id, uuid: uuid, path: path),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required String uuid,
-                required String path,
+                Value<String?> path = const Value.absent(),
               }) => PhotosCompanion.insert(id: id, uuid: uuid, path: path),
           withReferenceMapper: (p0) => p0
               .map(
@@ -2647,6 +3137,7 @@ typedef $$RecipesTableCreateCompanionBuilder =
       required int portions,
       Value<String?> procedure,
       Value<String?> photoId,
+      Value<int> updatedAt,
     });
 typedef $$RecipesTableUpdateCompanionBuilder =
     RecipesCompanion Function({
@@ -2656,6 +3147,7 @@ typedef $$RecipesTableUpdateCompanionBuilder =
       Value<int> portions,
       Value<String?> procedure,
       Value<String?> photoId,
+      Value<int> updatedAt,
     });
 
 final class $$RecipesTableReferences
@@ -2752,6 +3244,11 @@ class $$RecipesTableFilterComposer
 
   ColumnFilters<String> get procedure => $composableBuilder(
     column: $table.procedure,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2863,6 +3360,11 @@ class $$RecipesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$PhotosTableOrderingComposer get photoId {
     final $$PhotosTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -2910,6 +3412,9 @@ class $$RecipesTableAnnotationComposer
 
   GeneratedColumn<String> get procedure =>
       $composableBuilder(column: $table.procedure, builder: (column) => column);
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$PhotosTableAnnotationComposer get photoId {
     final $$PhotosTableAnnotationComposer composer = $composerBuilder(
@@ -3024,6 +3529,7 @@ class $$RecipesTableTableManager
                 Value<int> portions = const Value.absent(),
                 Value<String?> procedure = const Value.absent(),
                 Value<String?> photoId = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
               }) => RecipesCompanion(
                 id: id,
                 uuid: uuid,
@@ -3031,6 +3537,7 @@ class $$RecipesTableTableManager
                 portions: portions,
                 procedure: procedure,
                 photoId: photoId,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -3040,6 +3547,7 @@ class $$RecipesTableTableManager
                 required int portions,
                 Value<String?> procedure = const Value.absent(),
                 Value<String?> photoId = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
               }) => RecipesCompanion.insert(
                 id: id,
                 uuid: uuid,
@@ -3047,6 +3555,7 @@ class $$RecipesTableTableManager
                 portions: portions,
                 procedure: procedure,
                 photoId: photoId,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -4849,6 +5358,310 @@ typedef $$GroceryListItemsTableProcessedTableManager =
       GroceryListItemRow,
       PrefetchHooks Function({bool listId})
     >;
+typedef $$PendingRecipeChangesTableCreateCompanionBuilder =
+    PendingRecipeChangesCompanion Function({
+      required String recipeUuid,
+      required int updatedAt,
+      Value<int> rowid,
+    });
+typedef $$PendingRecipeChangesTableUpdateCompanionBuilder =
+    PendingRecipeChangesCompanion Function({
+      Value<String> recipeUuid,
+      Value<int> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$PendingRecipeChangesTableFilterComposer
+    extends Composer<_$AppDatabase, $PendingRecipeChangesTable> {
+  $$PendingRecipeChangesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get recipeUuid => $composableBuilder(
+    column: $table.recipeUuid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PendingRecipeChangesTableOrderingComposer
+    extends Composer<_$AppDatabase, $PendingRecipeChangesTable> {
+  $$PendingRecipeChangesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get recipeUuid => $composableBuilder(
+    column: $table.recipeUuid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PendingRecipeChangesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PendingRecipeChangesTable> {
+  $$PendingRecipeChangesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get recipeUuid => $composableBuilder(
+    column: $table.recipeUuid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$PendingRecipeChangesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PendingRecipeChangesTable,
+          PendingRecipeChangeRow,
+          $$PendingRecipeChangesTableFilterComposer,
+          $$PendingRecipeChangesTableOrderingComposer,
+          $$PendingRecipeChangesTableAnnotationComposer,
+          $$PendingRecipeChangesTableCreateCompanionBuilder,
+          $$PendingRecipeChangesTableUpdateCompanionBuilder,
+          (
+            PendingRecipeChangeRow,
+            BaseReferences<
+              _$AppDatabase,
+              $PendingRecipeChangesTable,
+              PendingRecipeChangeRow
+            >,
+          ),
+          PendingRecipeChangeRow,
+          PrefetchHooks Function()
+        > {
+  $$PendingRecipeChangesTableTableManager(
+    _$AppDatabase db,
+    $PendingRecipeChangesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PendingRecipeChangesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PendingRecipeChangesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$PendingRecipeChangesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> recipeUuid = const Value.absent(),
+                Value<int> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PendingRecipeChangesCompanion(
+                recipeUuid: recipeUuid,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String recipeUuid,
+                required int updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PendingRecipeChangesCompanion.insert(
+                recipeUuid: recipeUuid,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PendingRecipeChangesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PendingRecipeChangesTable,
+      PendingRecipeChangeRow,
+      $$PendingRecipeChangesTableFilterComposer,
+      $$PendingRecipeChangesTableOrderingComposer,
+      $$PendingRecipeChangesTableAnnotationComposer,
+      $$PendingRecipeChangesTableCreateCompanionBuilder,
+      $$PendingRecipeChangesTableUpdateCompanionBuilder,
+      (
+        PendingRecipeChangeRow,
+        BaseReferences<
+          _$AppDatabase,
+          $PendingRecipeChangesTable,
+          PendingRecipeChangeRow
+        >,
+      ),
+      PendingRecipeChangeRow,
+      PrefetchHooks Function()
+    >;
+typedef $$SyncCursorsTableCreateCompanionBuilder =
+    SyncCursorsCompanion Function({
+      required String name,
+      required String cursor,
+      Value<int> rowid,
+    });
+typedef $$SyncCursorsTableUpdateCompanionBuilder =
+    SyncCursorsCompanion Function({
+      Value<String> name,
+      Value<String> cursor,
+      Value<int> rowid,
+    });
+
+class $$SyncCursorsTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncCursorsTable> {
+  $$SyncCursorsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get cursor => $composableBuilder(
+    column: $table.cursor,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncCursorsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncCursorsTable> {
+  $$SyncCursorsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get cursor => $composableBuilder(
+    column: $table.cursor,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncCursorsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncCursorsTable> {
+  $$SyncCursorsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get cursor =>
+      $composableBuilder(column: $table.cursor, builder: (column) => column);
+}
+
+class $$SyncCursorsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncCursorsTable,
+          SyncCursorRow,
+          $$SyncCursorsTableFilterComposer,
+          $$SyncCursorsTableOrderingComposer,
+          $$SyncCursorsTableAnnotationComposer,
+          $$SyncCursorsTableCreateCompanionBuilder,
+          $$SyncCursorsTableUpdateCompanionBuilder,
+          (
+            SyncCursorRow,
+            BaseReferences<_$AppDatabase, $SyncCursorsTable, SyncCursorRow>,
+          ),
+          SyncCursorRow,
+          PrefetchHooks Function()
+        > {
+  $$SyncCursorsTableTableManager(_$AppDatabase db, $SyncCursorsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncCursorsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncCursorsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncCursorsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> name = const Value.absent(),
+                Value<String> cursor = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SyncCursorsCompanion(
+                name: name,
+                cursor: cursor,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String name,
+                required String cursor,
+                Value<int> rowid = const Value.absent(),
+              }) => SyncCursorsCompanion.insert(
+                name: name,
+                cursor: cursor,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncCursorsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncCursorsTable,
+      SyncCursorRow,
+      $$SyncCursorsTableFilterComposer,
+      $$SyncCursorsTableOrderingComposer,
+      $$SyncCursorsTableAnnotationComposer,
+      $$SyncCursorsTableCreateCompanionBuilder,
+      $$SyncCursorsTableUpdateCompanionBuilder,
+      (
+        SyncCursorRow,
+        BaseReferences<_$AppDatabase, $SyncCursorsTable, SyncCursorRow>,
+      ),
+      SyncCursorRow,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4867,4 +5680,8 @@ class $AppDatabaseManager {
       $$GroceryListRecipesTableTableManager(_db, _db.groceryListRecipes);
   $$GroceryListItemsTableTableManager get groceryListItems =>
       $$GroceryListItemsTableTableManager(_db, _db.groceryListItems);
+  $$PendingRecipeChangesTableTableManager get pendingRecipeChanges =>
+      $$PendingRecipeChangesTableTableManager(_db, _db.pendingRecipeChanges);
+  $$SyncCursorsTableTableManager get syncCursors =>
+      $$SyncCursorsTableTableManager(_db, _db.syncCursors);
 }

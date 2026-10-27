@@ -1,0 +1,11 @@
+name: ambrogio_api_contract
+description: "The JSON the Ambrogio app and backend exchange over HTTP."
+publish_to: 'none'
+
+environment:
+  sdk: ^3.11.1
+
+resolution: workspace
+
+dev_dependencies:
+  lints: 6.1.0

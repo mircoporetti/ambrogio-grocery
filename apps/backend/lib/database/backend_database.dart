@@ -38,7 +38,26 @@ class RefreshTokens extends Table {
   Set<Column> get primaryKey => {tokenHash};
 }
 
-@DriftDatabase(tables: [Accounts, Sessions, RefreshTokens])
+@DataClassName('RecipeRow')
+@TableIndex(
+  name: 'recipes_account_cursor',
+  columns: {#accountId, #changeCursor},
+  unique: true,
+)
+class Recipes extends Table {
+  UuidColumn get accountId => customType(
+    PgTypes.uuid,
+  ).references(Accounts, #id, onDelete: KeyAction.cascade)();
+  UuidColumn get id => customType(PgTypes.uuid)();
+  TimestampColumn get updatedAt => customType(PgTypes.timestampWithTimezone)();
+  Column<Object> get recipe => customType(PgTypes.jsonb).nullable()();
+  IntColumn get changeCursor => integer()();
+
+  @override
+  Set<Column> get primaryKey => {accountId, id};
+}
+
+@DriftDatabase(tables: [Accounts, Sessions, RefreshTokens, Recipes])
 class BackendDatabase extends _$BackendDatabase {
   BackendDatabase(super.executor);
 
@@ -51,5 +70,15 @@ class BackendDatabase extends _$BackendDatabase {
       );
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.createTable(recipes);
+        await m.createIndex(recipesAccountCursor);
+      }
+    },
+  );
 }

@@ -156,5 +156,7 @@
   "passwordTooLong": "The password is too long.",
   "serverUnreachable": "Could not reach the server. Check your connection and try again.",
   "somethingWentWrong": "Something went wrong. Please try again.",
-  "logInLater": "You can log in later in Settings."
+  "logInLater": "You can log in later in Settings.",
+  "unsyncedChangesWillBeLost": "Some changes haven't been synced yet. If you log out now, they'll be lost.",
+  "logOutAnyway": "Log out anyway"
 }

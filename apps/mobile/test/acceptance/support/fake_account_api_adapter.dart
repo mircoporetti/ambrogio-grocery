@@ -6,12 +6,22 @@ import 'package:ambrogio_grocery/account/domain/auth_tokens.dart';
 class FakeAccountApiAdapter implements AccountApiPort {
   final _passwords = <String, String>{};
   final _emailsByAccessToken = <String, String>{};
+  final _emailsByRefreshToken = <String, String>{};
   final loggedOut = <String>[];
-  var _logins = 0;
+  var _issued = 0;
   bool unreachable = false;
 
   void givenAccount(String email, String password) =>
       _passwords[email] = password;
+
+  String? emailFor(String accessToken) => _emailsByAccessToken[accessToken];
+
+  void expireAccessTokens() => _emailsByAccessToken.clear();
+
+  void expireSessions() {
+    _emailsByAccessToken.clear();
+    _emailsByRefreshToken.clear();
+  }
 
   @override
   Future<void> register({
@@ -38,13 +48,16 @@ class FakeAccountApiAdapter implements AccountApiPort {
     if (_passwords[address] != password) {
       throw const InvalidCredentialsException();
     }
-    _logins++;
-    final tokens = AuthTokens(
-      access: 'access-$_logins',
-      refresh: 'refresh-$_logins',
-    );
-    _emailsByAccessToken[tokens.access] = address;
-    return tokens;
+    return _issue(address);
+  }
+
+  @override
+  Future<AuthTokens> refresh(String refreshToken) async {
+    _reach();
+    final email =
+        _emailsByRefreshToken.remove(refreshToken) ??
+        (throw const InvalidRefreshTokenException());
+    return _issue(email);
   }
 
   @override
@@ -57,7 +70,19 @@ class FakeAccountApiAdapter implements AccountApiPort {
   @override
   Future<void> logOut(String refreshToken) async {
     _reach();
+    _emailsByRefreshToken.remove(refreshToken);
     loggedOut.add(refreshToken);
+  }
+
+  AuthTokens _issue(String email) {
+    _issued++;
+    final tokens = AuthTokens(
+      access: 'access-$_issued',
+      refresh: 'refresh-$_issued',
+    );
+    _emailsByAccessToken[tokens.access] = email;
+    _emailsByRefreshToken[tokens.refresh] = email;
+    return tokens;
   }
 
   void _reach() {

@@ -37,6 +37,19 @@ class HttpAccountApiAdapter implements AccountApiPort {
   }
 
   @override
+  Future<AuthTokens> refresh(String refreshToken) async {
+    final json = await _send(
+      'POST',
+      '/sessions/refresh',
+      body: {'refreshToken': refreshToken},
+    );
+    return AuthTokens(
+      access: _string(json, 'accessToken'),
+      refresh: _string(json, 'refreshToken'),
+    );
+  }
+
+  @override
   Future<String> currentEmail(String accessToken) async =>
       _string(await _send('GET', '/me', token: accessToken), 'email');
 
@@ -82,6 +95,8 @@ class HttpAccountApiAdapter implements AccountApiPort {
       'password_too_long' => const PasswordTooLongException(),
       'email_taken' => const EmailTakenException(),
       'invalid_credentials' => const InvalidCredentialsException(),
+      'invalid_refresh_token' => const InvalidRefreshTokenException(),
+      'unauthorized' => const AccessTokenRejectedException(),
       _ => const UnexpectedResponseException(),
     };
   }

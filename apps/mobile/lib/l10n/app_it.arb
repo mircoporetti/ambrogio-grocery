@@ -83,5 +83,7 @@
   "passwordTooLong": "La password è troppo lunga.",
   "serverUnreachable": "Impossibile raggiungere il server. Controlla la connessione e riprova.",
   "somethingWentWrong": "Qualcosa è andato storto. Riprova.",
-  "logInLater": "Puoi accedere più tardi dalle Impostazioni."
+  "logInLater": "Puoi accedere più tardi dalle Impostazioni.",
+  "unsyncedChangesWillBeLost": "Alcune modifiche non sono ancora state sincronizzate. Se esci ora andranno perse.",
+  "logOutAnyway": "Esci comunque"
 }

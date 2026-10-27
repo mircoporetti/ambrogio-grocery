@@ -18,6 +18,10 @@ import 'accounts/domain/password_hasher_port.dart';
 import 'accounts/http/account_routes.dart';
 import 'database/backend_database.dart';
 import 'health/http/health_routes.dart';
+import 'recipes/application/pull_recipe_changes.dart';
+import 'recipes/application/push_recipe_changes.dart';
+import 'recipes/data/drift_recipe_storage_adapter.dart';
+import 'recipes/http/recipe_routes.dart';
 
 Future<HttpServer> startServer({
   required int port,
@@ -29,18 +33,26 @@ Future<HttpServer> startServer({
 }) {
   final accounts = DriftAccountStorageAdapter(database);
   final sessions = DriftSessionStorageAdapter(database);
+  final recipes = DriftRecipeStorageAdapter(database);
+  final authenticate = Authenticate(accessTokens, clock);
   final accountRoutes = AccountRoutes(
     RegisterAccount(accounts, passwordHasher),
     LogIn(accounts, sessions, passwordHasher, accessTokens, clock),
     RefreshSession(sessions, accessTokens, clock),
     LogOut(sessions),
-    Authenticate(accessTokens, clock),
+    authenticate,
     GetAccount(accounts),
+  );
+  final recipeRoutes = RecipeRoutes(
+    authenticate,
+    PushRecipeChanges(recipes),
+    PullRecipeChanges(recipes),
   );
 
   final router = Router()
     ..mount('/', HealthRoutes().router.call)
-    ..mount('/', accountRoutes.router.call);
+    ..mount('/', accountRoutes.router.call)
+    ..mount('/', recipeRoutes.router.call);
   final handler = const Pipeline()
       .addMiddleware(logRequests())
       .addHandler(router.call);

@@ -7,7 +7,10 @@ import 'package:ambrogio_grocery/grocery/domain/clock_port.dart';
 import 'package:ambrogio_grocery/grocery/domain/grocery_list_storage_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_picker_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_storage_port.dart';
+import 'package:ambrogio_grocery/recipes/data/drift_recipe_storage_adapter.dart';
 import 'package:ambrogio_grocery/recipes/domain/recipe_storage_port.dart';
+import 'package:ambrogio_grocery/recipes/domain/recipe_sync_api_port.dart';
+import 'package:ambrogio_grocery/recipes/domain/recipe_sync_storage_port.dart';
 import 'package:ambrogio_grocery/settings/data/shared_preferences_language_preference_adapter.dart';
 import 'package:ambrogio_grocery/settings/domain/language_preference_port.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +18,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'fake_account_api_adapter.dart';
 import 'fake_photo_picker_adapter.dart';
+import 'fake_recipe_sync_api_adapter.dart';
 import 'fake_photo_storage_adapter.dart';
 import 'fixed_clock_adapter.dart';
 import 'test_database.dart';
@@ -36,10 +40,24 @@ class RecipeRobot {
     AccountApiPort? accountApi,
     SessionStoragePort? sessionStorage,
     LogInPromptPort? logInPrompt,
+    RecipeSyncApiPort? recipeSyncApi,
   }) async {
+    final api = accountApi ?? FakeAccountApiAdapter();
     await tester.pumpWidget(
       AmbrogioApp(
         recipeStorage: storage,
+        recipeSyncStorage: switch (storage) {
+          final RecipeSyncStoragePort sync => sync,
+          _ => DriftRecipeStorageAdapter(
+            openInMemoryDatabase(),
+            documentsDir: testDocumentsDir,
+          ),
+        },
+        recipeSyncApi:
+            recipeSyncApi ??
+            FakeRecipeSyncApiAdapter(
+              api is FakeAccountApiAdapter ? api : FakeAccountApiAdapter(),
+            ),
         groceryListStorage:
             groceryListStorage ??
             DriftGroceryListStorageAdapter(openInMemoryDatabase()),
@@ -49,7 +67,7 @@ class RecipeRobot {
         languagePreference:
             languagePreference ??
             SharedPreferencesLanguagePreferenceAdapter(inMemoryPreferences()),
-        accountApi: accountApi ?? FakeAccountApiAdapter(),
+        accountApi: api,
         sessionStorage: sessionStorage ?? emptySecureStorage(),
         logInPrompt: logInPrompt ?? await answeredLogInPrompt(),
       ),
@@ -91,6 +109,20 @@ class RecipeRobot {
 
   Future<void> closeApp() async {
     await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> bringAppToForeground() async {
+    for (final state in [
+      AppLifecycleState.inactive,
+      AppLifecycleState.hidden,
+      AppLifecycleState.paused,
+      AppLifecycleState.hidden,
+      AppLifecycleState.inactive,
+      AppLifecycleState.resumed,
+    ]) {
+      tester.binding.handleAppLifecycleStateChanged(state);
+    }
     await tester.pumpAndSettle();
   }
 

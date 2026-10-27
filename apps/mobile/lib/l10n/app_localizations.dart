@@ -601,6 +601,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You can log in later in Settings.'**
   String get logInLater;
+
+  /// No description provided for @unsyncedChangesWillBeLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Some changes haven\'t been synced yet. If you log out now, they\'ll be lost.'**
+  String get unsyncedChangesWillBeLost;
+
+  /// No description provided for @logOutAnyway.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out anyway'**
+  String get logOutAnyway;
 }
 
 class _AppLocalizationsDelegate

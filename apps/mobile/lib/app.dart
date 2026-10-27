@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'account/application/answer_log_in_prompt.dart';
 import 'account/application/create_account.dart';
 import 'account/application/log_in.dart';
+import 'account/application/call_with_session.dart';
 import 'account/application/log_out.dart';
 import 'account/application/should_ask_to_log_in.dart';
 import 'account/application/watch_session.dart';
@@ -30,9 +31,14 @@ import 'grocery/ui/plan_week_view_model.dart';
 import 'l10n/app_localizations.dart';
 import 'recipes/application/create_recipe.dart';
 import 'recipes/application/delete_recipe.dart';
+import 'recipes/application/forget_local_recipes.dart';
 import 'recipes/application/list_recipes.dart';
 import 'recipes/application/pick_recipe_photo.dart';
+import 'recipes/application/recipe_sync_lock.dart';
+import 'recipes/application/sync_recipes.dart';
 import 'recipes/application/update_recipe.dart';
+import 'recipes/application/upload_pending_recipes.dart';
+import 'recipes/application/watch_pending_recipe_changes.dart';
 import 'recipes/application/watch_recipe.dart';
 import 'recipes/application/watch_recipes.dart';
 import 'recipes/data/file_photo_storage_adapter.dart';
@@ -40,8 +46,11 @@ import 'recipes/data/image_picker_photo_picker_adapter.dart';
 import 'recipes/domain/photo_picker_port.dart';
 import 'recipes/domain/photo_storage_port.dart';
 import 'recipes/domain/recipe_storage_port.dart';
+import 'recipes/domain/recipe_sync_api_port.dart';
+import 'recipes/domain/recipe_sync_storage_port.dart';
 import 'recipes/ui/recipe_list_page.dart';
 import 'recipes/ui/recipe_list_view_model.dart';
+import 'recipes/ui/recipe_sync_view_model.dart';
 import 'settings/application/change_language.dart';
 import 'settings/application/watch_language_preference.dart';
 import 'settings/domain/language_preference_port.dart';
@@ -59,6 +68,8 @@ class AmbrogioApp extends StatefulWidget {
     required this.accountApi,
     required this.sessionStorage,
     required this.logInPrompt,
+    required this.recipeSyncStorage,
+    required this.recipeSyncApi,
     this.clock,
     this.photoPicker,
     this.photoStorage,
@@ -70,6 +81,8 @@ class AmbrogioApp extends StatefulWidget {
   final AccountApiPort accountApi;
   final SessionStoragePort sessionStorage;
   final LogInPromptPort logInPrompt;
+  final RecipeSyncStoragePort recipeSyncStorage;
+  final RecipeSyncApiPort recipeSyncApi;
   final ClockPort? clock;
   final PhotoPickerPort? photoPicker;
   final PhotoStoragePort? photoStorage;
@@ -109,8 +122,33 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
   late final _appLanguage = AppLanguageViewModel(_watchLanguagePreference);
   late final _logIn = LogIn(widget.accountApi, widget.sessionStorage);
   late final _createAccount = CreateAccount(widget.accountApi, _logIn);
-  late final _logOut = LogOut(widget.accountApi, widget.sessionStorage);
   late final _watchSession = WatchSession(widget.sessionStorage);
+  late final _recipeSyncLock = RecipeSyncLock();
+  late final _syncRecipes = SyncRecipes(
+    widget.recipeSyncStorage,
+    widget.recipeSyncApi,
+    CallWithSession(widget.accountApi, widget.sessionStorage),
+    _recipeSyncLock,
+  );
+  late final _uploadPendingRecipes = UploadPendingRecipes(
+    widget.recipeSyncStorage,
+    _syncRecipes,
+  );
+  late final _logOut = LogOut(
+    widget.accountApi,
+    widget.sessionStorage,
+    ForgetLocalRecipes(
+      widget.recipeStorage,
+      widget.recipeSyncStorage,
+      _photoStorage,
+      _recipeSyncLock,
+    ).call,
+  );
+  late final _recipeSync = RecipeSyncViewModel(
+    _watchSession,
+    WatchPendingRecipeChanges(widget.recipeSyncStorage),
+    _syncRecipes,
+  );
   late final _logInPrompt = LogInPromptViewModel(
     ShouldAskToLogIn(widget.logInPrompt, widget.sessionStorage),
     AnswerLogInPrompt(widget.logInPrompt),
@@ -121,7 +159,14 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
   );
 
   @override
+  void initState() {
+    super.initState();
+    _recipeSync;
+  }
+
+  @override
   void dispose() {
+    _recipeSync.dispose();
     _recipeList.dispose();
     _appLanguage.dispose();
     super.dispose();
@@ -157,7 +202,11 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
             viewModel: SettingsViewModel(_watchLanguagePreference),
             languageViewModel: () =>
                 LanguageViewModel(_watchLanguagePreference, _changeLanguage),
-            accountViewModel: AccountViewModel(_watchSession, _logOut),
+            accountViewModel: AccountViewModel(
+              _watchSession,
+              _logOut,
+              _uploadPendingRecipes,
+            ),
             logInViewModel: () => LogInViewModel(_logIn, _createAccount),
           ),
           groceryListsPage: () => GroceryListsPage(
