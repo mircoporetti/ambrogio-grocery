@@ -125,7 +125,7 @@ void main() {
   });
 
   testWidgets('replacing the photo deletes the old one', (tester) async {
-    final photoPicker = FakePhotoPickerAdapter()..nextPhoto = '/photos/old.jpg';
+    final photoPicker = FakePhotoPickerAdapter()..nextPhoto = 'old';
     final photoStorage = FakePhotoStorageAdapter();
     robot = RecipeRobot(tester);
     await robot.launchApp(
@@ -139,22 +139,24 @@ void main() {
     await robot.enterPortions('4');
     await robot.addIngredient('Spaghetti', '320', 'g');
     await robot.save();
-    final oldPhoto = (await storage.findAll()).single.photo!;
+    final oldPath = robot.photoInList('Carbonara')!;
 
     await robot.openRecipe('Carbonara');
     await robot.editOpenRecipe();
-    photoPicker.nextPhoto = '/photos/new.jpg';
+    photoPicker.nextPhoto = 'new';
     await robot.changePhoto();
     await robot.save();
+    await robot.goBack();
 
-    final newPhoto = (await storage.findAll()).single.photo!;
-    expect(newPhoto.path, '/photos/new.jpg');
-    expect(newPhoto.id, isNot(oldPhoto.id));
-    expect(photoStorage.deleted, ['/photos/old.jpg']);
+    expect(
+      photoStorage.fileAt(robot.photoInList('Carbonara')!),
+      FakePhotoPickerAdapter.bytesOf('new'),
+    );
+    expect(photoStorage.fileAt(oldPath), isNull);
   });
 
   testWidgets('saving without changing the photo keeps it', (tester) async {
-    final photoPicker = FakePhotoPickerAdapter()..nextPhoto = '/photos/old.jpg';
+    final photoPicker = FakePhotoPickerAdapter()..nextPhoto = 'old';
     final photoStorage = FakePhotoStorageAdapter();
     robot = RecipeRobot(tester);
     await robot.launchApp(
@@ -168,16 +170,15 @@ void main() {
     await robot.enterPortions('4');
     await robot.addIngredient('Spaghetti', '320', 'g');
     await robot.save();
-    final photo = (await storage.findAll()).single.photo!;
+    final path = robot.photoInList('Carbonara')!;
 
     await robot.openRecipe('Carbonara');
     await robot.editOpenRecipe();
     await robot.enterTitle('Carbonara classica');
     await robot.save();
+    await robot.goBack();
 
-    final kept = (await storage.findAll()).single.photo!;
-    expect(kept.id, photo.id);
-    expect(kept.path, '/photos/old.jpg');
-    expect(photoStorage.deleted, isEmpty);
+    expect(robot.photoInList('Carbonara classica'), path);
+    expect(photoStorage.fileAt(path), FakePhotoPickerAdapter.bytesOf('old'));
   });
 }

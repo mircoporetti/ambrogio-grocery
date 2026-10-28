@@ -1,5 +1,7 @@
 import 'package:ambrogio_grocery/account/domain/account_exceptions.dart';
 import 'package:ambrogio_grocery/recipes/domain/ingredient.dart';
+import 'package:ambrogio_grocery/recipes/domain/photo.dart';
+import 'package:ambrogio_grocery/recipes/domain/photo_id.dart';
 import 'package:ambrogio_grocery/recipes/domain/recipe.dart';
 import 'package:ambrogio_grocery/recipes/domain/recipe_change.dart';
 import 'package:ambrogio_grocery/recipes/domain/recipe_id.dart';
@@ -16,7 +18,7 @@ class FakeRecipeSyncApiAdapter implements RecipeSyncApiPort {
   var _cursor = 0;
   bool unreachable = false;
 
-  void givenRecipe(String email, String title, {RecipeId? id}) {
+  void givenRecipe(String email, String title, {RecipeId? id, PhotoId? photo}) {
     final recipeId = id ?? RecipeId.generate();
     _store(
       email,
@@ -27,6 +29,7 @@ class FakeRecipeSyncApiAdapter implements RecipeSyncApiPort {
           id: recipeId,
           title: title,
           portions: 2,
+          photo: photo == null ? null : Photo(id: photo),
           ingredients: [
             Ingredient(name: 'Rice', quantity: 300, unit: MeasureUnit.grams),
           ],
@@ -34,6 +37,9 @@ class FakeRecipeSyncApiAdapter implements RecipeSyncApiPort {
       ),
     );
   }
+
+  void givenDeletion(String email, RecipeId id) =>
+      _store(email, RecipeChange(id: id, updatedAt: DateTime.now()));
 
   List<Recipe> recipesOf(String email) => [
     for (final entry in _ordered(email)) ?entry.change.recipe,

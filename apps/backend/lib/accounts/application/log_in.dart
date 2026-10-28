@@ -1,7 +1,7 @@
 import '../domain/access_token_port.dart';
 import '../domain/account_exceptions.dart';
 import '../domain/account_storage_port.dart';
-import '../domain/clock_port.dart';
+import '../../shared/domain/clock_port.dart';
 import '../domain/email.dart';
 import '../domain/password.dart';
 import '../domain/password_hasher_port.dart';

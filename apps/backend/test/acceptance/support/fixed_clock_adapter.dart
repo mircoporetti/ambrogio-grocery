@@ -1,4 +1,4 @@
-import 'package:ambrogio_backend/accounts/domain/clock_port.dart';
+import 'package:ambrogio_backend/shared/domain/clock_port.dart';
 
 final today = DateTime.utc(2026, 10, 21, 10);
 

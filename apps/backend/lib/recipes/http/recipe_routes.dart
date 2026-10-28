@@ -10,7 +10,7 @@ import '../../http/json.dart';
 import '../application/pull_recipe_changes.dart';
 import '../application/push_recipe_changes.dart';
 import '../domain/ingredient.dart';
-import '../domain/photo_id.dart';
+import '../../photos/domain/photo_id.dart';
 import '../domain/recipe.dart';
 import '../domain/recipe_change.dart';
 import '../domain/recipe_exceptions.dart';

@@ -9,6 +9,5 @@ class Photo {
 
   final PhotoId id;
 
-  /// Null when the photo isn't on this phone: photos aren't synced yet.
   final String? path;
 }

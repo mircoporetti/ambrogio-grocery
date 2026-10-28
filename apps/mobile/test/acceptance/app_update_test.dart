@@ -4,12 +4,15 @@ import 'package:ambrogio_grocery/grocery/data/drift_grocery_list_storage_adapter
 import 'package:ambrogio_grocery/grocery/domain/week.dart';
 import 'package:ambrogio_grocery/recipes/data/drift_recipe_storage_adapter.dart';
 import 'package:ambrogio_grocery/recipes/domain/ingredient.dart';
+import 'package:ambrogio_grocery/recipes/domain/photo_id.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 
 import 'support/account_robot.dart';
 import 'support/fake_account_api_adapter.dart';
 import 'support/fake_grocery_list_sync_api_adapter.dart';
+import 'support/fake_photo_storage_adapter.dart';
+import 'support/fake_photo_sync_api_adapter.dart';
 import 'support/fake_recipe_sync_api_adapter.dart';
 import 'support/grocery_robot.dart';
 import 'support/recipe_robot.dart';
@@ -217,6 +220,74 @@ void main() {
     );
     expect(uploaded.items.map((i) => i.id).toSet(), hasLength(2));
   });
+  testWidgets('photos saved before photo sync survive the update and are '
+      'uploaded at the next sync', (tester) async {
+    final file = newDatabaseFile();
+    _writeVersion8Database(file);
+    final accounts = FakeAccountApiAdapter()
+      ..givenAccount('ada@example.com', 'secret-pw');
+    final server = FakeRecipeSyncApiAdapter(accounts);
+    final photoServer = FakePhotoSyncApiAdapter(accounts);
+
+    final db = openFileDatabase(file);
+    addTearDown(db.close);
+    final storage = DriftRecipeStorageAdapter(
+      db,
+      documentsDir: testDocumentsDir,
+    );
+    const carbonaraPath = '$testDocumentsDir/photos/carbonara.jpg';
+    final carbonaraPhoto = [1, 2, 3];
+    final robot = RecipeRobot(tester);
+    await robot.launchApp(
+      storage,
+      accountApi: accounts,
+      recipeSyncApi: server,
+      photoSyncApi: photoServer,
+      photoStorage: FakePhotoStorageAdapter()
+        ..givenFile(carbonaraPath, carbonaraPhoto),
+    );
+
+    expect(robot.photoInList('Carbonara'), carbonaraPath);
+    expect(robot.photoInList('Risotto'), isNull);
+
+    await AccountRobot(tester).logIn('ada@example.com', 'secret-pw');
+
+    expect(
+      photoServer.photoOf(
+        'ada@example.com',
+        PhotoId('8e7d6c5b-4a3f-4e2d-9c1b-0a9f8e7d6c5b'),
+      ),
+      carbonaraPhoto,
+    );
+    expect(server.recipesOf('ada@example.com'), hasLength(1));
+  });
+}
+
+// Schema version 8 synced recipes and lists, but photos stayed on the phone
+// they were picked on.
+void _writeVersion8Database(File file) {
+  final raw = sqlite3.open(file.path);
+  raw.execute('''
+    CREATE TABLE "photos" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "uuid" TEXT NOT NULL UNIQUE, "path" TEXT NULL);
+    CREATE TABLE "recipes" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "uuid" TEXT NOT NULL UNIQUE, "title" TEXT NOT NULL, "portions" INTEGER NOT NULL, "procedure" TEXT NULL, "photo_id" TEXT NULL REFERENCES photos (uuid), "updated_at" INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE "recipe_ingredients" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "recipe_id" INTEGER NOT NULL REFERENCES recipes (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "name" TEXT NOT NULL, "quantity" REAL NOT NULL, "unit" TEXT NOT NULL);
+    CREATE TABLE "recipe_categories" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "recipe_id" INTEGER NOT NULL REFERENCES recipes (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "name" TEXT NOT NULL);
+    CREATE TABLE "grocery_lists" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "uuid" TEXT NOT NULL UNIQUE, "week_start" TEXT NOT NULL UNIQUE, "updated_at" INTEGER NOT NULL DEFAULT 0);
+    CREATE TABLE "grocery_list_recipes" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "list_id" INTEGER NOT NULL REFERENCES grocery_lists (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "title" TEXT NOT NULL);
+    CREATE TABLE "grocery_list_items" ("id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT, "list_id" INTEGER NOT NULL REFERENCES grocery_lists (id) ON DELETE CASCADE, "position" INTEGER NOT NULL, "name" TEXT NOT NULL, "quantity" REAL NOT NULL, "unit" TEXT NOT NULL, "ticked" INTEGER NOT NULL DEFAULT 0 CHECK ("ticked" IN (0, 1)), "uuid" TEXT NOT NULL UNIQUE, "ticked_at" INTEGER NULL);
+    CREATE TABLE "pending_recipe_changes" ("recipe_uuid" TEXT NOT NULL, "updated_at" INTEGER NOT NULL, PRIMARY KEY ("recipe_uuid"));
+    CREATE TABLE "pending_grocery_list_changes" ("week_start" TEXT NOT NULL, "updated_at" INTEGER NOT NULL, PRIMARY KEY ("week_start"));
+    CREATE TABLE "sync_cursors" ("name" TEXT NOT NULL, "cursor" TEXT NOT NULL, PRIMARY KEY ("name"));
+    INSERT INTO photos (uuid, path) VALUES ('8e7d6c5b-4a3f-4e2d-9c1b-0a9f8e7d6c5b', 'photos/carbonara.jpg');
+    INSERT INTO photos (uuid, path) VALUES ('3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f', NULL);
+    INSERT INTO recipes (uuid, title, portions, photo_id, updated_at) VALUES ('4b6f1c2e-8a3d-4f5b-9c7e-1d2a3b4c5d6e', 'Carbonara', 4, '8e7d6c5b-4a3f-4e2d-9c1b-0a9f8e7d6c5b', 1);
+    INSERT INTO recipes (uuid, title, portions, photo_id, updated_at) VALUES ('2a3b4c5d-6e7f-4a8b-9c0d-1e2f3a4b5c6d', 'Risotto', 2, '3c4d5e6f-7a8b-4c9d-8e0f-1a2b3c4d5e6f', 1);
+    INSERT INTO recipe_ingredients (recipe_id, position, name, quantity, unit) VALUES (1, 0, 'Spaghetti', 320, 'grams');
+    INSERT INTO recipe_ingredients (recipe_id, position, name, quantity, unit) VALUES (2, 0, 'Rice', 300, 'grams');
+    INSERT INTO pending_recipe_changes (recipe_uuid, updated_at) VALUES ('4b6f1c2e-8a3d-4f5b-9c7e-1d2a3b4c5d6e', 1);
+    PRAGMA user_version = 8;
+  ''');
+  raw.close();
 }
 
 // Schema version 7 synced recipes but not grocery lists: items had no ids.

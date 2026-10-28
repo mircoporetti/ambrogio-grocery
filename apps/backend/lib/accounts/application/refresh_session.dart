@@ -1,6 +1,6 @@
 import '../domain/access_token_port.dart';
 import '../domain/account_exceptions.dart';
-import '../domain/clock_port.dart';
+import '../../shared/domain/clock_port.dart';
 import '../domain/refresh_token.dart';
 import '../domain/session_storage_port.dart';
 import 'session_tokens.dart';

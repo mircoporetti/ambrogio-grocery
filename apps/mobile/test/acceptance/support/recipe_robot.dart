@@ -9,6 +9,7 @@ import 'package:ambrogio_grocery/grocery/domain/grocery_list_sync_api_port.dart'
 import 'package:ambrogio_grocery/grocery/domain/grocery_list_sync_storage_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_picker_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_storage_port.dart';
+import 'package:ambrogio_grocery/recipes/domain/photo_sync_api_port.dart';
 import 'package:ambrogio_grocery/recipes/data/drift_recipe_storage_adapter.dart';
 import 'package:ambrogio_grocery/recipes/domain/recipe_storage_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/recipe_sync_api_port.dart';
@@ -23,6 +24,7 @@ import 'fake_grocery_list_sync_api_adapter.dart';
 import 'fake_photo_picker_adapter.dart';
 import 'fake_recipe_sync_api_adapter.dart';
 import 'fake_photo_storage_adapter.dart';
+import 'fake_photo_sync_api_adapter.dart';
 import 'fixed_clock_adapter.dart';
 import 'test_database.dart';
 import 'test_preferences.dart';
@@ -44,6 +46,7 @@ class RecipeRobot {
     SessionStoragePort? sessionStorage,
     LogInPromptPort? logInPrompt,
     RecipeSyncApiPort? recipeSyncApi,
+    PhotoSyncApiPort? photoSyncApi,
     GroceryListSyncApiPort? groceryListSyncApi,
   }) async {
     final api = accountApi ?? FakeAccountApiAdapter();
@@ -64,6 +67,7 @@ class RecipeRobot {
           ),
         },
         recipeSyncApi: recipeSyncApi ?? FakeRecipeSyncApiAdapter(fakeAccounts),
+        photoSyncApi: photoSyncApi ?? FakePhotoSyncApiAdapter(fakeAccounts),
         groceryListStorage: lists,
         // Tests that wrap the storage to make it fail don't sync.
         groceryListSyncStorage: switch (lists) {
@@ -95,6 +99,19 @@ class RecipeRobot {
 
   Future<void> removeCategory(String name) =>
       _tap(find.byTooltip('Remove $name'));
+
+  String? photoInList(String title) {
+    final avatar = tester.widget<CircleAvatar>(
+      find.descendant(
+        of: find.widgetWithText(ListTile, title),
+        matching: find.byType(CircleAvatar),
+      ),
+    );
+    return switch (avatar.backgroundImage) {
+      final FileImage image => image.file.path,
+      _ => null,
+    };
+  }
 
   Future<void> changePhoto() => _tap(find.bySemanticsLabel('Change photo'));
 

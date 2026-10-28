@@ -2,6 +2,7 @@ import 'package:ambrogio_grocery/recipes/data/drift_recipe_storage_adapter.dart'
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/fake_photo_picker_adapter.dart';
+import 'support/fake_photo_storage_adapter.dart';
 import 'support/recipe_robot.dart';
 import 'support/test_database.dart';
 
@@ -10,14 +11,13 @@ void main() {
     const oldFolder = '/containers/old-id/Documents';
     const newFolder = '/containers/new-id/Documents';
     final file = newDatabaseFile();
-    final photoPicker = FakePhotoPickerAdapter()
-      ..nextPhoto = '$oldFolder/photos/carbonara.jpg';
     final robot = RecipeRobot(tester);
 
     final firstLaunch = openFileDatabase(file);
     await robot.launchApp(
       DriftRecipeStorageAdapter(firstLaunch, documentsDir: oldFolder),
-      photoPicker: photoPicker,
+      photoPicker: FakePhotoPickerAdapter()..nextPhoto = 'carbonara',
+      photoStorage: FakePhotoStorageAdapter(documentsDir: oldFolder),
     );
     await robot.startNewRecipe();
     await robot.addPhoto();
@@ -25,24 +25,20 @@ void main() {
     await robot.enterPortions('4');
     await robot.addIngredient('Spaghetti', '320', 'g');
     await robot.save();
-    final firstStorage = DriftRecipeStorageAdapter(
-      firstLaunch,
-      documentsDir: oldFolder,
-    );
-    final photoId = (await firstStorage.findAll()).single.photo!.id;
+    final oldPath = robot.photoInList('Carbonara')!;
     await robot.closeApp();
     await firstLaunch.close();
 
     final secondLaunch = openFileDatabase(file);
     addTearDown(secondLaunch.close);
-    final storage = DriftRecipeStorageAdapter(
-      secondLaunch,
-      documentsDir: newFolder,
+    await robot.launchApp(
+      DriftRecipeStorageAdapter(secondLaunch, documentsDir: newFolder),
     );
-    await robot.launchApp(storage);
 
-    final recipe = (await storage.findAll()).single;
-    expect(recipe.photo!.path, '$newFolder/photos/carbonara.jpg');
-    expect(recipe.photo!.id, photoId);
+    expect(oldPath, startsWith('$oldFolder/photos/'));
+    expect(
+      robot.photoInList('Carbonara'),
+      oldPath.replaceFirst(oldFolder, newFolder),
+    );
   });
 }

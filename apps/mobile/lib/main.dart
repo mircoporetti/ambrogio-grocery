@@ -12,6 +12,8 @@ import 'database/app_database.dart';
 import 'grocery/data/drift_grocery_list_storage_adapter.dart';
 import 'grocery/data/http_grocery_list_sync_api_adapter.dart';
 import 'recipes/data/drift_recipe_storage_adapter.dart';
+import 'recipes/data/file_photo_storage_adapter.dart';
+import 'recipes/data/http_photo_sync_api_adapter.dart';
 import 'recipes/data/http_recipe_sync_api_adapter.dart';
 import 'settings/data/shared_preferences_language_preference_adapter.dart';
 
@@ -36,6 +38,8 @@ Future<void> main() async {
       recipeStorage: recipes,
       recipeSyncStorage: recipes,
       recipeSyncApi: HttpRecipeSyncApiAdapter(apiUrl, client),
+      photoSyncApi: HttpPhotoSyncApiAdapter(apiUrl, client),
+      photoStorage: FilePhotoStorageAdapter(documents.path),
       groceryListStorage: groceryLists,
       groceryListSyncStorage: groceryLists,
       groceryListSyncApi: HttpGroceryListSyncApiAdapter(apiUrl, client),

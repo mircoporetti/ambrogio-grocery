@@ -40,8 +40,23 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, PhotoRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _uploadedMeta = const VerificationMeta(
+    'uploaded',
+  );
   @override
-  List<GeneratedColumn> get $columns => [id, uuid, path];
+  late final GeneratedColumn<bool> uploaded = GeneratedColumn<bool>(
+    'uploaded',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("uploaded" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, uuid, path, uploaded];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -71,6 +86,12 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, PhotoRow> {
         path.isAcceptableOrUnknown(data['path']!, _pathMeta),
       );
     }
+    if (data.containsKey('uploaded')) {
+      context.handle(
+        _uploadedMeta,
+        uploaded.isAcceptableOrUnknown(data['uploaded']!, _uploadedMeta),
+      );
+    }
     return context;
   }
 
@@ -92,6 +113,10 @@ class $PhotosTable extends Photos with TableInfo<$PhotosTable, PhotoRow> {
         DriftSqlType.string,
         data['${effectivePrefix}path'],
       ),
+      uploaded: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}uploaded'],
+      )!,
     );
   }
 
@@ -105,7 +130,13 @@ class PhotoRow extends DataClass implements Insertable<PhotoRow> {
   final int id;
   final String uuid;
   final String? path;
-  const PhotoRow({required this.id, required this.uuid, this.path});
+  final bool uploaded;
+  const PhotoRow({
+    required this.id,
+    required this.uuid,
+    this.path,
+    required this.uploaded,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -114,6 +145,7 @@ class PhotoRow extends DataClass implements Insertable<PhotoRow> {
     if (!nullToAbsent || path != null) {
       map['path'] = Variable<String>(path);
     }
+    map['uploaded'] = Variable<bool>(uploaded);
     return map;
   }
 
@@ -122,6 +154,7 @@ class PhotoRow extends DataClass implements Insertable<PhotoRow> {
       id: Value(id),
       uuid: Value(uuid),
       path: path == null && nullToAbsent ? const Value.absent() : Value(path),
+      uploaded: Value(uploaded),
     );
   }
 
@@ -134,6 +167,7 @@ class PhotoRow extends DataClass implements Insertable<PhotoRow> {
       id: serializer.fromJson<int>(json['id']),
       uuid: serializer.fromJson<String>(json['uuid']),
       path: serializer.fromJson<String?>(json['path']),
+      uploaded: serializer.fromJson<bool>(json['uploaded']),
     );
   }
   @override
@@ -143,6 +177,7 @@ class PhotoRow extends DataClass implements Insertable<PhotoRow> {
       'id': serializer.toJson<int>(id),
       'uuid': serializer.toJson<String>(uuid),
       'path': serializer.toJson<String?>(path),
+      'uploaded': serializer.toJson<bool>(uploaded),
     };
   }
 
@@ -150,16 +185,19 @@ class PhotoRow extends DataClass implements Insertable<PhotoRow> {
     int? id,
     String? uuid,
     Value<String?> path = const Value.absent(),
+    bool? uploaded,
   }) => PhotoRow(
     id: id ?? this.id,
     uuid: uuid ?? this.uuid,
     path: path.present ? path.value : this.path,
+    uploaded: uploaded ?? this.uploaded,
   );
   PhotoRow copyWithCompanion(PhotosCompanion data) {
     return PhotoRow(
       id: data.id.present ? data.id.value : this.id,
       uuid: data.uuid.present ? data.uuid.value : this.uuid,
       path: data.path.present ? data.path.value : this.path,
+      uploaded: data.uploaded.present ? data.uploaded.value : this.uploaded,
     );
   }
 
@@ -168,45 +206,52 @@ class PhotoRow extends DataClass implements Insertable<PhotoRow> {
     return (StringBuffer('PhotoRow(')
           ..write('id: $id, ')
           ..write('uuid: $uuid, ')
-          ..write('path: $path')
+          ..write('path: $path, ')
+          ..write('uploaded: $uploaded')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, uuid, path);
+  int get hashCode => Object.hash(id, uuid, path, uploaded);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is PhotoRow &&
           other.id == this.id &&
           other.uuid == this.uuid &&
-          other.path == this.path);
+          other.path == this.path &&
+          other.uploaded == this.uploaded);
 }
 
 class PhotosCompanion extends UpdateCompanion<PhotoRow> {
   final Value<int> id;
   final Value<String> uuid;
   final Value<String?> path;
+  final Value<bool> uploaded;
   const PhotosCompanion({
     this.id = const Value.absent(),
     this.uuid = const Value.absent(),
     this.path = const Value.absent(),
+    this.uploaded = const Value.absent(),
   });
   PhotosCompanion.insert({
     this.id = const Value.absent(),
     required String uuid,
     this.path = const Value.absent(),
+    this.uploaded = const Value.absent(),
   }) : uuid = Value(uuid);
   static Insertable<PhotoRow> custom({
     Expression<int>? id,
     Expression<String>? uuid,
     Expression<String>? path,
+    Expression<bool>? uploaded,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (uuid != null) 'uuid': uuid,
       if (path != null) 'path': path,
+      if (uploaded != null) 'uploaded': uploaded,
     });
   }
 
@@ -214,11 +259,13 @@ class PhotosCompanion extends UpdateCompanion<PhotoRow> {
     Value<int>? id,
     Value<String>? uuid,
     Value<String?>? path,
+    Value<bool>? uploaded,
   }) {
     return PhotosCompanion(
       id: id ?? this.id,
       uuid: uuid ?? this.uuid,
       path: path ?? this.path,
+      uploaded: uploaded ?? this.uploaded,
     );
   }
 
@@ -234,6 +281,9 @@ class PhotosCompanion extends UpdateCompanion<PhotoRow> {
     if (path.present) {
       map['path'] = Variable<String>(path.value);
     }
+    if (uploaded.present) {
+      map['uploaded'] = Variable<bool>(uploaded.value);
+    }
     return map;
   }
 
@@ -242,7 +292,8 @@ class PhotosCompanion extends UpdateCompanion<PhotoRow> {
     return (StringBuffer('PhotosCompanion(')
           ..write('id: $id, ')
           ..write('uuid: $uuid, ')
-          ..write('path: $path')
+          ..write('path: $path, ')
+          ..write('uploaded: $uploaded')
           ..write(')'))
         .toString();
   }
@@ -3275,12 +3326,14 @@ typedef $$PhotosTableCreateCompanionBuilder =
       Value<int> id,
       required String uuid,
       Value<String?> path,
+      Value<bool> uploaded,
     });
 typedef $$PhotosTableUpdateCompanionBuilder =
     PhotosCompanion Function({
       Value<int> id,
       Value<String> uuid,
       Value<String?> path,
+      Value<bool> uploaded,
     });
 
 final class $$PhotosTableReferences
@@ -3328,6 +3381,11 @@ class $$PhotosTableFilterComposer
 
   ColumnFilters<String> get path => $composableBuilder(
     column: $table.path,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get uploaded => $composableBuilder(
+    column: $table.uploaded,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3380,6 +3438,11 @@ class $$PhotosTableOrderingComposer
     column: $table.path,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get uploaded => $composableBuilder(
+    column: $table.uploaded,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PhotosTableAnnotationComposer
@@ -3399,6 +3462,9 @@ class $$PhotosTableAnnotationComposer
 
   GeneratedColumn<String> get path =>
       $composableBuilder(column: $table.path, builder: (column) => column);
+
+  GeneratedColumn<bool> get uploaded =>
+      $composableBuilder(column: $table.uploaded, builder: (column) => column);
 
   Expression<T> recipesRefs<T extends Object>(
     Expression<T> Function($$RecipesTableAnnotationComposer a) f,
@@ -3457,13 +3523,25 @@ class $$PhotosTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> uuid = const Value.absent(),
                 Value<String?> path = const Value.absent(),
-              }) => PhotosCompanion(id: id, uuid: uuid, path: path),
+                Value<bool> uploaded = const Value.absent(),
+              }) => PhotosCompanion(
+                id: id,
+                uuid: uuid,
+                path: path,
+                uploaded: uploaded,
+              ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required String uuid,
                 Value<String?> path = const Value.absent(),
-              }) => PhotosCompanion.insert(id: id, uuid: uuid, path: path),
+                Value<bool> uploaded = const Value.absent(),
+              }) => PhotosCompanion.insert(
+                id: id,
+                uuid: uuid,
+                path: path,
+                uploaded: uploaded,
+              ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) =>

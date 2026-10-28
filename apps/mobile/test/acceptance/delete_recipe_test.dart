@@ -60,8 +60,7 @@ void main() {
   });
 
   testWidgets('deleting a recipe also deletes its photo', (tester) async {
-    final photoPicker = FakePhotoPickerAdapter()
-      ..nextPhoto = '/photos/carbonara.jpg';
+    final photoPicker = FakePhotoPickerAdapter()..nextPhoto = 'carbonara';
     final photoStorage = FakePhotoStorageAdapter();
     robot = RecipeRobot(tester);
     await robot.launchApp(
@@ -80,16 +79,15 @@ void main() {
     await robot.deleteOpenRecipe();
     await robot.confirmDelete();
 
-    expect(photoStorage.deleted, ['/photos/carbonara.jpg']);
+    expect(photoStorage.isEmpty, isTrue);
   });
 
   testWidgets('if deleting fails, the recipe stays and an error is shown', (
     tester,
   ) async {
     final failingStorage = FailingRecipeStorageAdapter(storage);
-    final photoStorage = FakePhotoStorageAdapter();
     robot = RecipeRobot(tester);
-    await robot.launchApp(failingStorage, photoStorage: photoStorage);
+    await robot.launchApp(failingStorage);
     await createRecipe('Carbonara');
 
     await robot.openRecipe('Carbonara');
@@ -103,7 +101,6 @@ void main() {
     );
     expect(find.text('Salt'), findsOneWidget);
     expect(await storage.findAll(), hasLength(1));
-    expect(photoStorage.deleted, isEmpty);
   });
 
   testWidgets('swiping a recipe left in the list deletes it', (tester) async {
@@ -139,8 +136,7 @@ void main() {
   testWidgets('deleting a recipe by swipe also deletes its photo', (
     tester,
   ) async {
-    final photoPicker = FakePhotoPickerAdapter()
-      ..nextPhoto = '/photos/carbonara.jpg';
+    final photoPicker = FakePhotoPickerAdapter()..nextPhoto = 'carbonara';
     final photoStorage = FakePhotoStorageAdapter();
     robot = RecipeRobot(tester);
     await robot.launchApp(
@@ -158,7 +154,7 @@ void main() {
     await robot.swipeToDelete('Carbonara');
     await robot.confirmDelete();
 
-    expect(photoStorage.deleted, ['/photos/carbonara.jpg']);
+    expect(photoStorage.isEmpty, isTrue);
   });
 
   testWidgets('if deleting by swipe fails, the recipe stays and can retry', (

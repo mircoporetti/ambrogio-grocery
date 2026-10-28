@@ -1,5 +1,5 @@
 import 'ingredient.dart';
-import 'photo_id.dart';
+import '../../photos/domain/photo_id.dart';
 import 'recipe_exceptions.dart';
 
 class Recipe {

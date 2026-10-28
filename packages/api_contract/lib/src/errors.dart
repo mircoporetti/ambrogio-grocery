@@ -6,6 +6,9 @@ abstract final class ErrorCodes {
   static const invalidRecipe = 'invalid_recipe';
   static const invalidGroceryList = 'invalid_grocery_list';
   static const tooManyChanges = 'too_many_changes';
+  static const photoNotFound = 'photo_not_found';
+  static const photoTooLarge = 'photo_too_large';
+  static const unsupportedPhotoType = 'unsupported_photo_type';
 }
 
 class ErrorResponse {

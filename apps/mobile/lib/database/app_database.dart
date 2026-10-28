@@ -7,8 +7,8 @@ part 'app_database.g.dart';
 class Photos extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get uuid => text().unique()();
-  // Null for a photo synced from another device: photos are not synced yet.
   TextColumn get path => text().nullable()();
+  BoolColumn get uploaded => boolean().withDefault(const Constant(false))();
 }
 
 @DataClassName('RecipeRow')
@@ -130,7 +130,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.onDevice() : super(driftDatabase(name: 'ambrogio_grocery'));
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -180,7 +180,9 @@ class AppDatabase extends _$AppDatabase {
         await customStatement('ALTER TABLE recipes DROP COLUMN photo_path');
       }
       if (from < 7) {
-        await m.alterTable(TableMigration(photos));
+        await m.alterTable(
+          TableMigration(photos, newColumns: [if (from == 6) photos.uploaded]),
+        );
         await m.addColumn(recipes, recipes.updatedAt);
         await customStatement('UPDATE recipes SET updated_at = ?', [
           DateTime.now().toUtc().microsecondsSinceEpoch,
@@ -219,6 +221,10 @@ class AppDatabase extends _$AppDatabase {
           '(week_start, updated_at) '
           'SELECT week_start, updated_at FROM grocery_lists',
         );
+      }
+      if (from < 9) {
+        if (from >= 7) await m.addColumn(photos, photos.uploaded);
+        await customStatement('UPDATE photos SET uploaded = path IS NULL');
       }
     },
     beforeOpen: (_) => customStatement('PRAGMA foreign_keys = ON'),

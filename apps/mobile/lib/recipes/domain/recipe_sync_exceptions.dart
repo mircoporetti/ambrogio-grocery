@@ -9,3 +9,11 @@ class SyncServerUnreachableException extends RecipeSyncException {
 class UnexpectedSyncResponseException extends RecipeSyncException {
   const UnexpectedSyncResponseException();
 }
+
+class PhotoRejectedException extends RecipeSyncException {
+  const PhotoRejectedException();
+}
+
+class PhotoTransferFailedException extends RecipeSyncException {
+  const PhotoTransferFailedException();
+}

@@ -3,14 +3,17 @@ import 'dart:io';
 
 import 'package:ambrogio_backend/accounts/data/bcrypt_password_hasher_adapter.dart';
 import 'package:ambrogio_backend/accounts/data/jwt_access_token_adapter.dart';
-import 'package:ambrogio_backend/accounts/domain/clock_port.dart';
+import 'package:ambrogio_backend/shared/data/stderr_logger_adapter.dart';
+import 'package:ambrogio_backend/shared/domain/clock_port.dart';
 import 'package:ambrogio_backend/database/backend_database.dart';
+import 'package:ambrogio_backend/photos/domain/photo_storage_port.dart';
 import 'package:ambrogio_backend/server.dart';
 import 'package:http/http.dart' as http;
 import 'package:test/test.dart';
 
 import 'fixed_clock_adapter.dart';
 import 'test_database.dart';
+import 'test_photo_storage.dart';
 
 class ApiClient {
   ApiClient._(this._server);
@@ -22,6 +25,7 @@ class ApiClient {
   static Future<ApiClient> start({
     BackendDatabase? database,
     ClockPort? clock,
+    PhotoStoragePort? photos,
     String jwtSecret = 'test-signing-secret-of-at-least-32-bytes',
   }) async {
     final server = await startServer(
@@ -30,6 +34,8 @@ class ApiClient {
       clock: clock ?? FixedClockAdapter(),
       passwordHasher: BcryptPasswordHasherAdapter(cost: 4),
       accessTokens: JwtAccessTokenAdapter(jwtSecret),
+      photos: photos ?? await openTestPhotoStorage(),
+      logger: StderrLoggerAdapter(),
     );
     final client = ApiClient._(server);
     addTearDown(client.stop);

@@ -86,20 +86,23 @@ dart run build_runner build
 ## Backend
 
 A plain Dart server built on [shelf](https://pub.dev/packages/shelf), with
-a Postgres database. Requires Docker for the local database. The commands
+a Postgres database and S3-compatible photo storage (Cloudflare R2 in
+production, [SeaweedFS](https://github.com/seaweedfs/seaweedfs) locally).
+Requires Docker for the local database and photo storage. The commands
 run from `apps/backend`.
 
 ```sh
-docker compose up -d --wait       # local Postgres on port 5433
+docker compose up -d --wait       # Postgres on port 5433, SeaweedFS S3 on 8333
 dart run bin/server.dart          # listens on port 8080, or $PORT
 curl localhost:8080/health        # {"status":"ok"}
-dart test                         # acceptance tests over real HTTP and Postgres
-docker compose down               # stop the database (data is kept)
+dart test                         # acceptance tests over real HTTP, Postgres and SeaweedFS
+docker compose down               # stop them (data is kept)
 ```
 
-`dart test` starts the database itself if it isn't running (Docker must be
-running). Each test creates its own empty database on it and drops it
-afterwards. The database keeps running after the tests; stop it with
+`dart test` starts Postgres and SeaweedFS itself if they aren't running
+(Docker must be running). Each test creates its own empty database and drops
+it afterwards; photos go to the `ambrogio-photos-test` bucket under each
+test's new accounts. Both keep running after the tests; stop them with
 `docker compose down`.
 
 The server reads its configuration from environment variables. The defaults
@@ -115,6 +118,17 @@ match `compose.yaml`:
 | `DB_USER`     | `ambrogio`  |
 | `DB_PASSWORD` | `ambrogio`  |
 | `DB_SSL`      | `disable` for localhost, `require` otherwise |
+| `S3_ENDPOINT` | `http://localhost:8333`; on R2 `https://<account id>.r2.cloudflarestorage.com` |
+| `S3_REGION`   | `us-east-1`; on R2 `auto` |
+| `S3_BUCKET`   | `ambrogio-photos` |
+| `S3_ACCESS_KEY_ID`     | `ambrogio` |
+| `S3_SECRET_ACCESS_KEY` | `ambrogio-secret` |
+
+Photos never pass through the server: it signs short-lived URLs (15
+minutes) and the app uploads and downloads straight from the bucket. The
+bucket stays private. Photos are stored at
+`accounts/<account id>/photos/<photo id>`, and deleted when no recipe uses
+them any more.
 
 After changing tables in `lib/database/backend_database.dart`, run
 `dart run build_runner build` and bump `schemaVersion` with a migration.

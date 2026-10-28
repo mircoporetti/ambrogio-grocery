@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'support/failing_recipe_storage_adapter.dart';
 import 'support/fake_photo_picker_adapter.dart';
+import 'support/fake_photo_storage_adapter.dart';
 import 'support/recipe_robot.dart';
 import 'support/test_database.dart';
 
@@ -142,10 +143,14 @@ void main() {
   });
 
   testWidgets('a picked photo is saved with the recipe', (tester) async {
-    final photoPicker = FakePhotoPickerAdapter()
-      ..nextPhoto = '/photos/carbonara.jpg';
+    final photoPicker = FakePhotoPickerAdapter()..nextPhoto = 'carbonara';
+    final photoFiles = FakePhotoStorageAdapter();
     robot = RecipeRobot(tester);
-    await robot.launchApp(storage, photoPicker: photoPicker);
+    await robot.launchApp(
+      storage,
+      photoPicker: photoPicker,
+      photoStorage: photoFiles,
+    );
 
     await robot.startNewRecipe();
     await robot.addPhoto();
@@ -155,8 +160,10 @@ void main() {
     await robot.save();
 
     expect(find.text('Carbonara'), findsOneWidget);
-    final saved = (await storage.findAll()).single;
-    expect(saved.photo?.path, '/photos/carbonara.jpg');
+    expect(
+      photoFiles.fileAt(robot.photoInList('Carbonara')!),
+      FakePhotoPickerAdapter.bytesOf('carbonara'),
+    );
   });
 
   testWidgets('the photo stays optional if the user cancels the picker', (
@@ -173,8 +180,8 @@ void main() {
     await robot.addIngredient('Flour', '100', 'g');
     await robot.save();
 
-    final saved = (await storage.findAll()).single;
-    expect(saved.photo, isNull);
+    expect(find.text('Pancakes'), findsOneWidget);
+    expect(robot.photoInList('Pancakes'), isNull);
   });
 
   testWidgets('if saving fails, the form keeps the input and can retry', (

@@ -1,3 +1,5 @@
+import 'photo_file.dart';
+
 abstract interface class PhotoPickerPort {
-  Future<String?> pick();
+  Future<PhotoFile?> pick();
 }

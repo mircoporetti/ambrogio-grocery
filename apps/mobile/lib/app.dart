@@ -44,10 +44,10 @@ import 'recipes/application/update_recipe.dart';
 import 'recipes/application/watch_pending_recipe_changes.dart';
 import 'recipes/application/watch_recipe.dart';
 import 'recipes/application/watch_recipes.dart';
-import 'recipes/data/file_photo_storage_adapter.dart';
 import 'recipes/data/image_picker_photo_picker_adapter.dart';
 import 'recipes/domain/photo_picker_port.dart';
 import 'recipes/domain/photo_storage_port.dart';
+import 'recipes/domain/photo_sync_api_port.dart';
 import 'recipes/domain/recipe_storage_port.dart';
 import 'recipes/domain/recipe_sync_api_port.dart';
 import 'recipes/domain/recipe_sync_storage_port.dart';
@@ -78,11 +78,12 @@ class AmbrogioApp extends StatefulWidget {
     required this.logInPrompt,
     required this.recipeSyncStorage,
     required this.recipeSyncApi,
+    required this.photoSyncApi,
     required this.groceryListSyncStorage,
     required this.groceryListSyncApi,
+    required this.photoStorage,
     this.clock,
     this.photoPicker,
-    this.photoStorage,
   });
 
   final RecipeStoragePort recipeStorage;
@@ -93,11 +94,12 @@ class AmbrogioApp extends StatefulWidget {
   final LogInPromptPort logInPrompt;
   final RecipeSyncStoragePort recipeSyncStorage;
   final RecipeSyncApiPort recipeSyncApi;
+  final PhotoSyncApiPort photoSyncApi;
   final GroceryListSyncStoragePort groceryListSyncStorage;
   final GroceryListSyncApiPort groceryListSyncApi;
   final ClockPort? clock;
   final PhotoPickerPort? photoPicker;
-  final PhotoStoragePort? photoStorage;
+  final PhotoStoragePort photoStorage;
 
   @override
   State<AmbrogioApp> createState() => _AmbrogioAppState();
@@ -107,9 +109,10 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
   late final _createRecipe = CreateRecipe(widget.recipeStorage);
   late final _pickRecipePhoto = PickRecipePhoto(
     widget.photoPicker ?? ImagePickerPhotoPickerAdapter(),
+    _photoStorage,
   );
   late final _watchRecipe = WatchRecipe(widget.recipeStorage);
-  late final _photoStorage = widget.photoStorage ?? FilePhotoStorageAdapter();
+  late final _photoStorage = widget.photoStorage;
   late final _deleteRecipe = DeleteRecipe(widget.recipeStorage, _photoStorage);
   late final _updateRecipe = UpdateRecipe(widget.recipeStorage, _photoStorage);
   late final _listRecipes = ListRecipes(widget.recipeStorage);
@@ -144,6 +147,8 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
     SyncRecipes(
       widget.recipeSyncStorage,
       widget.recipeSyncApi,
+      _photoStorage,
+      widget.photoSyncApi,
       _callWithSession,
     ),
     SyncGroceryLists(

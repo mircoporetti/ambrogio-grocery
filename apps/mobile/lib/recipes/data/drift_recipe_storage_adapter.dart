@@ -89,6 +89,7 @@ class DriftRecipeStorageAdapter
             PhotosCompanion.insert(
               uuid: photo.id.value,
               path: Value(_toStored(photo.path)),
+              uploaded: Value(photo.path == null),
             ),
             mode: InsertMode.insertOrIgnore,
           );
@@ -142,10 +143,19 @@ class DriftRecipeStorageAdapter
     });
   }
 
-  Future<void> _deleteUnusedPhotos() => _db.customStatement(
-    'DELETE FROM photos WHERE uuid NOT IN '
-    '(SELECT photo_id FROM recipes WHERE photo_id IS NOT NULL)',
-  );
+  Future<List<Photo>> _deleteUnusedPhotos() async {
+    final unused = _db.photos.uuid.isNotInQuery(
+      _db.selectOnly(_db.recipes)
+        ..addColumns([_db.recipes.photoId])
+        ..where(_db.recipes.photoId.isNotNull()),
+    );
+    final rows = await (_db.select(_db.photos)..where((_) => unused)).get();
+    await (_db.delete(_db.photos)..where((_) => unused)).go();
+    return [
+      for (final row in rows)
+        Photo(id: PhotoId(row.uuid), path: _fromStored(row.path)),
+    ];
+  }
 
   @override
   Future<List<RecipeChange>> pendingChanges() => _db.transaction(() async {
@@ -191,30 +201,64 @@ class DriftRecipeStorageAdapter
       });
 
   @override
-  Future<void> applyPulled(RecipeChangesPage page) => _db.transaction(() async {
-    for (final change in page.changes) {
-      final updatedAt = _micros(change.updatedAt);
-      final local = await _localUpdatedAt(change.id.value);
-      if (local != null && updatedAt <= local) continue;
-      switch (change.recipe) {
-        case null:
-          await (_db.delete(
-            _db.recipes,
-          )..where((r) => r.uuid.equals(change.id.value))).go();
-        case final recipe:
-          await _write(recipe, updatedAt);
+  Future<List<Photo>> photosToUpload() async => [
+    for (final row in await (_db.select(
+      _db.photos,
+    )..where((p) => p.uploaded.not() & p.path.isNotNull())).get())
+      Photo(id: PhotoId(row.uuid), path: _fromStored(row.path)),
+  ];
+
+  @override
+  Future<void> stopUploadingPhoto(PhotoId id) =>
+      (_db.update(_db.photos)..where((p) => p.uuid.equals(id.value))).write(
+        const PhotosCompanion(uploaded: Value(true)),
+      );
+
+  @override
+  Future<List<PhotoId>> photosToDownload() async => [
+    for (final row in await (_db.select(
+      _db.photos,
+    )..where((p) => p.path.isNull())).get())
+      PhotoId(row.uuid),
+  ];
+
+  @override
+  Future<bool> savePhotoPath(PhotoId id, String path) async {
+    final updated =
+        await (_db.update(_db.photos)
+              ..where((p) => p.uuid.equals(id.value) & p.path.isNull()))
+            .write(PhotosCompanion(path: Value(_toStored(path))));
+    return updated > 0;
+  }
+
+  @override
+  Future<List<Photo>> applyPulled(RecipeChangesPage page) => _db.transaction(
+    () async {
+      for (final change in page.changes) {
+        final updatedAt = _micros(change.updatedAt);
+        final local = await _localUpdatedAt(change.id.value);
+        if (local != null && updatedAt <= local) continue;
+        switch (change.recipe) {
+          case null:
+            await (_db.delete(
+              _db.recipes,
+            )..where((r) => r.uuid.equals(change.id.value))).go();
+          case final recipe:
+            await _write(recipe, updatedAt);
+        }
+        await (_db.delete(
+          _db.pendingRecipeChanges,
+        )..where((c) => c.recipeUuid.equals(change.id.value))).go();
       }
-      await (_db.delete(
-        _db.pendingRecipeChanges,
-      )..where((c) => c.recipeUuid.equals(change.id.value))).go();
-    }
-    await _deleteUnusedPhotos();
-    await _db
-        .into(_db.syncCursors)
-        .insertOnConflictUpdate(
-          SyncCursorsCompanion.insert(name: _cursorName, cursor: page.cursor),
-        );
-  });
+      final removed = await _deleteUnusedPhotos();
+      await _db
+          .into(_db.syncCursors)
+          .insertOnConflictUpdate(
+            SyncCursorsCompanion.insert(name: _cursorName, cursor: page.cursor),
+          );
+      return removed;
+    },
+  );
 
   @override
   Future<String?> cursor() async => (await (_db.select(

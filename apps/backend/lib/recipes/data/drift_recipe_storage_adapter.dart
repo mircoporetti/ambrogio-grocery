@@ -4,7 +4,7 @@ import 'package:drift_postgres/drift_postgres.dart';
 import '../../accounts/domain/account_id.dart';
 import '../../database/backend_database.dart';
 import '../domain/ingredient.dart';
-import '../domain/photo_id.dart';
+import '../../photos/domain/photo_id.dart';
 import '../domain/recipe.dart';
 import '../domain/recipe_change.dart';
 import '../domain/recipe_id.dart';
@@ -16,7 +16,7 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
   final BackendDatabase _db;
 
   @override
-  Future<void> apply(AccountId account, List<RecipeChange> changes) {
+  Future<Set<PhotoId>> apply(AccountId account, List<RecipeChange> changes) {
     final accountId = UuidValue.fromString(account.value);
     return _db.transaction(() async {
       await _db
@@ -33,6 +33,11 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
               .map((row) => row.read(latest))
               .getSingle() ??
           0;
+      final previousPhotos = await _photoIds(
+        accountId,
+        'id = ANY(\$2::uuid[])',
+        [for (final change in changes) change.id.value],
+      );
 
       for (final change in changes) {
         cursor++;
@@ -57,7 +62,35 @@ class DriftRecipeStorageAdapter implements RecipeStoragePort {
               ),
             );
       }
+      return previousPhotos;
     });
+  }
+
+  @override
+  Future<Set<PhotoId>> photosInUse(AccountId account, Set<PhotoId> photos) =>
+      _photoIds(
+        UuidValue.fromString(account.value),
+        "recipe->>'photoId' = ANY(\$2::text[])",
+        [for (final photo in photos) photo.value],
+      );
+
+  Future<Set<PhotoId>> _photoIds(
+    UuidValue accountId,
+    String condition,
+    List<String> values,
+  ) async {
+    final rows = await _db
+        .customSelect(
+          "SELECT DISTINCT recipe->>'photoId' AS photo_id FROM recipes "
+          r"WHERE account_id = $1 AND recipe->>'photoId' IS NOT NULL "
+          'AND $condition',
+          variables: [
+            Variable(accountId, PgTypes.uuid),
+            Variable(values, PgTypes.textArray),
+          ],
+        )
+        .get();
+    return {for (final row in rows) PhotoId(row.read<String>('photo_id'))};
   }
 
   @override

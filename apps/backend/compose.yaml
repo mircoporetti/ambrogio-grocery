@@ -1,4 +1,5 @@
-# Local development database only. The credentials are not secret.
+# Local development database and photo storage only. The credentials are not
+# secret.
 name: ambrogio
 services:
   postgres:
@@ -15,6 +16,22 @@ services:
       test: ["CMD", "pg_isready", "-U", "ambrogio"]
       interval: 2s
       retries: 15
+  # S3-compatible stand-in for Cloudflare R2.
+  seaweedfs:
+    image: chrislusf/seaweedfs:4.51
+    command: mini -dir=/data -bucket=ambrogio-photos,ambrogio-photos-test
+    environment:
+      AWS_ACCESS_KEY_ID: ambrogio
+      AWS_SECRET_ACCESS_KEY: ambrogio-secret
+    ports:
+      - "127.0.0.1:8333:8333"
+    volumes:
+      - seaweedfs:/data
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8333/healthz"]
+      interval: 2s
+      retries: 30
 
 volumes:
   postgres:
+  seaweedfs:
