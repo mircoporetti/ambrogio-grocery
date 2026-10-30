@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
@@ -19,7 +20,9 @@ import 'settings/data/shared_preferences_language_preference_adapter.dart';
 
 const _apiUrl = String.fromEnvironment(
   'API_URL',
-  defaultValue: 'http://localhost:8080',
+  defaultValue: kReleaseMode
+      ? 'https://api-ambrogio.mircoporetti.me'
+      : 'http://localhost:8080',
 );
 
 Future<void> main() async {

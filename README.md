@@ -37,8 +37,9 @@ from the list but `flutter devices` shows it, restart IntelliJ. Use a full
 restart, not hot reload, after changing `main.dart`, the database or the
 dependencies.
 
-The app talks to the [backend](#backend) for accounts. It uses
-`http://localhost:8080` unless you pass another address:
+The app talks to the [backend](#backend) for accounts. Release builds use
+the deployed one at `https://api-ambrogio.mircoporetti.me`, debug builds
+`http://localhost:8080`. Pass another address to override either:
 
 ```sh
 flutter run -d <device id> --dart-define=API_URL=http://10.0.2.2:8080       # Android emulator

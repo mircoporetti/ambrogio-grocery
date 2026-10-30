@@ -128,12 +128,9 @@ still work with the newer schema.
 
 ## Mobile app
 
-Release builds point at the deployed backend:
-
-```sh
-flutter build apk --release --dart-define=API_URL=https://api-ambrogio.mircoporetti.me
-flutter run --release -d <iPhone id> --dart-define=API_URL=https://api-ambrogio.mircoporetti.me
-```
+Release builds point at the deployed backend by default (`main.dart`), so
+`flutter build apk --release` and `flutter run --release` need no extra
+flag. Debug builds keep using `http://localhost:8080`.
 
 ## Check
 
