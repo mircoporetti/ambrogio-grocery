@@ -51,3 +51,6 @@ app.*.map.json
 !.env.example
 /apps/mobile/.idea/
 /.idea/
+
+# Filled-in Kubernetes secrets (keep the example in git)
+/apps/backend/k8s/secrets.yaml

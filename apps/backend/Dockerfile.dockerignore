@@ -1,0 +1,9 @@
+**
+!pubspec.yaml
+!pubspec.lock
+!packages/api_contract/
+!apps/backend/
+**/.dart_tool/
+**/build/
+apps/backend/test/
+apps/backend/k8s/

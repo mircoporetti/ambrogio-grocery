@@ -133,6 +133,11 @@ them any more.
 After changing tables in `lib/database/backend_database.dart`, run
 `dart run build_runner build` and bump `schemaVersion` with a migration.
 
+The backend runs on the homelab k3s at
+`https://api-ambrogio.mircoporetti.me` and deploys on every push to `main`
+that touches it. Setup, secrets and rollback:
+[apps/backend/k8s/README.md](apps/backend/k8s/README.md).
+
 ## Android
 
 ### Release an APK
