@@ -3,6 +3,21 @@
 (() => {
   if (!('serviceWorker' in navigator)) return;
 
+  const version = '__AMBROGIO_VERSION__';
+  if (version.startsWith('__')) {
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((registrations) => registrations.forEach((r) => r.unregister()));
+    caches
+      ?.keys()
+      .then((names) =>
+        names
+          .filter((name) => name.startsWith('ambrogio-'))
+          .forEach((name) => caches.delete(name)),
+      );
+    return;
+  }
+
   navigator.storage?.persist?.().catch(() => {});
 
   let updating = false;

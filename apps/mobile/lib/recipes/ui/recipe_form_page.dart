@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/ui/readable_width.dart';
+
 import '../../l10n/app_localizations.dart';
 import '../domain/ingredient.dart';
 import '../domain/recipe.dart';
@@ -168,130 +170,136 @@ class _RecipeFormPageState extends State<RecipeFormPage> {
           ),
         ),
       ),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 16,
-            children: [
-              ListenableBuilder(
-                listenable: widget.viewModel,
-                builder: (_, _) => _PhotoField(
-                  photoPath: widget.viewModel.photo?.path,
-                  onPick: widget.viewModel.pickPhoto,
-                ),
-              ),
-              TextFormField(
-                controller: _title,
-                decoration: InputDecoration(labelText: l10n.titleLabel),
-                textCapitalization: TextCapitalization.sentences,
-                validator: (value) =>
-                    (value ?? '').trim().isEmpty ? l10n.titleRequired : null,
-              ),
-              TextFormField(
-                controller: _portions,
-                decoration: InputDecoration(labelText: l10n.portionsLabel),
-                keyboardType: TextInputType.number,
-                validator: (value) {
-                  final portions = int.tryParse((value ?? '').trim());
-                  return portions == null || portions < 1
-                      ? l10n.portionsInvalid
-                      : null;
-                },
-              ),
-              Text(l10n.ingredients, style: textTheme.titleMedium),
-              for (final ingredient in _ingredients)
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: Text(ingredient.name),
-                  subtitle: Text(formatQuantity(l10n, ingredient)),
-                  trailing: IconButton(
-                    tooltip: l10n.remove(ingredient.name),
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () => _removeIngredient(ingredient),
+      body: ReadableWidth(
+        maxWidth: ReadableWidth.form,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 16,
+              children: [
+                ListenableBuilder(
+                  listenable: widget.viewModel,
+                  builder: (_, _) => _PhotoField(
+                    photoPath: widget.viewModel.photo?.path,
+                    onPick: widget.viewModel.pickPhoto,
                   ),
                 ),
-              if (_ingredientsError != null)
-                Text(
-                  _ingredientsError!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                TextFormField(
+                  controller: _title,
+                  decoration: InputDecoration(labelText: l10n.titleLabel),
+                  textCapitalization: TextCapitalization.sentences,
+                  validator: (value) =>
+                      (value ?? '').trim().isEmpty ? l10n.titleRequired : null,
                 ),
-              TextFormField(
-                controller: _ingredientName,
-                decoration: InputDecoration(
-                  labelText: l10n.ingredientLabel,
-                  errorText: _ingredientNameError,
+                TextFormField(
+                  controller: _portions,
+                  decoration: InputDecoration(labelText: l10n.portionsLabel),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    final portions = int.tryParse((value ?? '').trim());
+                    return portions == null || portions < 1
+                        ? l10n.portionsInvalid
+                        : null;
+                  },
                 ),
-                textCapitalization: TextCapitalization.sentences,
-              ),
-              Row(
-                spacing: 16,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _ingredientQuantity,
-                      decoration: InputDecoration(
-                        labelText: l10n.quantityLabel,
-                        errorText: _ingredientQuantityError,
-                      ),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
+                Text(l10n.ingredients, style: textTheme.titleMedium),
+                for (final ingredient in _ingredients)
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(ingredient.name),
+                    subtitle: Text(formatQuantity(l10n, ingredient)),
+                    trailing: IconButton(
+                      tooltip: l10n.remove(ingredient.name),
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () => _removeIngredient(ingredient),
                     ),
                   ),
-                  SegmentedButton<MeasureUnit>(
-                    segments: [
-                      for (final unit in MeasureUnit.values)
-                        ButtonSegment(value: unit, label: Text(unit.symbol)),
-                    ],
-                    selected: {_unit},
-                    onSelectionChanged: (s) => setState(() => _unit = s.single),
+                if (_ingredientsError != null)
+                  Text(
+                    _ingredientsError!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
-                ],
-              ),
-              OutlinedButton.icon(
-                onPressed: _addIngredient,
-                icon: const Icon(Icons.add),
-                label: Text(l10n.addIngredient),
-              ),
-              TextFormField(
-                controller: _procedure,
-                decoration: InputDecoration(
-                  labelText: l10n.procedureOptionalLabel,
-                  alignLabelWithHint: true,
+                TextFormField(
+                  controller: _ingredientName,
+                  decoration: InputDecoration(
+                    labelText: l10n.ingredientLabel,
+                    errorText: _ingredientNameError,
+                  ),
+                  textCapitalization: TextCapitalization.sentences,
                 ),
-                minLines: 3,
-                maxLines: null,
-                textCapitalization: TextCapitalization.sentences,
-              ),
-              Text(l10n.categories, style: textTheme.titleMedium),
-              if (_categories.isNotEmpty)
-                Wrap(
-                  spacing: 8,
+                Row(
+                  spacing: 16,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    for (final category in _categories)
-                      InputChip(
-                        label: Text(category),
-                        onDeleted: () => _removeCategory(category),
-                        deleteButtonTooltipMessage: l10n.remove(category),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _ingredientQuantity,
+                        decoration: InputDecoration(
+                          labelText: l10n.quantityLabel,
+                          errorText: _ingredientQuantityError,
+                        ),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                       ),
+                    ),
+                    SegmentedButton<MeasureUnit>(
+                      segments: [
+                        for (final unit in MeasureUnit.values)
+                          ButtonSegment(value: unit, label: Text(unit.symbol)),
+                      ],
+                      selected: {_unit},
+                      onSelectionChanged: (s) =>
+                          setState(() => _unit = s.single),
+                    ),
                   ],
                 ),
-              TextFormField(
-                controller: _category,
-                decoration: InputDecoration(labelText: l10n.categoryLabel),
-                textCapitalization: TextCapitalization.sentences,
-                onFieldSubmitted: (_) => _addCategory(),
-              ),
-              OutlinedButton.icon(
-                onPressed: _addCategory,
-                icon: const Icon(Icons.add),
-                label: Text(l10n.addCategory),
-              ),
-            ],
+                OutlinedButton.icon(
+                  onPressed: _addIngredient,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.addIngredient),
+                ),
+                TextFormField(
+                  controller: _procedure,
+                  decoration: InputDecoration(
+                    labelText: l10n.procedureOptionalLabel,
+                    alignLabelWithHint: true,
+                  ),
+                  minLines: 3,
+                  maxLines: null,
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+                Text(l10n.categories, style: textTheme.titleMedium),
+                if (_categories.isNotEmpty)
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final category in _categories)
+                        InputChip(
+                          label: Text(category),
+                          onDeleted: () => _removeCategory(category),
+                          deleteButtonTooltipMessage: l10n.remove(category),
+                        ),
+                    ],
+                  ),
+                TextFormField(
+                  controller: _category,
+                  decoration: InputDecoration(labelText: l10n.categoryLabel),
+                  textCapitalization: TextCapitalization.sentences,
+                  onFieldSubmitted: (_) => _addCategory(),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _addCategory,
+                  icon: const Icon(Icons.add),
+                  label: Text(l10n.addCategory),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/ui/readable_width.dart';
+
 import '../../l10n/app_localizations.dart';
 import '../../recipes/ui/formatting.dart';
 import '../domain/grocery_item.dart';
@@ -50,17 +52,22 @@ class _GroceryListPageState extends State<GroceryListPage> {
           ],
           bottom: _errorBanner(context),
         ),
-        body: switch ((widget.viewModel.loading, widget.viewModel.list)) {
-          (true, _) => const Center(child: CircularProgressIndicator()),
-          (false, null) => Center(
-            child: Text(AppLocalizations.of(context).groceryListNoLongerExists),
-          ),
-          (false, final GroceryList list) => _GroceryListItems(
-            list: list,
-            items: widget.viewModel.items,
-            onToggle: widget.viewModel.toggle,
-          ),
-        },
+        body: ReadableWidth(
+          maxWidth: ReadableWidth.list,
+          child: switch ((widget.viewModel.loading, widget.viewModel.list)) {
+            (true, _) => const Center(child: CircularProgressIndicator()),
+            (false, null) => Center(
+              child: Text(
+                AppLocalizations.of(context).groceryListNoLongerExists,
+              ),
+            ),
+            (false, final GroceryList list) => _GroceryListItems(
+              list: list,
+              items: widget.viewModel.items,
+              onToggle: widget.viewModel.toggle,
+            ),
+          },
+        ),
       ),
     );
   }

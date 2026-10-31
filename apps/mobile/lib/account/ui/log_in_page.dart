@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/ui/readable_width.dart';
+
 import '../../l10n/app_localizations.dart';
 import 'confirm_skip_log_in.dart';
 import 'log_in_view_model.dart';
@@ -84,61 +86,66 @@ class _LogInPageState extends State<LogInPage> {
                     ),
                   ),
           ),
-          body: Form(
-            key: _formKey,
-            child: AutofillGroup(
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  if (widget.asPrompt)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16),
-                      child: Text(l10n.logInLater),
+          body: ReadableWidth(
+            maxWidth: ReadableWidth.form,
+            child: Form(
+              key: _formKey,
+              child: AutofillGroup(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    if (widget.asPrompt)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Text(l10n.logInLater),
+                      ),
+                    TextFormField(
+                      controller: _email,
+                      decoration: InputDecoration(labelText: l10n.emailLabel),
+                      keyboardType: TextInputType.emailAddress,
+                      autocorrect: false,
+                      autofillHints: const [AutofillHints.email],
+                      textInputAction: TextInputAction.next,
+                      validator: (value) => (value ?? '').trim().isEmpty
+                          ? l10n.emailRequired
+                          : null,
                     ),
-                  TextFormField(
-                    controller: _email,
-                    decoration: InputDecoration(labelText: l10n.emailLabel),
-                    keyboardType: TextInputType.emailAddress,
-                    autocorrect: false,
-                    autofillHints: const [AutofillHints.email],
-                    textInputAction: TextInputAction.next,
-                    validator: (value) => (value ?? '').trim().isEmpty
-                        ? l10n.emailRequired
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _password,
-                    decoration: InputDecoration(labelText: l10n.passwordLabel),
-                    obscureText: true,
-                    autocorrect: false,
-                    enableSuggestions: false,
-                    autofillHints: [
-                      creating
-                          ? AutofillHints.newPassword
-                          : AutofillHints.password,
-                    ],
-                    onFieldSubmitted: (_) => _submit(),
-                    validator: (value) =>
-                        (value ?? '').isEmpty ? l10n.passwordRequired : null,
-                  ),
-                  const SizedBox(height: 24),
-                  FilledButton(
-                    onPressed: viewModel.submitting ? null : _submit,
-                    child: Text(title),
-                  ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: viewModel.submitting
-                        ? null
-                        : viewModel.switchMode,
-                    child: Text(
-                      creating
-                          ? l10n.switchToLogIn
-                          : l10n.switchToCreateAccount,
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _password,
+                      decoration: InputDecoration(
+                        labelText: l10n.passwordLabel,
+                      ),
+                      obscureText: true,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      autofillHints: [
+                        creating
+                            ? AutofillHints.newPassword
+                            : AutofillHints.password,
+                      ],
+                      onFieldSubmitted: (_) => _submit(),
+                      validator: (value) =>
+                          (value ?? '').isEmpty ? l10n.passwordRequired : null,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: viewModel.submitting ? null : _submit,
+                      child: Text(title),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: viewModel.submitting
+                          ? null
+                          : viewModel.switchMode,
+                      child: Text(
+                        creating
+                            ? l10n.switchToLogIn
+                            : l10n.switchToCreateAccount,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

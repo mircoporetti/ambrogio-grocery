@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/ui/readable_width.dart';
+
 import '../../l10n/app_localizations.dart';
 import '../domain/grocery_list.dart';
 import '../domain/week.dart';
@@ -102,7 +104,10 @@ class _GroceryListsPageState extends State<GroceryListsPage> {
           onPressed: _planWeek,
           child: const Icon(Icons.add),
         ),
-        body: _body(viewModel),
+        body: ReadableWidth(
+          maxWidth: ReadableWidth.list,
+          child: _body(viewModel),
+        ),
       ),
     );
   }

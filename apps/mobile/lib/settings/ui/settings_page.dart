@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/ui/readable_width.dart';
+
 import '../../account/ui/account_view_model.dart';
 import '../../account/ui/log_in_page.dart';
 import '../../account/ui/log_in_view_model.dart';
@@ -80,46 +82,49 @@ class _SettingsPageState extends State<SettingsPage> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
-      body: ListenableBuilder(
-        listenable: Listenable.merge([
-          widget.viewModel,
-          widget.accountViewModel,
-        ]),
-        builder: (context, _) {
-          final language = widget.viewModel.language;
-          final account = widget.accountViewModel;
-          final session = account.session;
-          return ListView(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.language),
-                title: Text(l10n.language),
-                subtitle: Text(
-                  language == null ? '' : languageName(l10n, language),
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: _openLanguage,
-              ),
-              ListTile(
-                leading: const Icon(Icons.account_circle_outlined),
-                title: Text(l10n.account),
-                subtitle: Text(
-                  account.loading ? '' : session?.email ?? l10n.notLoggedIn,
-                ),
-                trailing: session == null
-                    ? const Icon(Icons.chevron_right)
-                    : null,
-                onTap: account.loading || session != null ? null : _openLogIn,
-              ),
-              if (session != null)
+      body: ReadableWidth(
+        maxWidth: ReadableWidth.list,
+        child: ListenableBuilder(
+          listenable: Listenable.merge([
+            widget.viewModel,
+            widget.accountViewModel,
+          ]),
+          builder: (context, _) {
+            final language = widget.viewModel.language;
+            final account = widget.accountViewModel;
+            final session = account.session;
+            return ListView(
+              children: [
                 ListTile(
-                  leading: const Icon(Icons.logout),
-                  title: Text(l10n.logOut),
-                  onTap: _logOut,
+                  leading: const Icon(Icons.language),
+                  title: Text(l10n.language),
+                  subtitle: Text(
+                    language == null ? '' : languageName(l10n, language),
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: _openLanguage,
                 ),
-            ],
-          );
-        },
+                ListTile(
+                  leading: const Icon(Icons.account_circle_outlined),
+                  title: Text(l10n.account),
+                  subtitle: Text(
+                    account.loading ? '' : session?.email ?? l10n.notLoggedIn,
+                  ),
+                  trailing: session == null
+                      ? const Icon(Icons.chevron_right)
+                      : null,
+                  onTap: account.loading || session != null ? null : _openLogIn,
+                ),
+                if (session != null)
+                  ListTile(
+                    leading: const Icon(Icons.logout),
+                    title: Text(l10n.logOut),
+                    onTap: _logOut,
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

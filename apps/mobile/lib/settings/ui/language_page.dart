@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/ui/readable_width.dart';
+
 import '../../l10n/app_localizations.dart';
 import '../domain/language_preference.dart';
 import 'language_name.dart';
@@ -56,19 +58,22 @@ class _LanguagePageState extends State<LanguagePage> {
                   )
                 : null,
           ),
-          body: ListView(
-            children: [
-              for (final choice in viewModel.choices)
-                ListTile(
-                  title: Text(languageName(l10n, choice)),
-                  selected: choice == viewModel.current,
-                  trailing: choice == viewModel.current
-                      ? const Icon(Icons.check)
-                      : null,
-                  enabled: !viewModel.saving,
-                  onTap: () => _choose(choice),
-                ),
-            ],
+          body: ReadableWidth(
+            maxWidth: ReadableWidth.list,
+            child: ListView(
+              children: [
+                for (final choice in viewModel.choices)
+                  ListTile(
+                    title: Text(languageName(l10n, choice)),
+                    selected: choice == viewModel.current,
+                    trailing: choice == viewModel.current
+                        ? const Icon(Icons.check)
+                        : null,
+                    enabled: !viewModel.saving,
+                    onTap: () => _choose(choice),
+                  ),
+              ],
+            ),
           ),
         );
       },

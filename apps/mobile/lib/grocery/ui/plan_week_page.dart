@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
+import '../../shared/ui/readable_width.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../recipes/domain/recipe.dart';
@@ -79,54 +82,60 @@ class _PlanWeekPageState extends State<PlanWeekPage> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(title: Text(l10n.planTheWeek)),
-      body: ListenableBuilder(
-        listenable: viewModel,
-        builder: (context, _) => Column(
-          children: [
-            _WeekPicker(viewModel: viewModel),
-            Expanded(child: _deck(viewModel)),
-          ],
+      body: ReadableWidth(
+        maxWidth: ReadableWidth.deck,
+        child: ListenableBuilder(
+          listenable: viewModel,
+          builder: (context, _) => Column(
+            children: [
+              _WeekPicker(viewModel: viewModel),
+              Expanded(child: _deck(viewModel)),
+            ],
+          ),
         ),
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: ListenableBuilder(
-            listenable: viewModel,
-            builder: (context, _) {
-              final error = viewModel.error;
-              final colors = Theme.of(context).colorScheme;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (error != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Semantics(
-                        liveRegion: true,
-                        child: Text(
-                          error.message(l10n),
-                          style: TextStyle(color: colors.error),
+      bottomNavigationBar: ReadableWidth(
+        maxWidth: ReadableWidth.deck,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: ListenableBuilder(
+              listenable: viewModel,
+              builder: (context, _) {
+                final error = viewModel.error;
+                final colors = Theme.of(context).colorScheme;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (error != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            error.message(l10n),
+                            style: TextStyle(color: colors.error),
+                          ),
                         ),
                       ),
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(l10n.recipesChosen(viewModel.chosenCount)),
                     ),
-                  Semantics(
-                    liveRegion: true,
-                    child: Text(l10n.recipesChosen(viewModel.chosenCount)),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: viewModel.canCreateGroceryList
-                          ? _createGroceryList
-                          : null,
-                      child: Text(l10n.createGroceryList),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: viewModel.canCreateGroceryList
+                            ? _createGroceryList
+                            : null,
+                        child: Text(l10n.createGroceryList),
+                      ),
                     ),
-                  ),
-                ],
-              );
-            },
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
@@ -278,7 +287,15 @@ class _RecipeDeckState extends State<_RecipeDeck>
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => CallbackShortcuts(
+    bindings: {
+      const SingleActivator(LogicalKeyboardKey.arrowRight): () => _throw(1),
+      const SingleActivator(LogicalKeyboardKey.arrowLeft): () => _throw(-1),
+    },
+    child: Focus(autofocus: true, child: _card(context)),
+  );
+
+  Widget _card(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context);
     final pull = (_offset.dx / (_width * _throwDistance)).clamp(-1.0, 1.0);

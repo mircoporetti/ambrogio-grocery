@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/ui/readable_width.dart';
+
 import '../../l10n/app_localizations.dart';
 import '../domain/recipe.dart';
 import 'confirm_delete_recipe.dart';
@@ -92,11 +94,14 @@ class _RecipeDetailPageState extends State<RecipeDetailPage> {
                     ),
                   ),
           ),
-          body: switch ((widget.viewModel.loading, recipe)) {
-            (true, _) => const Center(child: CircularProgressIndicator()),
-            (false, null) => Center(child: Text(l10n.recipeNoLongerExists)),
-            (false, final Recipe recipe) => _RecipeDetails(recipe: recipe),
-          },
+          body: ReadableWidth(
+            maxWidth: ReadableWidth.list,
+            child: switch ((widget.viewModel.loading, recipe)) {
+              (true, _) => const Center(child: CircularProgressIndicator()),
+              (false, null) => Center(child: Text(l10n.recipeNoLongerExists)),
+              (false, final Recipe recipe) => _RecipeDetails(recipe: recipe),
+            },
+          ),
         );
       },
     );
