@@ -127,7 +127,16 @@ const _randomUuid =
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
-  AppDatabase.onDevice() : super(driftDatabase(name: 'ambrogio_grocery'));
+  AppDatabase.onDevice({String name = 'ambrogio_grocery'})
+    : super(
+        driftDatabase(
+          name: name,
+          web: DriftWebOptions(
+            sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+            driftWorker: Uri.parse('drift_worker.js'),
+          ),
+        ),
+      );
 
   @override
   int get schemaVersion => 9;

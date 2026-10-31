@@ -12,6 +12,8 @@ class ImagePickerPhotoPickerAdapter implements PhotoPickerPort {
     final image = await _picker.pickImage(
       source: ImageSource.gallery,
       maxWidth: 1600,
+      maxHeight: 1600,
+      imageQuality: 80,
     );
     if (image == null) return null;
     final bytes = await image.readAsBytes();

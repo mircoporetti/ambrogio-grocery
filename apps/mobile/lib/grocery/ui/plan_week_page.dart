@@ -1,9 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../recipes/domain/recipe.dart';
+import '../../recipes/ui/photo_image.dart';
 import '../domain/week.dart';
 import 'grocery_list_page.dart';
 import 'grocery_list_view_model.dart';
@@ -369,8 +368,8 @@ class _RecipeCard extends StatelessWidget {
           Expanded(
             child: photo == null
                 ? const Icon(Icons.restaurant, size: 96)
-                : Image.file(
-                    File(photo),
+                : Image(
+                    image: photoImage(photo),
                     fit: BoxFit.cover,
                     semanticLabel: l10n.photoOf(recipe.title),
                     errorBuilder: (_, _, _) =>

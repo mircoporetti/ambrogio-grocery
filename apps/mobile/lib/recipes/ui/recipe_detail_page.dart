@@ -1,11 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../domain/recipe.dart';
 import 'confirm_delete_recipe.dart';
 import 'formatting.dart';
+import 'photo_image.dart';
 import 'recipe_detail_view_model.dart';
 import 'recipe_form_page.dart';
 import 'recipe_form_view_model.dart';
@@ -123,8 +122,8 @@ class _RecipeDetails extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 16),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.file(
-                File(photo),
+              child: Image(
+                image: photoImage(photo),
                 height: 220,
                 fit: BoxFit.cover,
                 semanticLabel: l10n.photoOf(recipe.title),

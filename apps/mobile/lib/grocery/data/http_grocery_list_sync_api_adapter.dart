@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:ambrogio_api_contract/ambrogio_api_contract.dart';
 import 'package:http/http.dart' as http;
@@ -72,8 +71,6 @@ class HttpGroceryListSyncApiAdapter implements GroceryListSyncApiPort {
         await _client.send(request),
       ).timeout(_timeout);
     } on http.ClientException {
-      throw const GroceryListServerUnreachableException();
-    } on SocketException {
       throw const GroceryListServerUnreachableException();
     } on TimeoutException {
       throw const GroceryListServerUnreachableException();

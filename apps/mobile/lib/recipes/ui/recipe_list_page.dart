@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import '../application/create_recipe.dart';
@@ -13,6 +11,7 @@ import 'confirm_delete_recipe.dart';
 import 'recipe_detail_page.dart';
 import 'recipe_detail_view_model.dart';
 import 'recipe_form_page.dart';
+import 'photo_image.dart';
 import 'recipe_form_view_model.dart';
 import 'recipe_list_view_model.dart';
 
@@ -187,7 +186,7 @@ class _RecipeTile extends StatelessWidget {
     final photo = recipe.photo?.path;
     return ListTile(
       leading: CircleAvatar(
-        backgroundImage: photo == null ? null : FileImage(File(photo)),
+        backgroundImage: photo == null ? null : photoImage(photo),
         child: photo == null ? const Icon(Icons.restaurant) : null,
       ),
       title: Text(recipe.title),

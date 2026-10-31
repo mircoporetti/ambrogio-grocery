@@ -77,6 +77,18 @@ Acceptance tests in `test/acceptance/` drive the whole app through its UI
 against a real SQLite database. They run headless in a few seconds, no
 emulator needed.
 
+The browser storage (SQLite on WebAssembly, photos in IndexedDB) is tested
+in Chrome:
+
+```sh
+flutter test --platform chrome test/web
+```
+
+`web/sqlite3.wasm` and `web/drift_worker.js` come from the GitHub releases
+of [sqlite3](https://github.com/simolus3/sqlite3.dart/releases) and
+[drift](https://github.com/simolus3/drift/releases) matching the versions in
+`pubspec.lock`. Download them again when upgrading either package.
+
 After changing database tables in `lib/database/app_database.dart`,
 regenerate the drift code and bump `schemaVersion` with a migration:
 

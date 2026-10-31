@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:ambrogio_api_contract/ambrogio_api_contract.dart';
 import 'package:http/http.dart' as http;
@@ -63,8 +62,6 @@ class HttpRecipeSyncApiAdapter implements RecipeSyncApiPort {
         await _client.send(request),
       ).timeout(_timeout);
     } on http.ClientException {
-      throw const SyncServerUnreachableException();
-    } on SocketException {
       throw const SyncServerUnreachableException();
     } on TimeoutException {
       throw const SyncServerUnreachableException();

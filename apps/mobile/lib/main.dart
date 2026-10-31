@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'account/data/http_account_api_adapter.dart';
@@ -13,9 +12,9 @@ import 'database/app_database.dart';
 import 'grocery/data/drift_grocery_list_storage_adapter.dart';
 import 'grocery/data/http_grocery_list_sync_api_adapter.dart';
 import 'recipes/data/drift_recipe_storage_adapter.dart';
-import 'recipes/data/file_photo_storage_adapter.dart';
 import 'recipes/data/http_photo_sync_api_adapter.dart';
 import 'recipes/data/http_recipe_sync_api_adapter.dart';
+import 'recipes/data/photo_storage_on_device.dart';
 import 'settings/data/shared_preferences_language_preference_adapter.dart';
 
 const _apiUrl = String.fromEnvironment(
@@ -27,11 +26,11 @@ const _apiUrl = String.fromEnvironment(
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final documents = await getApplicationDocumentsDirectory();
+  final device = await photoStorageOnDevice();
   final database = AppDatabase.onDevice();
   final recipes = DriftRecipeStorageAdapter(
     database,
-    documentsDir: documents.path,
+    documentsDir: device.documentsDir,
   );
   final groceryLists = DriftGroceryListStorageAdapter(database);
   final apiUrl = Uri.parse(_apiUrl);
@@ -42,7 +41,7 @@ Future<void> main() async {
       recipeSyncStorage: recipes,
       recipeSyncApi: HttpRecipeSyncApiAdapter(apiUrl, client),
       photoSyncApi: HttpPhotoSyncApiAdapter(apiUrl, client),
-      photoStorage: FilePhotoStorageAdapter(documents.path),
+      photoStorage: device.photoStorage,
       groceryListStorage: groceryLists,
       groceryListSyncStorage: groceryLists,
       groceryListSyncApi: HttpGroceryListSyncApiAdapter(apiUrl, client),

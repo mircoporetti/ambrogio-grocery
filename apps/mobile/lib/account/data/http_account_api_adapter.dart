@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -78,8 +77,6 @@ class HttpAccountApiAdapter implements AccountApiPort {
         await _client.send(request),
       ).timeout(_timeout);
     } on http.ClientException {
-      throw const ServerUnreachableException();
-    } on SocketException {
       throw const ServerUnreachableException();
     } on TimeoutException {
       throw const ServerUnreachableException();

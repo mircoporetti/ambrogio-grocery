@@ -1,11 +1,10 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../domain/ingredient.dart';
 import '../domain/recipe.dart';
 import 'formatting.dart';
+import 'photo_image.dart';
 import 'recipe_form_view_model.dart';
 
 class RecipeFormPage extends StatefulWidget {
@@ -324,8 +323,8 @@ class _PhotoField extends StatelessWidget {
         onTap: onPick,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: Image.file(
-            File(path),
+          child: Image(
+            image: photoImage(path),
             height: 180,
             fit: BoxFit.cover,
             errorBuilder: (_, _, _) => const SizedBox(
