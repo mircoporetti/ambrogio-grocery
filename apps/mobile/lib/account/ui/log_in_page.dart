@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import 'confirm_skip_log_in.dart';
 import 'log_in_view_model.dart';
 
 class LogInPage extends StatefulWidget {
@@ -37,6 +38,12 @@ class _LogInPageState extends State<LogInPage> {
     if (loggedIn && mounted) Navigator.of(context).pop();
   }
 
+  Future<void> _skip() async {
+    if (await confirmSkipLogIn(context) && mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -55,9 +62,7 @@ class _LogInPageState extends State<LogInPage> {
             actions: [
               if (widget.asPrompt)
                 TextButton(
-                  onPressed: viewModel.submitting
-                      ? null
-                      : () => Navigator.of(context).pop(),
+                  onPressed: viewModel.submitting ? null : _skip,
                   child: Text(l10n.skip),
                 ),
             ],

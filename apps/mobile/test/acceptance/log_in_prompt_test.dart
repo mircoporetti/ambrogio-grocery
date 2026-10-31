@@ -46,6 +46,27 @@ void main() {
     expect(find.text('Skip'), findsOneWidget);
   });
 
+  testWidgets('skipping first explains what you can lose without an account', (
+    tester,
+  ) async {
+    await launchApp(tester);
+
+    await robot.tapSkip();
+
+    expect(robot.isWarnedAboutSkipping, isTrue);
+    expect(
+      find.textContaining('deleting the app or clearing the browser data'),
+      findsOneWidget,
+    );
+
+    await robot.backToLogIn();
+
+    expect(robot.isWarnedAboutSkipping, isFalse);
+    expect(robot.pageTitle, 'Log in');
+    await restartApp(tester);
+    expect(robot.isAskedToLogIn, isTrue);
+  });
+
   testWidgets('skipping shows the recipes and does not ask again', (
     tester,
   ) async {

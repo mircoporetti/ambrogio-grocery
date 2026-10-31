@@ -64,7 +64,22 @@ class AccountRobot {
   bool get isAskedToLogIn =>
       find.text('You can log in later in Settings.').evaluate().isNotEmpty;
 
-  Future<void> skipLogIn() => _tap(find.text('Skip'));
+  Future<void> skipLogIn() async {
+    await tapSkip();
+    await continueWithoutAccount();
+  }
+
+  Future<void> tapSkip() => _tap(find.text('Skip'));
+
+  bool get isWarnedAboutSkipping => find
+      .textContaining('your recipes and lists are saved only on this device')
+      .evaluate()
+      .isNotEmpty;
+
+  Future<void> continueWithoutAccount() =>
+      _tap(find.text('Continue without account'));
+
+  Future<void> backToLogIn() => _tap(find.text('Back to log in'));
 
   Future<void> goBackWithSystemButton() async {
     await tester.binding.handlePopRoute();

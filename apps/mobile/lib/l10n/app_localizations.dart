@@ -625,6 +625,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get notNow;
+
+  /// No description provided for @skipLogInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without an account?'**
+  String get skipLogInTitle;
+
+  /// No description provided for @skipLogInWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Without an account your recipes and lists are saved only on this device. You lose them by deleting the app or clearing the browser data, or if the browser removes them, and you can\'t use them on other devices. You can log in later in Settings to keep them safe.'**
+  String get skipLogInWarning;
+
+  /// No description provided for @backToLogIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to log in'**
+  String get backToLogIn;
+
+  /// No description provided for @continueWithoutAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue without account'**
+  String get continueWithoutAccount;
 }
 
 class _AppLocalizationsDelegate

@@ -160,5 +160,9 @@
   "unsyncedChangesWillBeLost": "Some changes haven't been synced yet. If you log out now, they'll be lost.",
   "logOutAnyway": "Log out anyway",
   "addToHomeScreen": "To use Ambrogio offline and keep your data, add it to your Home Screen: tap Share, then \"Add to Home Screen\".",
-  "notNow": "Not now"
+  "notNow": "Not now",
+  "skipLogInTitle": "Continue without an account?",
+  "skipLogInWarning": "Without an account your recipes and lists are saved only on this device. You lose them by deleting the app or clearing the browser data, or if the browser removes them, and you can't use them on other devices. You can log in later in Settings to keep them safe.",
+  "backToLogIn": "Back to log in",
+  "continueWithoutAccount": "Continue without account"
 }

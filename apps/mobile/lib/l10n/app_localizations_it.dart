@@ -322,4 +322,17 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get notNow => 'Non ora';
+
+  @override
+  String get skipLogInTitle => 'Continuare senza account?';
+
+  @override
+  String get skipLogInWarning =>
+      'Senza account le tue ricette e liste sono salvate solo su questo dispositivo. Le perdi se elimini l\'app o cancelli i dati del browser, o se il browser li rimuove, e non puoi usarle su altri dispositivi. Puoi accedere più tardi dalle Impostazioni per tenerle al sicuro.';
+
+  @override
+  String get backToLogIn => 'Torna all\'accesso';
+
+  @override
+  String get continueWithoutAccount => 'Continua senza account';
 }
