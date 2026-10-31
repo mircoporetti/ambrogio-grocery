@@ -11,3 +11,4 @@ data:
   DB_SSL: disable
   S3_REGION: auto
   S3_BUCKET: ambrogio-photos
+  WEB_ORIGINS: https://ambrogio.mircoporetti.me

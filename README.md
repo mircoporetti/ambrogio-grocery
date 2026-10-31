@@ -125,6 +125,7 @@ match `compose.yaml`:
 |---------------|-------------|
 | `JWT_SECRET`  | none, required: signs access tokens, at least 32 random bytes (`openssl rand -base64 48`) |
 | `PORT`        | `8080`      |
+| `WEB_ORIGINS` | `http://localhost:8090`: comma-separated origins of the web app, the only sites allowed to call the API from a browser |
 | `DB_HOST`     | `localhost` |
 | `DB_PORT`     | `5433`      |
 | `DB_NAME`     | `ambrogio`  |

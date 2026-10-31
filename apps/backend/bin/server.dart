@@ -34,6 +34,11 @@ Future<void> main() async {
       bucket: photoStorage.bucket,
     ),
     logger: StderrLoggerAdapter(),
+    webOrigins: {
+      for (final origin
+          in (env['WEB_ORIGINS'] ?? 'http://localhost:8090').split(','))
+        if (origin.trim().isNotEmpty) origin.trim(),
+    },
   );
   stdout.writeln('Listening on port ${server.port}');
 }

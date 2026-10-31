@@ -139,6 +139,32 @@ void main() {
     }
   });
 
+  test('in a browser the refresh token stays in its cookie', () async {
+    final sent = <http.Request>[];
+    final api = HttpAccountApiAdapter(
+      baseUrl,
+      MockClient((request) async {
+        sent.add(request);
+        return request.url.path == '/sessions/logout'
+            ? http.Response('', 204)
+            : json(200, {
+                'tokenType': 'Bearer',
+                'accessToken': 'the-access',
+                'expiresIn': 900,
+              });
+      }),
+      refreshInCookie: true,
+    );
+
+    final loggedIn = await api.logIn(email: 'ada@example.com', password: 'pw');
+    final renewed = await api.refresh(loggedIn.refresh);
+    await api.logOut(renewed.refresh);
+
+    expect(loggedIn.access, 'the-access');
+    expect(renewed.access, 'the-access');
+    expect([for (final r in sent.skip(1)) jsonDecode(r.body)], [{}, {}]);
+  });
+
   test('a network failure means the server is unreachable', () async {
     final api = HttpAccountApiAdapter(
       baseUrl,

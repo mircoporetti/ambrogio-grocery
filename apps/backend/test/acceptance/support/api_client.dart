@@ -18,6 +18,8 @@ import 'test_photo_storage.dart';
 class ApiClient {
   ApiClient._(this._server);
 
+  static const webOrigin = 'https://web.test';
+
   final HttpServer _server;
   final _http = http.Client();
   bool _stopped = false;
@@ -36,6 +38,7 @@ class ApiClient {
       accessTokens: JwtAccessTokenAdapter(jwtSecret),
       photos: photos ?? await openTestPhotoStorage(),
       logger: StderrLoggerAdapter(),
+      webOrigins: {webOrigin},
     );
     final client = ApiClient._(server);
     addTearDown(client.stop);
@@ -67,6 +70,23 @@ class ApiClient {
   Future<ApiResponse> delete(String path, {String? token}) async =>
       ApiResponse(await _http.delete(_uri(path), headers: _headers(token)));
 
+  Future<ApiResponse> send(
+    String method,
+    String path, {
+    Object? body,
+    Map<String, String> headers = const {},
+  }) async {
+    final request = http.Request(method, _uri(path))..headers.addAll(headers);
+    if (body != null) {
+      request
+        ..headers['content-type'] = 'application/json'
+        ..body = jsonEncode(body);
+    }
+    return ApiResponse(
+      await http.Response.fromStream(await _http.send(request)),
+    );
+  }
+
   Future<void> stop() async {
     if (_stopped) return;
     _stopped = true;
@@ -82,7 +102,8 @@ class ApiResponse {
 
   int get status => _response.statusCode;
 
-  Object? get json => jsonDecode(_response.body);
+  Object? get json =>
+      _response.body.isEmpty ? null : jsonDecode(_response.body);
 
   Object? operator [](String key) => (json! as Map<String, Object?>)[key];
 

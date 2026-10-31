@@ -1,6 +1,7 @@
 import 'package:shelf/shelf.dart';
 import 'package:shelf_router/shelf_router.dart';
 
+import '../../http/cors.dart';
 import '../../http/json.dart';
 import '../application/authenticate.dart';
 import '../application/get_account.dart';
@@ -12,6 +13,7 @@ import '../application/session_tokens.dart';
 import '../domain/access_token.dart';
 import '../domain/account.dart';
 import '../domain/account_exceptions.dart';
+import '../domain/refresh_token.dart';
 
 class AccountRoutes {
   AccountRoutes(
@@ -52,35 +54,65 @@ class AccountRoutes {
       email: fields['email']!,
       password: fields['password']!,
     );
-    return _tokensResponse(tokens);
+    return _tokensResponse(request, tokens);
   }
 
-  Future<Response> _refresh(Request request) async {
-    final fields = await readStringFields(request, ['refreshToken']);
-    return _tokensResponse(await _refreshSession(fields['refreshToken']!));
-  }
+  Future<Response> _refresh(Request request) async => _tokensResponse(
+    request,
+    await _refreshSession(await _refreshToken(request)),
+  );
 
   Future<Response> _endSession(Request request) async {
-    final fields = await readStringFields(request, ['refreshToken']);
-    await _logOut(fields['refreshToken']!);
-    return Response(204);
+    await _logOut(await _refreshToken(request));
+    if (!isFromWebApp(request)) return Response(204);
+    return Response(204, headers: {'set-cookie': _refreshCookie('', 0)});
   }
+
+  // The web app never sees its refresh token: it lives in an httpOnly cookie
+  // only the session endpoints receive. The phone app keeps it in the body.
+  Future<String> _refreshToken(Request request) async {
+    if (!isFromWebApp(request)) {
+      final fields = await readStringFields(request, ['refreshToken']);
+      return fields['refreshToken']!;
+    }
+    for (final cookie in (request.headers['cookie'] ?? '').split(';')) {
+      final [name, ...value] = cookie.trim().split('=');
+      if (name == _cookieName) return value.join('=');
+    }
+    return '';
+  }
+
+  static const _cookieName = 'ambrogio_refresh';
+
+  static String _refreshCookie(String value, int maxAge) =>
+      '$_cookieName=$value; Max-Age=$maxAge; Path=/sessions; HttpOnly; '
+      'Secure; SameSite=Strict';
 
   Future<Response> _me(Request request) async {
     final accountId = _authenticate(bearerToken(request));
     return jsonResponse(200, _accountJson(await _getAccount(accountId)));
   }
 
-  Response _tokensResponse(SessionTokens tokens) => jsonResponse(
-    200,
-    {
-      'tokenType': 'Bearer',
-      'accessToken': tokens.access.value,
-      'expiresIn': AccessToken.lifetime.inSeconds,
-      'refreshToken': tokens.refresh.value,
-    },
-    headers: {'cache-control': 'no-store'},
-  );
+  Response _tokensResponse(Request request, SessionTokens tokens) {
+    final web = isFromWebApp(request);
+    return jsonResponse(
+      200,
+      {
+        'tokenType': 'Bearer',
+        'accessToken': tokens.access.value,
+        'expiresIn': AccessToken.lifetime.inSeconds,
+        if (!web) 'refreshToken': tokens.refresh.value,
+      },
+      headers: {
+        'cache-control': 'no-store',
+        if (web)
+          'set-cookie': _refreshCookie(
+            tokens.refresh.value,
+            RefreshToken.lifetime.inSeconds,
+          ),
+      },
+    );
+  }
 
   Map<String, Object?> _accountJson(Account account) => {
     'id': account.id.value,

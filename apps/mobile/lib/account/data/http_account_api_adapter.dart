@@ -8,10 +8,18 @@ import '../domain/account_exceptions.dart';
 import '../domain/auth_tokens.dart';
 
 class HttpAccountApiAdapter implements AccountApiPort {
-  HttpAccountApiAdapter(this._baseUrl, this._client);
+  HttpAccountApiAdapter(
+    this._baseUrl,
+    this._client, {
+    bool refreshInCookie = false,
+  }) : _refreshInCookie = refreshInCookie;
 
   final Uri _baseUrl;
   final http.Client _client;
+
+  // In a browser the server keeps the refresh token in an httpOnly cookie:
+  // the app neither receives nor sends it.
+  final bool _refreshInCookie;
 
   static const _timeout = Duration(seconds: 15);
 
@@ -29,24 +37,13 @@ class HttpAccountApiAdapter implements AccountApiPort {
       '/sessions',
       body: {'email': email, 'password': password},
     );
-    return AuthTokens(
-      access: _string(json, 'accessToken'),
-      refresh: _string(json, 'refreshToken'),
-    );
+    return _tokens(json);
   }
 
   @override
-  Future<AuthTokens> refresh(String refreshToken) async {
-    final json = await _send(
-      'POST',
-      '/sessions/refresh',
-      body: {'refreshToken': refreshToken},
-    );
-    return AuthTokens(
-      access: _string(json, 'accessToken'),
-      refresh: _string(json, 'refreshToken'),
-    );
-  }
+  Future<AuthTokens> refresh(String refreshToken) async => _tokens(
+    await _send('POST', '/sessions/refresh', body: _refreshBody(refreshToken)),
+  );
 
   @override
   Future<String> currentEmail(String accessToken) async =>
@@ -54,7 +51,15 @@ class HttpAccountApiAdapter implements AccountApiPort {
 
   @override
   Future<void> logOut(String refreshToken) =>
-      _send('POST', '/sessions/logout', body: {'refreshToken': refreshToken});
+      _send('POST', '/sessions/logout', body: _refreshBody(refreshToken));
+
+  Map<String, Object?> _refreshBody(String refreshToken) =>
+      _refreshInCookie ? {} : {'refreshToken': refreshToken};
+
+  AuthTokens _tokens(Map<String, Object?>? json) => AuthTokens(
+    access: _string(json, 'accessToken'),
+    refresh: _refreshInCookie ? '' : _string(json, 'refreshToken'),
+  );
 
   Future<Map<String, Object?>?> _send(
     String method,

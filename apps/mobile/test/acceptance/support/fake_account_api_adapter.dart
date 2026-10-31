@@ -4,6 +4,14 @@ import 'package:ambrogio_grocery/account/domain/auth_tokens.dart';
 
 /// Follows the backend's rules for the cases the app tests drive.
 class FakeAccountApiAdapter implements AccountApiPort {
+  /// With [refreshInCookie] it acts like a browser and the server together:
+  /// the refresh token stays in a cookie the app never sees.
+  FakeAccountApiAdapter({this.refreshInCookie = false});
+
+  final bool refreshInCookie;
+  String? _cookie;
+
+  bool get hasCookieSession => _emailsByRefreshToken.containsKey(_cookie);
   final _passwords = <String, String>{};
   final _emailsByAccessToken = <String, String>{};
   final _emailsByRefreshToken = <String, String>{};
@@ -55,7 +63,9 @@ class FakeAccountApiAdapter implements AccountApiPort {
   Future<AuthTokens> refresh(String refreshToken) async {
     _reach();
     final email =
-        _emailsByRefreshToken.remove(refreshToken) ??
+        _emailsByRefreshToken.remove(
+          refreshInCookie ? _cookie : refreshToken,
+        ) ??
         (throw const InvalidRefreshTokenException());
     return _issue(email);
   }
@@ -70,8 +80,10 @@ class FakeAccountApiAdapter implements AccountApiPort {
   @override
   Future<void> logOut(String refreshToken) async {
     _reach();
-    _emailsByRefreshToken.remove(refreshToken);
-    loggedOut.add(refreshToken);
+    final token = refreshInCookie ? _cookie : refreshToken;
+    _emailsByRefreshToken.remove(token);
+    _cookie = null;
+    loggedOut.add(token!);
   }
 
   AuthTokens _issue(String email) {
@@ -82,7 +94,9 @@ class FakeAccountApiAdapter implements AccountApiPort {
     );
     _emailsByAccessToken[tokens.access] = email;
     _emailsByRefreshToken[tokens.refresh] = email;
-    return tokens;
+    if (!refreshInCookie) return tokens;
+    _cookie = tokens.refresh;
+    return AuthTokens(access: tokens.access, refresh: '');
   }
 
   void _reach() {

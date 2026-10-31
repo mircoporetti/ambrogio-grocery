@@ -23,6 +23,7 @@ import 'grocery/application/push_grocery_list_changes.dart';
 import 'grocery/data/drift_grocery_list_storage_adapter.dart';
 import 'grocery/http/grocery_list_routes.dart';
 import 'health/http/health_routes.dart';
+import 'http/cors.dart';
 import 'photos/application/get_photo_download_url.dart';
 import 'photos/application/get_photo_upload_url.dart';
 import 'photos/domain/photo_storage_port.dart';
@@ -41,6 +42,7 @@ Future<HttpServer> startServer({
   required AccessTokenPort accessTokens,
   required PhotoStoragePort photos,
   required LoggerPort logger,
+  Set<String> webOrigins = const {},
 }) {
   final accounts = DriftAccountStorageAdapter(database);
   final sessions = DriftSessionStorageAdapter(database);
@@ -80,6 +82,7 @@ Future<HttpServer> startServer({
     ..mount('/', photoRoutes.router.call);
   final handler = const Pipeline()
       .addMiddleware(logRequests())
+      .addMiddleware(cors(webOrigins))
       .addHandler(router.call);
   return shelf_io.serve(handler, address ?? InternetAddress.loopbackIPv4, port);
 }

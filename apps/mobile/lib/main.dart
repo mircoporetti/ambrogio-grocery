@@ -1,11 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'account/data/http_account_api_adapter.dart';
-import 'account/data/secure_storage_session_adapter.dart';
+import 'account/data/account_on_device.dart';
 import 'account/data/shared_preferences_log_in_prompt_adapter.dart';
 import 'app.dart';
 import 'database/app_database.dart';
@@ -35,6 +33,7 @@ Future<void> main() async {
   final groceryLists = DriftGroceryListStorageAdapter(database);
   final apiUrl = Uri.parse(_apiUrl);
   final client = http.Client();
+  final account = accountOnDevice(apiUrl, client);
   runApp(
     AmbrogioApp(
       recipeStorage: recipes,
@@ -48,8 +47,8 @@ Future<void> main() async {
       languagePreference: SharedPreferencesLanguagePreferenceAdapter(
         SharedPreferencesAsync(),
       ),
-      accountApi: HttpAccountApiAdapter(apiUrl, client),
-      sessionStorage: SecureStorageSessionAdapter(const FlutterSecureStorage()),
+      accountApi: account.accountApi,
+      sessionStorage: account.sessionStorage,
       logInPrompt: SharedPreferencesLogInPromptAdapter(
         SharedPreferencesAsync(),
       ),
