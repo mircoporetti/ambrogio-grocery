@@ -64,6 +64,16 @@ class GroceryRobot {
     await tester.pumpAndSettle();
   }
 
+  Future<void> deleteFromList(String week) => _tap(
+    find.descendant(
+      of: find.widgetWithText(ListTile, week),
+      matching: find.byTooltip('Delete grocery list'),
+    ),
+  );
+
+  bool get listHasDeleteButtons =>
+      find.byTooltip('Delete grocery list').evaluate().isNotEmpty;
+
   Future<void> confirmDelete() => _tap(find.text('Delete'));
 
   Future<void> cancelDelete() => _tap(find.text('Cancel'));

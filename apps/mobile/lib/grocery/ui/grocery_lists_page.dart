@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/ui/mouse_platform.dart';
 import '../../shared/ui/readable_width.dart';
 
 import '../../l10n/app_localizations.dart';
@@ -143,7 +144,13 @@ class _GroceryListsPageState extends State<GroceryListsPage> {
               leading: const Icon(Icons.shopping_cart_outlined),
               title: Text(formatWeek(l10n, list.week)),
               subtitle: Text(_subtitle(l10n, list)),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: usesMouse(context)
+                  ? IconButton(
+                      tooltip: l10n.deleteGroceryList,
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () => _confirmAndDelete(list),
+                    )
+                  : const Icon(Icons.chevron_right),
               onTap: () => _openList(list),
             ),
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/ui/mouse_platform.dart';
 import '../../shared/ui/readable_width.dart';
 
 import '../application/create_recipe.dart';
@@ -130,6 +131,9 @@ class RecipeListPage extends StatelessWidget {
         return _RecipeGridCard(
           recipe: recipe,
           onTap: () => _openRecipe(context, recipe),
+          onDelete: usesMouse(context)
+              ? () => _confirmAndDelete(context, recipe)
+              : null,
         );
       },
     ),
@@ -187,6 +191,9 @@ class RecipeListPage extends StatelessWidget {
               child: _RecipeTile(
                 recipe: recipe,
                 onTap: () => _openRecipe(context, recipe),
+                onDelete: usesMouse(context)
+                    ? () => _confirmAndDelete(context, recipe)
+                    : null,
               ),
             );
           },
@@ -203,10 +210,15 @@ String _subtitle(AppLocalizations l10n, Recipe recipe) {
 }
 
 class _RecipeTile extends StatelessWidget {
-  const _RecipeTile({required this.recipe, required this.onTap});
+  const _RecipeTile({
+    required this.recipe,
+    required this.onTap,
+    required this.onDelete,
+  });
 
   final Recipe recipe;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -218,17 +230,29 @@ class _RecipeTile extends StatelessWidget {
       ),
       title: Text(recipe.title),
       subtitle: Text(_subtitle(AppLocalizations.of(context), recipe)),
-      trailing: const Icon(Icons.chevron_right),
+      trailing: switch (onDelete) {
+        null => const Icon(Icons.chevron_right),
+        final onDelete => IconButton(
+          tooltip: AppLocalizations.of(context).deleteRecipe,
+          icon: const Icon(Icons.delete_outline),
+          onPressed: onDelete,
+        ),
+      },
       onTap: onTap,
     );
   }
 }
 
 class _RecipeGridCard extends StatelessWidget {
-  const _RecipeGridCard({required this.recipe, required this.onTap});
+  const _RecipeGridCard({
+    required this.recipe,
+    required this.onTap,
+    required this.onDelete,
+  });
 
   final Recipe recipe;
   final VoidCallback onTap;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -254,21 +278,33 @@ class _RecipeGridCard extends StatelessWidget {
                     ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.fromLTRB(12, 12, 4, 12),
+              child: Row(
                 children: [
-                  Text(
-                    recipe.title,
-                    style: textTheme.titleMedium,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          recipe.title,
+                          style: textTheme.titleMedium,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          _subtitle(l10n, recipe),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
                   ),
-                  Text(
-                    _subtitle(l10n, recipe),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  if (onDelete case final onDelete?)
+                    IconButton(
+                      tooltip: l10n.deleteRecipe,
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: onDelete,
+                    ),
                 ],
               ),
             ),

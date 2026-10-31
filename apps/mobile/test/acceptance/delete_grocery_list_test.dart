@@ -3,6 +3,7 @@ import 'package:ambrogio_grocery/grocery/data/drift_grocery_list_storage_adapter
 import 'package:ambrogio_grocery/recipes/data/drift_recipe_storage_adapter.dart';
 import 'package:ambrogio_grocery/recipes/domain/ingredient.dart';
 import 'package:ambrogio_grocery/recipes/domain/recipe.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/failing_grocery_list_storage_adapter.dart';
@@ -65,6 +66,30 @@ void main() {
     expect(robot.groceryListWeeks, ['26 Oct – 1 Nov']);
     final weeks = (await lists.findAll()).map((l) => l.week.start);
     expect(weeks, [DateTime(2026, 10, 26)]);
+  });
+
+  testWidgets(
+    'with a mouse a grocery list is deleted with its button in the list',
+    (tester) async {
+      await launchWithTwoLists(tester);
+
+      await robot.deleteFromList('19 – 25 Oct');
+      expect(find.text('Delete the list for 19 – 25 Oct?'), findsOneWidget);
+      await robot.confirmDelete();
+
+      expect(robot.groceryListWeeks, ['26 Oct – 1 Nov']);
+      final weeks = (await lists.findAll()).map((l) => l.week.start);
+      expect(weeks, [DateTime(2026, 10, 26)]);
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.macOS),
+  );
+
+  testWidgets('on a phone the lists have no delete buttons, you swipe', (
+    tester,
+  ) async {
+    await launchWithTwoLists(tester);
+
+    expect(robot.listHasDeleteButtons, isFalse);
   });
 
   testWidgets('cancelling the confirmation keeps the grocery list', (

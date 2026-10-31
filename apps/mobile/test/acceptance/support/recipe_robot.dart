@@ -134,6 +134,25 @@ class RecipeRobot {
     await tester.pumpAndSettle();
   }
 
+  Future<void> deleteFromList(String title) => _tap(
+    find
+        .descendant(
+          of: find
+              .ancestor(
+                of: find.text(title),
+                matching: find.byWidgetPredicate(
+                  (w) => w is ListTile || w is Card,
+                ),
+              )
+              .first,
+          matching: find.byTooltip('Delete recipe'),
+        )
+        .first,
+  );
+
+  bool get listHasDeleteButtons =>
+      find.byTooltip('Delete recipe').evaluate().isNotEmpty;
+
   Future<void> confirmDelete() => _tap(find.text('Delete'));
 
   Future<void> cancelDelete() => _tap(find.text('Cancel'));

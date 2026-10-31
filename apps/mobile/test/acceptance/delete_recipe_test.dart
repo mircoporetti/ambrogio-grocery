@@ -1,10 +1,12 @@
 import 'package:ambrogio_grocery/recipes/data/drift_recipe_storage_adapter.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'support/failing_recipe_storage_adapter.dart';
 import 'support/fake_photo_picker_adapter.dart';
 import 'support/fake_photo_storage_adapter.dart';
 import 'support/recipe_robot.dart';
+import 'support/screen.dart';
 import 'support/test_database.dart';
 
 void main() {
@@ -42,6 +44,52 @@ void main() {
     expect(find.text('Pancakes'), findsOneWidget);
     final titles = (await storage.findAll()).map((r) => r.title);
     expect(titles, ['Pancakes']);
+  });
+
+  group('with a mouse, where swiping is awkward,', () {
+    final computer = TargetPlatformVariant.only(TargetPlatform.macOS);
+
+    testWidgets('a recipe is deleted with its button in the list', (
+      tester,
+    ) async {
+      robot = RecipeRobot(tester);
+      await robot.launchApp(storage);
+      await createRecipe('Carbonara');
+      await createRecipe('Pancakes');
+
+      await robot.deleteFromList('Carbonara');
+      expect(find.text('Delete Carbonara?'), findsOneWidget);
+      await robot.confirmDelete();
+
+      expect(find.text('Carbonara'), findsNothing);
+      expect((await storage.findAll()).map((r) => r.title), ['Pancakes']);
+    }, variant: computer);
+
+    testWidgets('a recipe card on a wide screen has its button too', (
+      tester,
+    ) async {
+      useScreen(tester, computerScreen);
+      robot = RecipeRobot(tester);
+      await robot.launchApp(storage);
+      await createRecipe('Carbonara');
+      await createRecipe('Pancakes');
+
+      await robot.deleteFromList('Pancakes');
+      await robot.confirmDelete();
+
+      expect(find.text('Pancakes'), findsNothing);
+      expect((await storage.findAll()).map((r) => r.title), ['Carbonara']);
+    }, variant: computer);
+  });
+
+  testWidgets('on a phone the list has no delete buttons, you swipe', (
+    tester,
+  ) async {
+    robot = RecipeRobot(tester);
+    await robot.launchApp(storage);
+    await createRecipe('Carbonara');
+
+    expect(robot.listHasDeleteButtons, isFalse);
   });
 
   testWidgets('cancelling the confirmation keeps the recipe', (tester) async {
