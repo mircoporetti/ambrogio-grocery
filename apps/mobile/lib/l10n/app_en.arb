@@ -158,5 +158,7 @@
   "somethingWentWrong": "Something went wrong. Please try again.",
   "logInLater": "You can log in later in Settings.",
   "unsyncedChangesWillBeLost": "Some changes haven't been synced yet. If you log out now, they'll be lost.",
-  "logOutAnyway": "Log out anyway"
+  "logOutAnyway": "Log out anyway",
+  "addToHomeScreen": "To use Ambrogio offline and keep your data, add it to your Home Screen: tap Share, then \"Add to Home Screen\".",
+  "notNow": "Not now"
 }

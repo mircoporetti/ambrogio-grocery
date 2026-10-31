@@ -59,3 +59,14 @@ flutter:
   generate: true
 
   uses-material-design: true
+
+  # Bundled so the web app doesn't download Roboto from Google Fonts, which
+  # would fail offline.
+  fonts:
+    - family: Roboto
+      fonts:
+        - asset: fonts/Roboto-Regular.ttf
+        - asset: fonts/Roboto-Medium.ttf
+          weight: 500
+        - asset: fonts/Roboto-Bold.ttf
+          weight: 700

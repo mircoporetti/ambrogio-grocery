@@ -613,6 +613,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Log out anyway'**
   String get logOutAnyway;
+
+  /// No description provided for @addToHomeScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'To use Ambrogio offline and keep your data, add it to your Home Screen: tap Share, then \"Add to Home Screen\".'**
+  String get addToHomeScreen;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
 }
 
 class _AppLocalizationsDelegate

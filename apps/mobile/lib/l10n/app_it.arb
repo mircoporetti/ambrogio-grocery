@@ -85,5 +85,7 @@
   "somethingWentWrong": "Qualcosa è andato storto. Riprova.",
   "logInLater": "Puoi accedere più tardi dalle Impostazioni.",
   "unsyncedChangesWillBeLost": "Alcune modifiche non sono ancora state sincronizzate. Se esci ora andranno perse.",
-  "logOutAnyway": "Esci comunque"
+  "logOutAnyway": "Esci comunque",
+  "addToHomeScreen": "Per usare Ambrogio offline e non perdere i dati, aggiungilo alla schermata Home: tocca Condividi, poi \"Aggiungi alla schermata Home\".",
+  "notNow": "Non ora"
 }

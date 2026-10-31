@@ -9,6 +9,7 @@ import 'app.dart';
 import 'database/app_database.dart';
 import 'grocery/data/drift_grocery_list_storage_adapter.dart';
 import 'grocery/data/http_grocery_list_sync_api_adapter.dart';
+import 'install/data/home_screen_on_device.dart';
 import 'recipes/data/drift_recipe_storage_adapter.dart';
 import 'recipes/data/http_photo_sync_api_adapter.dart';
 import 'recipes/data/http_recipe_sync_api_adapter.dart';
@@ -49,6 +50,7 @@ Future<void> main() async {
       ),
       accountApi: account.accountApi,
       sessionStorage: account.sessionStorage,
+      homeScreen: homeScreenOnDevice(),
       logInPrompt: SharedPreferencesLogInPromptAdapter(
         SharedPreferencesAsync(),
       ),

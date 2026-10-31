@@ -33,6 +33,11 @@ import 'grocery/ui/grocery_list_view_model.dart';
 import 'grocery/ui/grocery_lists_page.dart';
 import 'grocery/ui/grocery_lists_view_model.dart';
 import 'grocery/ui/plan_week_view_model.dart';
+import 'install/application/should_suggest_home_screen.dart';
+import 'install/data/home_screen_on_device_io.dart';
+import 'install/domain/home_screen_port.dart';
+import 'install/ui/home_screen_hint.dart';
+import 'install/ui/home_screen_hint_view_model.dart';
 import 'l10n/app_localizations.dart';
 import 'recipes/application/create_recipe.dart';
 import 'recipes/application/delete_recipe.dart';
@@ -84,6 +89,7 @@ class AmbrogioApp extends StatefulWidget {
     required this.photoStorage,
     this.clock,
     this.photoPicker,
+    this.homeScreen = const InstalledAppHomeScreenAdapter(),
   });
 
   final RecipeStoragePort recipeStorage;
@@ -100,6 +106,7 @@ class AmbrogioApp extends StatefulWidget {
   final ClockPort? clock;
   final PhotoPickerPort? photoPicker;
   final PhotoStoragePort photoStorage;
+  final HomeScreenPort homeScreen;
 
   @override
   State<AmbrogioApp> createState() => _AmbrogioAppState();
@@ -224,44 +231,49 @@ class _AmbrogioAppState extends State<AmbrogioApp> {
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(colorSchemeSeed: Colors.green),
-      home: LogInPrompt(
-        viewModel: _logInPrompt,
-        logInViewModel: () => LogInViewModel(_logIn, _createAccount),
-        child: RecipeListPage(
-          viewModel: _recipeList,
-          createRecipe: _createRecipe,
-          pickRecipePhoto: _pickRecipePhoto,
-          watchRecipe: _watchRecipe,
-          deleteRecipe: _deleteRecipe,
-          updateRecipe: _updateRecipe,
-          settingsPage: () => SettingsPage(
-            viewModel: SettingsViewModel(_watchLanguagePreference),
-            languageViewModel: () =>
-                LanguageViewModel(_watchLanguagePreference, _changeLanguage),
-            accountViewModel: AccountViewModel(
-              _watchSession,
-              _logOut,
-              _uploadPendingChanges,
+      home: HomeScreenHint(
+        viewModel: HomeScreenHintViewModel(
+          ShouldSuggestHomeScreen(widget.homeScreen),
+        ),
+        child: LogInPrompt(
+          viewModel: _logInPrompt,
+          logInViewModel: () => LogInViewModel(_logIn, _createAccount),
+          child: RecipeListPage(
+            viewModel: _recipeList,
+            createRecipe: _createRecipe,
+            pickRecipePhoto: _pickRecipePhoto,
+            watchRecipe: _watchRecipe,
+            deleteRecipe: _deleteRecipe,
+            updateRecipe: _updateRecipe,
+            settingsPage: () => SettingsPage(
+              viewModel: SettingsViewModel(_watchLanguagePreference),
+              languageViewModel: () =>
+                  LanguageViewModel(_watchLanguagePreference, _changeLanguage),
+              accountViewModel: AccountViewModel(
+                _watchSession,
+                _logOut,
+                _uploadPendingChanges,
+              ),
+              logInViewModel: () => LogInViewModel(_logIn, _createAccount),
             ),
-            logInViewModel: () => LogInViewModel(_logIn, _createAccount),
-          ),
-          groceryListsPage: () => GroceryListsPage(
-            viewModel: GroceryListsViewModel(
-              _watchUpcomingGroceryLists,
-              _getCurrentWeek,
-              _deleteGroceryList,
-            ),
-            planWeekViewModel: () => PlanWeekViewModel(
-              _listRecipes,
-              _createGroceryList,
-              _findGroceryList,
-              _getCurrentWeek,
-            ),
-            groceryListViewModel: (week) => GroceryListViewModel(
-              _watchGroceryList,
-              _tickGroceryItem,
-              _deleteGroceryList,
-              week,
+            groceryListsPage: () => GroceryListsPage(
+              viewModel: GroceryListsViewModel(
+                _watchUpcomingGroceryLists,
+                _getCurrentWeek,
+                _deleteGroceryList,
+              ),
+              planWeekViewModel: () => PlanWeekViewModel(
+                _listRecipes,
+                _createGroceryList,
+                _findGroceryList,
+                _getCurrentWeek,
+              ),
+              groceryListViewModel: (week) => GroceryListViewModel(
+                _watchGroceryList,
+                _tickGroceryItem,
+                _deleteGroceryList,
+                week,
+              ),
             ),
           ),
         ),

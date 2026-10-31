@@ -7,6 +7,7 @@ import 'package:ambrogio_grocery/grocery/domain/clock_port.dart';
 import 'package:ambrogio_grocery/grocery/domain/grocery_list_storage_port.dart';
 import 'package:ambrogio_grocery/grocery/domain/grocery_list_sync_api_port.dart';
 import 'package:ambrogio_grocery/grocery/domain/grocery_list_sync_storage_port.dart';
+import 'package:ambrogio_grocery/install/domain/home_screen_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_picker_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_storage_port.dart';
 import 'package:ambrogio_grocery/recipes/domain/photo_sync_api_port.dart';
@@ -21,6 +22,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'fake_account_api_adapter.dart';
 import 'fake_grocery_list_sync_api_adapter.dart';
+import 'fake_home_screen_adapter.dart';
 import 'fake_photo_picker_adapter.dart';
 import 'fake_recipe_sync_api_adapter.dart';
 import 'fake_photo_storage_adapter.dart';
@@ -48,6 +50,7 @@ class RecipeRobot {
     RecipeSyncApiPort? recipeSyncApi,
     PhotoSyncApiPort? photoSyncApi,
     GroceryListSyncApiPort? groceryListSyncApi,
+    HomeScreenPort? homeScreen,
   }) async {
     final api = accountApi ?? FakeAccountApiAdapter();
     final fakeAccounts = api is FakeAccountApiAdapter
@@ -85,6 +88,8 @@ class RecipeRobot {
         accountApi: api,
         sessionStorage: sessionStorage ?? emptySecureStorage(),
         logInPrompt: logInPrompt ?? await answeredLogInPrompt(),
+        homeScreen:
+            homeScreen ?? FakeHomeScreenAdapter(inIphoneBrowserTab: false),
       ),
     );
     await tester.pumpAndSettle();

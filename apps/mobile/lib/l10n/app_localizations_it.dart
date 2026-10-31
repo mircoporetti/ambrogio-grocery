@@ -315,4 +315,11 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get logOutAnyway => 'Esci comunque';
+
+  @override
+  String get addToHomeScreen =>
+      'Per usare Ambrogio offline e non perdere i dati, aggiungilo alla schermata Home: tocca Condividi, poi \"Aggiungi alla schermata Home\".';
+
+  @override
+  String get notNow => 'Non ora';
 }

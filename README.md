@@ -152,6 +152,44 @@ The backend runs on the homelab k3s at
 that touches it. Setup, secrets and rollback:
 [apps/backend/k8s/README.md](apps/backend/k8s/README.md).
 
+## Web
+
+The same app runs in the browser, local-first like on the phones: SQLite
+on WebAssembly and photos in IndexedDB. A service worker keeps it working
+offline. On an iPhone it must be added to the Home Screen (Share → Add to
+Home Screen), otherwise Safari deletes its data after 7 days without a
+visit; the app shows a banner asking for it.
+
+Run it locally with `flutter run -d chrome --web-port=8090` (the backend
+allows `http://localhost:8090`). The service worker only runs in a release
+build:
+
+```sh
+deploy/build.sh local                                         # build/web
+docker build -f deploy/Dockerfile -t ambrogio-web .           # nginx image
+```
+
+It deploys on every push to `main` that touches `apps/mobile`
+(`.github/workflows/deploy-web.yml`) to the same k3s namespace as the
+backend, at `https://ambrogio.mircoporetti.me`. One-time setup:
+
+1. Cloudflare tunnel route in `homelab/infrastructure/cloudflare/configmap.yaml`:
+   `ambrogio.mircoporetti.me` → `http://web.ambrogio.svc.cluster.local:8080`,
+   then `cloudflared tunnel route dns <tunnel id> ambrogio.mircoporetti.me`.
+2. CORS on the `ambrogio-photos` R2 bucket (R2 → bucket → Settings → CORS
+   policy), so the browser can upload and download photos:
+
+   ```json
+   [{
+     "AllowedOrigins": ["https://ambrogio.mircoporetti.me"],
+     "AllowedMethods": ["GET", "PUT"],
+     "AllowedHeaders": ["content-type"],
+     "MaxAgeSeconds": 3600
+   }]
+   ```
+3. After the first push, make the `ambrogio-web` package public on GitHub,
+   like `ambrogio-backend`.
+
 ## Android
 
 ### Release an APK

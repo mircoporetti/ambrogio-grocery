@@ -1,6 +1,5 @@
 import 'api_client.dart';
 
-
 class WebSessionsApi {
   WebSessionsApi(this._api, {this.origin = webOrigin});
 
